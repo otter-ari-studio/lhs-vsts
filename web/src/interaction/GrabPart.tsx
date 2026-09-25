@@ -10,12 +10,8 @@ import {
   REMOVED_PICK_PRIORITY,
   SOP_PICK_PRIORITY,
 } from './defaults';
-import {
-  claimDropSlot,
-  distanceToDropTray,
-  releaseDropSlot,
-} from './dropTray';
 import { setGrabHolding } from './grabHoldHub';
+import { INVENTORY_PARK, partInventory } from './partInventory';
 import { setPartPose } from './partPoseHub';
 import {
   registerInteractable,
@@ -23,6 +19,11 @@ import {
   type HandInteractable,
 } from './registry';
 import { SopTargetHighlight } from './SopTargetHighlight';
+import {
+  detectLateralThrow,
+  pushThrowSample,
+  type ThrowSample,
+} from './throwDetect';
 
 interface GrabPartProps {
   part: PartDef;
@@ -41,12 +42,30 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
     () => new Vector3(...part.anchor.position),
     [part.anchor.position],
   );
+  const throwBuf = useRef<ThrowSample[]>([]);
   const [hover, setHover] = useState(false);
+  const [inInventory, setInInventory] = useState(() => partInventory.has(part.partId));
   const tipShown = useRef(false);
   const sopRef = useRef(isSopTarget);
   sopRef.current = isSopTarget;
   const meshScaleRef = useRef<Group>(null);
   const rotation: Vec3 = part.anchor.rotation ?? [0, 0, 0];
+
+  useEffect(() => {
+    return partInventory.subscribe(() => {
+      const now = partInventory.has(part.partId);
+      setInInventory(now);
+      if (!now) {
+        const mgr = getTrainingSession();
+        const g = groupRef.current;
+        if (g && mgr?.getState(part.partId) === 'installed') {
+          g.position.copy(installedPos);
+          followPos.current.copy(installedPos);
+          g.visible = true;
+        }
+      }
+    });
+  }, [part.partId, installedPos, followPos, groupRef]);
 
   const api = useMemo(() => {
     const self: HandInteractable = {
@@ -55,12 +74,12 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       interactionRadius: COLLIDER_RADIUS.grabbable,
       isInteractableNow() {
         if (grabbed.current) return false;
+        if (partInventory.has(part.partId)) return false;
         const mgr = getTrainingSession();
         if (!mgr) return true;
         const st = mgr.getState(part.partId);
-        // Installed: can detach. Removed: only re-pick when it is the SOP install target
-        // (parts on the tray must not stick when the hand passes by).
         if (st === 'installed') return true;
+        // Removed but not yet bagged — rare; allow SOP re-pick only
         if (st === 'removed') return sopRef.current;
         return false;
       },
@@ -85,6 +104,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
           mgr.notifyRemoved(part.partId);
         }
         grabbed.current = true;
+        throwBuf.current = [];
         setGrabHolding(part.partId, true);
         const g = groupRef.current;
         if (g) {
@@ -93,14 +113,15 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         }
         if (mgr && !tipShown.current) {
           tipShown.current = true;
-          mgr.tip('捏紧约半秒取下 → 松开放到左侧绿色放置区；回装时对准机身闪烁位');
+          mgr.tip('取下后向左或向右甩一下松手 → 进入左侧物品栏；回装捏闪烁安装位');
         }
       },
       onPinchHold(handPos) {
         if (!grabbed.current) return;
         followPos.current.copy(handPos).add(grabOffset.current);
+        pushThrowSample(throwBuf.current, performance.now(), handPos.x);
       },
-      onPinchEnd() {
+      onPinchEnd(handPos) {
         if (!grabbed.current) return;
         grabbed.current = false;
         setGrabHolding(part.partId, false);
@@ -109,21 +130,34 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         if (!mgr || !g) return;
         const range = part.snapRangeMeters ?? snapRange;
         g.getWorldPosition(_tmp);
-        const distTray = distanceToDropTray(_tmp);
+        pushThrowSample(throwBuf.current, performance.now(), handPos.x);
+        const throwDir = detectLateralThrow(throwBuf.current);
+        throwBuf.current = [];
 
         if (_tmp.distanceTo(installedPos) <= range && mgr.tryInstall(part.partId)) {
-          releaseDropSlot(part.partId);
+          partInventory.dequeue(part.partId);
           g.position.copy(installedPos);
           followPos.current.copy(installedPos);
+          g.visible = true;
+          setInInventory(false);
           return;
         }
 
         if (mgr.getState(part.partId) === 'removed') {
-          const slot = claimDropSlot(part.partId);
-          g.position.set(slot[0], slot[1], slot[2]);
+          // Lateral throw L/R → inventory; also bag on plain release away from install.
+          partInventory.enqueue(part.partId);
+          g.position.set(...INVENTORY_PARK);
           followPos.current.copy(g.position);
-          if (distTray > 0.15) {
-            mgr.tip('零件已放到左侧放置区');
+          g.visible = false;
+          setInInventory(true);
+          if (throwDir) {
+            mgr.tip(
+              throwDir === 'left'
+                ? '已甩向左侧 · 零件进入物品栏'
+                : '已甩向右侧 · 零件进入物品栏',
+            );
+          } else {
+            mgr.tip('零件已进入左侧物品栏');
           }
           return;
         }
@@ -153,6 +187,13 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
   useFrame(({ clock }, dt) => {
     const g = groupRef.current;
     if (!g) return;
+    if (inInventory && !grabbed.current) {
+      g.visible = false;
+      g.position.set(...INVENTORY_PARK);
+      setPartPose(part.partId, INVENTORY_PARK);
+      return;
+    }
+    g.visible = true;
     if (grabbed.current) {
       const t = 1 - Math.exp(-40 * dt);
       g.position.lerp(followPos.current, t);
@@ -188,17 +229,78 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
           </mesh>
         )}
       </group>
-      <SopTargetHighlight active={isSopTarget} hover={hover} radius={0.03} ringRadius={0.07} />
+      <SopTargetHighlight
+        active={isSopTarget && !inInventory}
+        hover={hover}
+        radius={0.03}
+        ringRadius={0.07}
+      />
     </group>
   );
 }
 
-/** Empty install slot marker at the part's home pose (when SOP is install). */
-export function GrabInstallGhost({ part, active }: { part: PartDef; active: boolean }) {
-  if (!active) return null;
+/**
+ * Install-slot interactable: pinch here while part is in inventory → reinstall.
+ */
+export function GrabInstallGhost({
+  part,
+  active,
+  snapRange,
+}: {
+  part: PartDef;
+  active: boolean;
+  snapRange: number;
+}) {
+  const groupRef = useRef<Group>(null);
+  const sopActive = useRef(active);
+  sopActive.current = active;
   const rotation: Vec3 = part.anchor.rotation ?? [0, 0, 0];
+  const _local = useMemo(() => new Vector3(), []);
+
+  const api = useMemo(() => {
+    const home = new Vector3(...part.anchor.position);
+    const self: HandInteractable = {
+      id: `${part.partId}:install-slot`,
+      kind: 'grabbable',
+      interactionRadius: Math.max(COLLIDER_RADIUS.grabbable, snapRange * 1.5),
+      isInteractableNow() {
+        return sopActive.current && partInventory.has(part.partId);
+      },
+      pickPriority: () => SOP_PICK_PRIORITY,
+      distanceTo(handPos) {
+        return home.distanceTo(handPos);
+      },
+      onPinchStart() {
+        const mgr = getTrainingSession();
+        if (!mgr || !partInventory.has(part.partId)) return;
+        if (mgr.tryInstall(part.partId)) {
+          partInventory.dequeue(part.partId);
+          mgr.tip(`已回装 · ${part.displayName}`);
+        }
+      },
+      onPinchHold() {},
+      onPinchEnd() {},
+    };
+    return self;
+  }, [part, snapRange, _local]);
+
+  useEffect(() => {
+    registerInteractable(api);
+    return () => unregisterInteractable(api);
+  }, [api]);
+
+  // Sync mesh visibility when install succeeds elsewhere
+  useEffect(() => {
+    return partInventory.subscribe(() => {
+      /* GrabPart listens too — ghost only needs active prop from parent */
+    });
+  }, []);
+
+  if (!active) return null;
+
   return (
     <group
+      ref={groupRef}
       position={part.anchor.position}
       rotation={rotation}
       name={`${part.partId}:install-ghost`}

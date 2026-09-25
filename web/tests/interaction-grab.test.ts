@@ -12,6 +12,12 @@ import {
   REMOVED_PICK_PRIORITY,
   SOP_PICK_PRIORITY,
 } from '../src/interaction/defaults';
+import { partInventory } from '../src/interaction/partInventory';
+import {
+  detectLateralThrow,
+  pushThrowSample,
+  type ThrowSample,
+} from '../src/interaction/throwDetect';
 
 function stub(
   id: string,
@@ -42,31 +48,42 @@ test('clip pick radius reaches deep hood clips', () => {
   expect(COLLIDER_RADIUS.clip).toBeGreaterThanOrEqual(0.25);
 });
 
-test('drop tray is on the left (away from right-hand path)', async () => {
-  const { DROP_TRAY_CENTER } = await import('../src/interaction/dropTray');
-  expect(DROP_TRAY_CENTER[0]).toBeLessThan(0);
+test('inventory FIFO enqueue / dequeue', () => {
+  partInventory.clear();
+  expect(partInventory.enqueue('oil_box')).toBe(true);
+  expect(partInventory.enqueue('filter_top')).toBe(true);
+  expect(partInventory.enqueue('oil_box')).toBe(false);
+  expect([...partInventory.list()]).toEqual(['oil_box', 'filter_top']);
+  partInventory.dequeue('oil_box');
+  expect([...partInventory.list()]).toEqual(['filter_top']);
+  partInventory.clear();
 });
 
-test('drop tray claims stable slots per part', async () => {
-  const { claimDropSlot, resetDropTraySlots, DROP_TRAY_CENTER } = await import(
-    '../src/interaction/dropTray'
-  );
-  resetDropTraySlots();
-  const a = claimDropSlot('oil_box');
-  const a2 = claimDropSlot('oil_box');
-  const b = claimDropSlot('filter_top');
-  expect(a).toEqual(a2);
-  expect(a[0]).not.toBe(b[0]);
-  expect(Math.abs(a[0] - DROP_TRAY_CENTER[0])).toBeLessThan(0.2);
+test('detectLateralThrow left and right', () => {
+  const left: ThrowSample[] = [];
+  pushThrowSample(left, 0, 0.2);
+  pushThrowSample(left, 100, 0.1);
+  pushThrowSample(left, 200, -0.05);
+  expect(detectLateralThrow(left)).toBe('left');
+
+  const right: ThrowSample[] = [];
+  pushThrowSample(right, 0, -0.1);
+  pushThrowSample(right, 100, 0);
+  pushThrowSample(right, 200, 0.15);
+  expect(detectLateralThrow(right)).toBe('right');
+
+  const still: ThrowSample[] = [];
+  pushThrowSample(still, 0, 0.1);
+  pushThrowSample(still, 100, 0.11);
+  pushThrowSample(still, 200, 0.105);
+  expect(detectLateralThrow(still)).toBeNull();
 });
 
 test('findNearest prefers SOP target over closer removed part', () => {
   clearInteractables();
-  // Dropped oil_box near the hand
   registerInteractable(
     stub('oil_box', [0.05, 0, 0.26], { priority: REMOVED_PICK_PRIORITY, radius: 0.18 }),
   );
-  // filter_top farther but current SOP
   registerInteractable(
     stub('filter_top', [0.18, 0, 0.26], { priority: SOP_PICK_PRIORITY, radius: 0.18 }),
   );

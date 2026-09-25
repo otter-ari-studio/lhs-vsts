@@ -4,11 +4,10 @@ import { getTrainingSession, subscribeSession } from '../machine';
 import { closeStep, installStep, openStep, removeStep } from '../machine/types';
 import { ClipPart } from '../interaction/ClipPart';
 import { CleanSpotMesh } from '../interaction/CleanSpot';
-import { DropTrayVisual } from '../interaction/DropTrayVisual';
 import { GrabInstallGhost, GrabPart } from '../interaction/GrabPart';
 import { NutPart } from '../interaction/NutPart';
 import { getPartPose } from '../interaction/partPoseHub';
-import { resetDropTraySlots } from '../interaction/dropTray';
+import { partInventory } from '../interaction/partInventory';
 import { resetGrabHold } from '../interaction/grabHoldHub';
 import { KitbashPart } from './kitbash/KitbashAdapter';
 
@@ -66,9 +65,15 @@ export function MachineView({ def }: MachineViewProps) {
     () => getTrainingSession()?.getRevision() ?? 0,
     () => 0,
   );
+  const invKey = useSyncExternalStore(
+    (cb) => partInventory.subscribe(cb),
+    () => partInventory.list().join('|'),
+    () => '',
+  );
+  void invKey;
 
   useEffect(() => {
-    resetDropTraySlots();
+    partInventory.clear();
     resetGrabHold();
   }, [def.machineId]);
 
@@ -78,7 +83,6 @@ export function MachineView({ def }: MachineViewProps) {
 
   return (
     <group name={`machine:${def.machineId}`}>
-      <DropTrayVisual />
       {def.parts.map((part) => {
         const isTarget = sopTargets.has(part.partId);
         if (part.kind === 'fixed_shell') {
@@ -86,11 +90,17 @@ export function MachineView({ def }: MachineViewProps) {
         }
         if (part.kind === 'grabbable') {
           const showInstallGhost =
-            isTarget && session?.getState(part.partId) === 'removed';
+            isTarget &&
+            session?.getState(part.partId) === 'removed' &&
+            partInventory.has(part.partId);
           return (
             <group key={part.partId}>
               <GrabPart part={part} snapRange={snapRange} isSopTarget={isTarget} />
-              <GrabInstallGhost part={part} active={!!showInstallGhost} />
+              <GrabInstallGhost
+                part={part}
+                active={!!showInstallGhost}
+                snapRange={snapRange}
+              />
             </group>
           );
         }

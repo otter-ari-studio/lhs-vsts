@@ -5,7 +5,8 @@ export { GrabInstallGhost, GrabPart } from './GrabPart';
 export { ClipPart } from './ClipPart';
 export { NutPart } from './NutPart';
 export { CleanSpotMesh } from './CleanSpot';
-export { DropTrayVisual } from './DropTrayVisual';
+export { partInventory, INVENTORY_PARK } from './partInventory';
+export { detectLateralThrow, pushThrowSample } from './throwDetect';
 export {
   clearInteractables,
   findHoverTarget,

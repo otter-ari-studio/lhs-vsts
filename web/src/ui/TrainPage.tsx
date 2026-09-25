@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useHandCamera } from '../hand/useHandCamera';
+import { partInventory } from '../interaction/partInventory';
 import {
   getTrainingSession,
   subscribeSession,
@@ -88,6 +89,14 @@ export function TrainPage({ onBack }: TrainPageProps) {
   const status = statusLabel(phase, presence);
   const showOverlay = phase === 'denied' || phase === 'error';
   const snap = useSessionSnapshot(sessionTick);
+  const inventoryIds = useSyncExternalStore(
+    (cb) => partInventory.subscribe(cb),
+    () => partInventory.list().join('|'),
+    () => '',
+  );
+  const inventory = inventoryIds ? inventoryIds.split('|') : [];
+  const partName = (id: string) =>
+    getTrainingSession()?.def.parts.find((p) => p.partId === id)?.displayName ?? id;
 
   useEffect(() => {
     return subscribeTips((msg) => {
@@ -108,6 +117,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
   const restart = () => {
     recalibrateDepth();
+    partInventory.clear();
     setRestartToken((n) => n + 1);
     setCalibrateToken((n) => n + 1);
     setTip(null);
@@ -194,6 +204,19 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
       <div className="train-body">
         <aside className="step-rail" aria-label="训练步骤">
+          <h2 className="step-rail-title">物品栏 · FIFO</h2>
+          <ol className="inv-list" aria-label="已拆下零件">
+            {inventory.length === 0 ? (
+              <li className="inv-empty">空 · 取下后左右甩手松手入队</li>
+            ) : (
+              inventory.map((id, i) => (
+                <li key={`${id}-${i}`} className="inv-row">
+                  <span className="inv-idx">{i + 1}</span>
+                  <span className="inv-name">{partName(id)}</span>
+                </li>
+              ))
+            )}
+          </ol>
           <h2 className="step-rail-title">SOP 步骤</h2>
           <ol className="step-list">
             {snap.steps.map((row) => (
@@ -261,7 +284,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              双手举到胸前停约半秒后点「重新标定」。捏紧约半秒抓住闪烁零件，松开放到左侧绿色放置区；回装对准机身闪烁框。卡扣需伸向前上方闪烁处捏一下。
+              双手举到胸前停约半秒后点「重新标定」。捏紧取下闪烁零件，向左或向右甩一下松手 → 进入左侧物品栏；回装时对准机身闪烁框捏合。
             </div>
           ) : null}
 
