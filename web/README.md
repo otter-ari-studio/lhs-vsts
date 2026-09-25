@@ -1,7 +1,8 @@
-# LHA VSTS Web (Three.js)
+# LHS-VSTS Web
 
-Rsbuild + React + Three.js 接收端：连接本机 Python WebSocket（默认 `ws://127.0.0.1:8765`），
-相对腕位驱动双手骨架，并显示简化油烟机场景。
+纯浏览器大家电拆洗训练客户端：Rsbuild + React 19 + Three.js / R3F。
+
+手部追踪使用 `@mediapipe/tasks-vision` HandLandmarker（浏览器内 WASM），**不连接**本机 Python WebSocket。
 
 ## Setup
 
@@ -11,14 +12,13 @@ pnpm install
 
 ## Dev
 
-1. 先在仓库根目录启动 Python：`uv run python main.py`（会监听 WS）
-2. 再启动本应用：
-
 ```bash
 pnpm run dev
 ```
 
-打开 http://localhost:3000 。顶栏显示连接状态；**Recalibrate** 可重新归零相对原点。
+打开 http://localhost:3000 。引导页说明摄像头权限后进入训练占位场景。
+
+摄像头需要安全上下文（`localhost` 或 HTTPS）。
 
 ## Scripts
 
@@ -26,11 +26,13 @@ pnpm run dev
 - `pnpm run preview` — preview build
 - `pnpm run lint` / `pnpm run test` — lint & tests
 
-可选：改 `src/hand/defaults.ts` 中的 `WS_URL` 覆盖默认 WebSocket 地址。
+## Module layout
 
-## 拆装交互（MVP B）
-
-- 机型配置：`public/machines/range_hood_generic.json`
-- 捏合靠近零件可抓取（集油盒等）；顺序错误会提示并扣分
-- 卡扣捏合开合；螺母暂仅提示（旋转手势后置）
-- 顶栏显示分数与 tip
+| Folder | Responsibility |
+|--------|----------------|
+| `src/hand/` | MediaPipe loader / tracking (stub → full in next task) |
+| `src/machine/` | MachineDef / StepGraph / ScoreBook |
+| `src/interaction/` | Hover / grab / clip / nut / clean |
+| `src/visual/` | Kitbash / GLTF adapters |
+| `src/ui/` | Guide, chrome, tips, end screen |
+| `src/scene/` | R3F canvas / training viewport |

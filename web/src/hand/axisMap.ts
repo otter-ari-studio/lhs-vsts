@@ -3,22 +3,29 @@ import { Matrix4, Quaternion, Vector3 } from 'three';
 export type AxisSource = 'x' | 'y' | 'z';
 
 export interface AxisMapConfig {
-  unityXFrom: AxisSource;
+  sceneXFrom: AxisSource;
   invertX: boolean;
-  unityYFrom: AxisSource;
+  sceneYFrom: AxisSource;
   invertY: boolean;
-  unityZFrom: AxisSource;
+  sceneZFrom: AxisSource;
   invertZ: boolean;
 }
 
-/** Match Unity UdpHandDataReceiver defaults: flip Y and Z. */
+/**
+ * MediaPipe world landmarks → Three.js Y-up, mirrored to match selfie preview.
+ *
+ * Capture space: X right, Y down, Z toward camera.
+ * Scene: X right (mirrored), Y up, Z toward camera.
+ *
+ * Single source of truth — do not flip axes elsewhere.
+ */
 export const DEFAULT_AXIS_MAP: AxisMapConfig = {
-  unityXFrom: 'x',
-  invertX: false,
-  unityYFrom: 'y',
+  sceneXFrom: 'x',
+  invertX: true,
+  sceneYFrom: 'y',
   invertY: true,
-  unityZFrom: 'z',
-  invertZ: true,
+  sceneZFrom: 'z',
+  invertZ: false,
 };
 
 const AXIS_INDEX: Record<AxisSource, number> = { x: 0, y: 1, z: 2 };
@@ -31,18 +38,18 @@ function srcAxis(axis: AxisSource, invert: boolean): [number, number, number] {
 
 /** Build a Matrix4 that maps capture-space points (no translation). */
 export function buildMapMatrix(cfg: AxisMapConfig = DEFAULT_AXIS_MAP): Matrix4 {
-  const sx = AXIS_INDEX[cfg.unityXFrom];
-  const sy = AXIS_INDEX[cfg.unityYFrom];
-  const sz = AXIS_INDEX[cfg.unityZFrom];
-  let xFrom = cfg.unityXFrom;
-  let yFrom = cfg.unityYFrom;
-  let zFrom = cfg.unityZFrom;
+  const sx = AXIS_INDEX[cfg.sceneXFrom];
+  const sy = AXIS_INDEX[cfg.sceneYFrom];
+  const sz = AXIS_INDEX[cfg.sceneZFrom];
+  let xFrom = cfg.sceneXFrom;
+  let yFrom = cfg.sceneYFrom;
+  let zFrom = cfg.sceneZFrom;
   let invertX = cfg.invertX;
   let invertY = cfg.invertY;
   let invertZ = cfg.invertZ;
   if (sx === sy || sx === sz || sy === sz) {
     console.warn(
-      `[axisMap] illegal axis config ${cfg.unityXFrom}/${cfg.unityYFrom}/${cfg.unityZFrom}, using identity`,
+      `[axisMap] illegal axis config ${cfg.sceneXFrom}/${cfg.sceneYFrom}/${cfg.sceneZFrom}, using identity`,
     );
     xFrom = 'x';
     yFrom = 'y';
@@ -54,7 +61,6 @@ export function buildMapMatrix(cfg: AxisMapConfig = DEFAULT_AXIS_MAP): Matrix4 {
   const r0 = srcAxis(xFrom, invertX);
   const r1 = srcAxis(yFrom, invertY);
   const r2 = srcAxis(zFrom, invertZ);
-  // Three.js Matrix4 is column-major; set rows like Unity SetRow for MultiplyPoint3x4.
   const m = new Matrix4();
   m.set(
     r0[0],

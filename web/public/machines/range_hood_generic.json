@@ -2,7 +2,6 @@
   "machineId": "range_hood_generic",
   "displayName": "通用侧吸式抽油烟机（基础样机）",
   "unit": "meter",
-  "nutThread": "reverse",
   "scoring": {
     "baseScore": 100,
     "deductIllegalOrder": 5,
@@ -20,171 +19,179 @@
       "partId": "shell_main",
       "displayName": "主外壳",
       "kind": "fixed_shell",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/shell_main.prefab",
-      "anchorName": "",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "",
+      "anchor": { "position": [0, 0.15, 0] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "shell_main" },
       "removePrereqs": [],
       "installPrereqs": [],
-      "removeLockedTip": "",
-      "installLockedTip": "",
-      "pryTip": "",
-      "wrongDirectionTip": ""
+      "tips": {}
     },
     {
       "partId": "oil_box",
       "displayName": "集油盒",
       "kind": "grabbable",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/oil_box.prefab",
-      "anchorName": "anchor_oil_box",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "",
+      "anchor": { "position": [0, -0.02, 0.22] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "oil_box" },
       "removePrereqs": [],
       "installPrereqs": ["install_filter_top"],
-      "removeLockedTip": "",
-      "installLockedTip": "⚠️ 必须先回装上层滤网，才能回装集油盒",
-      "pryTip": "",
-      "wrongDirectionTip": ""
+      "tips": {
+        "installLocked": "⚠️ 必须先回装上层滤网，才能回装集油盒"
+      },
+      "snapRangeMeters": 0.08
     },
     {
       "partId": "filter_top",
       "displayName": "上层滤网",
       "kind": "grabbable",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/filter_top.prefab",
-      "anchorName": "anchor_filter_top",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "",
+      "anchor": { "position": [0, 0.08, 0.18] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "filter_top" },
       "removePrereqs": ["remove_oil_box"],
       "installPrereqs": ["install_filter_bottom"],
-      "removeLockedTip": "⚠️ 必须先拆下集油盒，才能拆卸上层滤网",
-      "installLockedTip": "⚠️ 必须先回装下层滤网，才能回装上层滤网",
-      "pryTip": "",
-      "wrongDirectionTip": ""
+      "tips": {
+        "removeLocked": "⚠️ 必须先拆下集油盒，才能拆卸上层滤网",
+        "installLocked": "⚠️ 必须先回装下层滤网，才能回装上层滤网"
+      },
+      "snapRangeMeters": 0.08
     },
     {
       "partId": "filter_bottom",
       "displayName": "下层滤网",
       "kind": "grabbable",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/filter_bottom.prefab",
-      "anchorName": "anchor_filter_bottom",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "",
+      "anchor": { "position": [0, 0.04, 0.18] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "filter_bottom" },
       "removePrereqs": ["remove_filter_top"],
       "installPrereqs": ["close_clip_left", "close_clip_right"],
-      "removeLockedTip": "⚠️ 必须先拆下上层滤网，才能拆卸下层滤网",
-      "installLockedTip": "⚠️ 必须先回装玻璃面板并锁止左右卡扣，才能回装下层滤网",
-      "pryTip": "",
-      "wrongDirectionTip": ""
+      "tips": {
+        "removeLocked": "⚠️ 必须先拆下上层滤网，才能拆卸下层滤网",
+        "installLocked": "⚠️ 必须先回装玻璃面板并锁止左右卡扣，才能回装下层滤网"
+      },
+      "snapRangeMeters": 0.08
     },
     {
       "partId": "clip_left",
       "displayName": "左侧卡扣",
       "kind": "clip",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/clip_left.prefab",
-      "anchorName": "",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "",
+      "anchor": { "position": [-0.3, 0.22, 0.14] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "clip_left" },
       "removePrereqs": ["remove_filter_bottom"],
       "installPrereqs": ["install_panel_glass"],
-      "removeLockedTip": "",
-      "installLockedTip": "⚠️ 请先回装玻璃面板，再锁止左侧卡扣",
-      "pryTip": "⚠️ 滤网未拆卸完成时硬撬卡扣，卡扣损坏，扣分！",
-      "wrongDirectionTip": ""
+      "tips": {
+        "installLocked": "⚠️ 请先回装玻璃面板，再锁止左侧卡扣",
+        "pry": "⚠️ 滤网未拆卸完成时硬撬卡扣，卡扣损坏，扣分！"
+      },
+      "snapRangeMeters": 0.08
     },
     {
       "partId": "clip_right",
       "displayName": "右侧卡扣",
       "kind": "clip",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/clip_right.prefab",
-      "anchorName": "",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "",
+      "anchor": { "position": [0.3, 0.22, 0.14] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "clip_right" },
       "removePrereqs": ["remove_filter_bottom"],
       "installPrereqs": ["install_panel_glass"],
-      "removeLockedTip": "",
-      "installLockedTip": "⚠️ 请先回装玻璃面板，再锁止右侧卡扣",
-      "pryTip": "⚠️ 滤网未拆卸完成时硬撬卡扣，卡扣损坏，扣分！",
-      "wrongDirectionTip": ""
+      "tips": {
+        "installLocked": "⚠️ 请先回装玻璃面板，再锁止右侧卡扣",
+        "pry": "⚠️ 滤网未拆卸完成时硬撬卡扣，卡扣损坏，扣分！"
+      },
+      "snapRangeMeters": 0.08
     },
     {
       "partId": "panel_glass",
       "displayName": "玻璃面板",
       "kind": "grabbable",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/panel_glass.prefab",
-      "anchorName": "anchor_panel_glass",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "",
+      "anchor": { "position": [0, 0.22, 0.14] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "panel_glass" },
       "removePrereqs": ["open_clip_left", "open_clip_right"],
       "installPrereqs": ["install_wind_cover"],
-      "removeLockedTip": "⚠️ 必须先打开左右卡扣，才能拆卸玻璃面板",
-      "installLockedTip": "⚠️ 必须先回装风轮护罩，才能回装玻璃面板",
-      "pryTip": "",
-      "wrongDirectionTip": ""
+      "tips": {
+        "removeLocked": "⚠️ 必须先打开左右卡扣，才能拆卸玻璃面板",
+        "installLocked": "⚠️ 必须先回装风轮护罩，才能回装玻璃面板"
+      },
+      "snapRangeMeters": 0.08
     },
     {
       "partId": "wind_cover",
       "displayName": "风轮护罩",
       "kind": "grabbable",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/wind_cover.prefab",
-      "anchorName": "anchor_wind_cover",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "",
+      "anchor": { "position": [0, 0.28, -0.02] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "wind_cover" },
       "removePrereqs": ["remove_panel_glass"],
       "installPrereqs": ["install_nut_wind"],
-      "removeLockedTip": "⚠️ 必须先拆下玻璃面板，才能拆卸风轮护罩",
-      "installLockedTip": "⚠️ 必须先回装锁紧螺母，才能回装风轮护罩",
-      "pryTip": "",
-      "wrongDirectionTip": ""
+      "tips": {
+        "removeLocked": "⚠️ 必须先拆下玻璃面板，才能拆卸风轮护罩",
+        "installLocked": "⚠️ 必须先回装锁紧螺母，才能回装风轮护罩"
+      },
+      "snapRangeMeters": 0.08
     },
     {
       "partId": "nut_wind",
       "displayName": "风轮锁紧螺母",
       "kind": "rotate_nut",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/nut_wind.prefab",
-      "anchorName": "anchor_nut_wind",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "reverse",
+      "anchor": { "position": [0, 0.28, 0.04] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "nut_wind" },
       "removePrereqs": ["remove_wind_cover"],
       "installPrereqs": ["install_wind_wheel"],
-      "removeLockedTip": "⚠️ 必须先拆下风轮护罩，才能旋转拆卸锁紧螺母",
-      "installLockedTip": "⚠️ 必须先回装风轮叶轮，才能拧紧锁紧螺母",
-      "pryTip": "",
-      "wrongDirectionTip": "⚠️ 该机型为反牙螺母：拆卸应顺时针旋转、拧紧应逆时针旋转，方向错误扣分！"
+      "tips": {
+        "removeLocked": "⚠️ 必须先拆下风轮护罩，才能旋转拆卸锁紧螺母",
+        "installLocked": "⚠️ 必须先回装风轮叶轮，才能拧紧锁紧螺母",
+        "wrongDirection": "⚠️ 该机型为反牙螺母：拆卸应顺时针旋转、拧紧应逆时针旋转，方向错误扣分！"
+      },
+      "snapRangeMeters": 0.08,
+      "thread": "reverse"
     },
     {
       "partId": "wind_wheel",
       "displayName": "风轮叶轮",
       "kind": "grabbable",
-      "prefabPath": "Assets/Prefabs/RangeHood/Parts/wind_wheel.prefab",
-      "anchorName": "anchor_wind_wheel",
-      "positionToleranceMeters": 0.015,
-      "angleToleranceDegrees": 5.0,
-      "snapRangeMeters": 0.08,
-      "thread": "",
+      "anchor": { "position": [0, 0.28, -0.08] },
+      "visual": { "adapter": "kitbash", "kitbashKey": "wind_wheel" },
       "removePrereqs": ["remove_nut_wind"],
       "installPrereqs": [],
-      "removeLockedTip": "⚠️ 必须先拧下锁紧螺母，才能拆卸风轮叶轮",
-      "installLockedTip": "",
-      "pryTip": "",
-      "wrongDirectionTip": ""
+      "tips": {
+        "removeLocked": "⚠️ 必须先拧下锁紧螺母，才能拆卸风轮叶轮"
+      },
+      "snapRangeMeters": 0.08
+    }
+  ],
+  "cleanSpots": [
+    {
+      "cleanId": "oil_box",
+      "displayName": "清洁集油盒",
+      "partId": "oil_box",
+      "position": [0, 0, 0],
+      "space": "part_local",
+      "radiusMeters": 0.1,
+      "dwellMs": 1500,
+      "stepId": "clean_oil_box"
+    },
+    {
+      "cleanId": "filter_top",
+      "displayName": "清洁上层滤网",
+      "partId": "filter_top",
+      "position": [0, 0, 0],
+      "space": "part_local",
+      "radiusMeters": 0.12,
+      "dwellMs": 1500,
+      "stepId": "clean_filter_top"
+    },
+    {
+      "cleanId": "filter_bottom",
+      "displayName": "清洁下层滤网",
+      "partId": "filter_bottom",
+      "position": [0, 0, 0],
+      "space": "part_local",
+      "radiusMeters": 0.12,
+      "dwellMs": 1500,
+      "stepId": "clean_filter_bottom"
+    },
+    {
+      "cleanId": "wind_wheel",
+      "displayName": "清洁风轮叶轮",
+      "partId": "wind_wheel",
+      "position": [0, 0, 0],
+      "space": "part_local",
+      "radiusMeters": 0.1,
+      "dwellMs": 1500,
+      "stepId": "clean_wind_wheel"
     }
   ]
 }

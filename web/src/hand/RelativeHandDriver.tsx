@@ -1,8 +1,6 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { Euler, Group, MeshStandardMaterial, Quaternion, Vector3 } from 'three';
-import { findNearestInteractable, type HandInteractable } from '../interaction/registry';
-import { handDataHub } from './HandDataHub';
 import {
   HAND_DEFAULTS,
   LANDMARK_MAX_STEP,
@@ -13,11 +11,12 @@ import {
   PINCH_COLOR,
   RIGHT_HAND_COLOR,
 } from './defaults';
+import { handHub } from './HandHub';
 import { LandmarkRig, type LandmarkRigHandle } from './LandmarkRig';
-import { JOINT_COUNT } from './protocol';
+import { JOINT_COUNT, type HandId } from './types';
 
 interface RelativeHandDriverProps {
-  handId: 0 | 1;
+  handId: HandId;
   /** Bumps when UI requests Recalibrate. */
   calibrateToken: number;
 }
@@ -32,13 +31,12 @@ const _lm = new Vector3();
 const _delta = new Vector3();
 
 /**
- * Relative wrist drive + landmark skeleton with per-frame smoothing
- * (targets update on WS samples; display lerps every render frame).
+ * Relative wrist drive + 21-point landmark skeleton.
+ * Input: HandHub (browser MediaPipe). No grab/interaction — later task.
  */
 export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDriverProps) {
   const palmRef = useRef<Group>(null);
   const palmMatRef = useRef<MeshStandardMaterial>(null);
-  const palmMeshVisible = useRef(true);
   const rigRef = useRef<LandmarkRigHandle>(null);
 
   const calibrated = useRef(false);
@@ -57,8 +55,6 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
   const smoothLm = useRef<Vector3[]>(
     Array.from({ length: JOINT_COUNT }, () => new Vector3()),
   );
-  const lastPinch = useRef(false);
-  const engaged = useRef<HandInteractable | null>(null);
 
   const rest = HAND_DEFAULTS[handId];
   const defaultPos = useRef(new Vector3(...rest.position));
@@ -68,13 +64,11 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
   const baseColor = handId === 0 ? LEFT_HAND_COLOR : RIGHT_HAND_COLOR;
 
   useEffect(() => {
+    // Re-origin from the next (or current) sample — do not clear HandHub.
     calibrated.current = false;
     prevPalmTs.current = -1;
     prevLmTs.current = -1;
     hasSmoothLm.current = false;
-    lmVisible.current = false;
-    handDataHub.clear(handId);
-    rigRef.current?.hideSkeleton();
   }, [calibrateToken, handId]);
 
   useEffect(() => {
@@ -89,24 +83,21 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     if (!palm) return;
     const dt = Math.min(Math.max(delta, 0.0001), 0.05);
 
-    const sample = handDataHub.tryGetLatest(handId);
+    const sample = handHub.tryGetLatest(handId);
     if (!sample) {
-      // No sample ever / cleared: keep rest pose, hide skeleton after delay
       if (
         lmVisible.current &&
         state.clock.elapsedTime - lastSampleAt.current > LANDMARK_STALE_HIDE_DELAY
       ) {
         rigRef.current?.hideSkeleton();
         lmVisible.current = false;
-        palmMeshVisible.current = true;
         const mesh = palm.children[0];
         if (mesh) mesh.visible = true;
       }
       return;
     }
 
-    const hasLm =
-      sample.landmarks !== null && sample.landmarks.length === JOINT_COUNT;
+    const hasLm = sample.landmarks !== null && sample.landmarks.length === JOINT_COUNT;
     if (hasLm) {
       const w = sample.landmarks![0];
       _wrist.set(w[0], w[1], w[2]);
@@ -156,29 +147,9 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       mat.emissiveIntensity = pinch ? 0.45 : 0;
     }
 
-    const pinch = sample.pinching;
-    const handPos = palm.position;
-    const handRot = {
-      x: palm.quaternion.x,
-      y: palm.quaternion.y,
-      z: palm.quaternion.z,
-      w: palm.quaternion.w,
-    };
-    if (pinch && !lastPinch.current) {
-      engaged.current = findNearestInteractable(handPos);
-      engaged.current?.onPinchStart(handPos, handRot);
-    } else if (pinch && lastPinch.current && engaged.current) {
-      engaged.current.onPinchHold(handPos, handRot);
-    } else if (!pinch && lastPinch.current) {
-      engaged.current?.onPinchEnd(handPos);
-      engaged.current = null;
-    }
-    lastPinch.current = pinch;
-
     const rig = rigRef.current;
     if (!rig) return;
 
-    // Update landmark *targets* only on new samples; display lerps every frame.
     if (hasLm && sample.timestamp !== prevLmTs.current) {
       for (let i = 0; i < JOINT_COUNT; i++) {
         const lm = sample.landmarks![i];
@@ -210,10 +181,8 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
         smoothLm.current[i].lerp(lmTarget.current[i], t);
       }
       rig.updateSkeleton(smoothLm.current);
-      // Hide redundant wrist ball while skeleton is up
       const mesh = palm.children[0];
       if (mesh) mesh.visible = false;
-      palmMeshVisible.current = false;
     }
 
     const stale =
@@ -223,7 +192,6 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       lmVisible.current = false;
       const mesh = palm.children[0];
       if (mesh) mesh.visible = true;
-      palmMeshVisible.current = true;
     }
   });
 

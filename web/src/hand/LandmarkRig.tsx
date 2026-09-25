@@ -8,7 +8,7 @@ import {
   Mesh,
   Vector3,
 } from 'three';
-import { HAND_CONNECTIONS, JOINT_COUNT } from './protocol';
+import { HAND_CONNECTIONS, JOINT_COUNT } from './types';
 
 export interface LandmarkRigHandle {
   updateSkeleton: (worldPoints: Vector3[]) => void;

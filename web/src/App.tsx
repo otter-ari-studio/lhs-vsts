@@ -1,67 +1,33 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-import { TopBar } from './components/TopBar';
-import { handDataHub } from './hand/HandDataHub';
-import { subscribeScore, subscribeTips } from './machine/events';
-import { connectHandSocket, type SocketStatus } from './net/handSocket';
-import { TrainingScene } from './scene/TrainingScene';
+import { GuidePage } from './ui/GuidePage';
+import { TrainPage } from './ui/TrainPage';
+import type { AppPage } from './ui/types';
 
-function statusUi(status: SocketStatus): {
-  label: string;
-  kind: 'ok' | 'wait' | 'bad';
-} {
-  if (status === 'open') return { label: '已连接', kind: 'ok' };
-  if (status === 'connecting') return { label: '连接中…', kind: 'wait' };
-  if (status === 'error') return { label: '连接错误', kind: 'bad' };
-  return { label: '已断开（重连中）', kind: 'bad' };
+function pageFromHash(): AppPage {
+  if (typeof window === 'undefined') return 'guide';
+  return window.location.hash === '#train' ? 'train' : 'guide';
 }
 
 const App = () => {
-  const [status, setStatus] = useState<SocketStatus>('connecting');
-  const [handCount, setHandCount] = useState(0);
-  const [calibrateToken, setCalibrateToken] = useState(0);
-  const [score, setScore] = useState(100);
-  const [tip, setTip] = useState('');
+  const [page, setPage] = useState<AppPage>(pageFromHash);
 
   useEffect(() => {
-    return connectHandSocket({
-      onStatus: setStatus,
-      onHandCount: setHandCount,
-    });
-  }, []);
+    const onHashChange = () => setPage(pageFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, [setPage]);
 
-  useEffect(() => {
-    const unTip = subscribeTips((msg) => {
-      setTip(msg);
-      window.setTimeout(() => setTip((cur) => (cur === msg ? '' : cur)), 3500);
-    });
-    const unScore = subscribeScore(setScore);
-    return () => {
-      unTip();
-      unScore();
-    };
-  }, []);
+  const go = (next: AppPage) => {
+    setPage(next);
+    window.location.hash = next === 'train' ? 'train' : '';
+  };
 
-  const ui = statusUi(status);
+  if (page === 'train') {
+    return <TrainPage onBack={() => go('guide')} />;
+  }
 
-  return (
-    <div className="app-shell">
-      <TopBar
-        statusLabel={ui.label}
-        statusKind={ui.kind}
-        handCount={handCount}
-        score={score}
-        tip={tip}
-        onRecalibrate={() => {
-          handDataHub.clearAll();
-          setCalibrateToken((n) => n + 1);
-        }}
-      />
-      <main className="viewport">
-        <TrainingScene calibrateToken={calibrateToken} />
-      </main>
-    </div>
-  );
+  return <GuidePage onStart={() => go('train')} />;
 };
 
 export default App;

@@ -1,0 +1,32 @@
+{
+  "id": "appliance-sim-redesign",
+  "name": "appliance-sim-redesign",
+  "title": "大家电虚拟仿真训练平台完整方案重设计",
+  "description": "",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "heyongqi10",
+  "assignee": "heyongqi10",
+  "createdAt": "2026-09-25",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-25-greenfield-scaffold",
+    "09-25-browser-hand-tracking",
+    "09-25-kitbash-machine-def",
+    "09-25-interaction-sop-clean",
+    "09-25-harden-docs-retire"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}

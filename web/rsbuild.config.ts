@@ -10,4 +10,13 @@ export default defineConfig({
     }),
     pluginTailwindcss(),
   ],
+  // Serve MediaPipe WASM from /mediapipe (pinned package version in mediapipeLoader).
+  output: {
+    copy: [
+      {
+        from: './node_modules/@mediapipe/tasks-vision/wasm',
+        to: 'mediapipe',
+      },
+    ],
+  },
 });
