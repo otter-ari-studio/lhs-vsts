@@ -55,11 +55,15 @@ export const IMAGE_LANDMARK_XY_SPAN_METERS = deskXySpanMeters(DESK_TO_SCREEN_MET
 export const IMAGE_LANDMARK_FINGER_Z_SPAN_METERS = 0.1;
 
 /**
- * Scene Z work slab: keep the glove in front of kitbash parts (oil_box ≈ z0.22–0.29).
- * Grab still works via collider radius without sinking into solids.
+ * Scene Z work slab for forward/back reach.
+ * NEAR ≈ front of oil_box / filters; FAR = pulled back toward viewer.
  */
-export const HAND_Z_MIN = 0.3;
-export const HAND_Z_MAX = 0.72;
+export const HAND_Z_NEAR = 0.26;
+export const HAND_Z_FAR = 0.58;
+/** @deprecated alias — prefer HAND_Z_NEAR */
+export const HAND_Z_MIN = HAND_Z_NEAR;
+/** @deprecated alias — prefer HAND_Z_FAR */
+export const HAND_Z_MAX = HAND_Z_FAR;
 
 /** @deprecated use IMAGE_LANDMARK_FINGER_Z_SPAN_METERS — kept for older tests */
 export const IMAGE_LANDMARK_Z_SPAN_METERS = IMAGE_LANDMARK_FINGER_Z_SPAN_METERS;

@@ -106,7 +106,7 @@ test('screen map: mirrored preview center → workspace center; right of preview
   const { imageLandmarkToScene, SCREEN_WORKSPACE, clampHandZ } = await import(
     '../src/hand/screenMap'
   );
-  const { HAND_Z_MIN } = await import('../src/hand/defaults');
+  const { HAND_Z_NEAR } = await import('../src/hand/defaults');
   const mid = imageLandmarkToScene(0.5, 0.5, 0, { depthZ: SCREEN_WORKSPACE.center[2] });
   expect(mid[0]).toBeCloseTo(SCREEN_WORKSPACE.center[0]);
   expect(mid[1]).toBeCloseTo(SCREEN_WORKSPACE.center[1]);
@@ -126,15 +126,15 @@ test('screen map: mirrored preview center → workspace center; right of preview
 
   // Closer fingertip (negative MediaPipe z) must not sink past work slab
   const tip = imageLandmarkToScene(0.5, 0.5, -0.5, { depthZ: 0.35 });
-  expect(tip[2]).toBeGreaterThanOrEqual(HAND_Z_MIN);
-  expect(clampHandZ(0.1)).toBe(HAND_Z_MIN);
+  expect(tip[2]).toBeGreaterThanOrEqual(HAND_Z_NEAR);
+  expect(clampHandZ(0.1)).toBe(HAND_Z_NEAR);
 });
 
 test('desk depth: larger palm → closer; browsers assume 1 m desk', async () => {
   const {
     DESK_TO_SCREEN_METERS,
     estimateDepthFromPalmNorm,
-    applyDepthDeadzone,
+    palmRatioToSceneZ,
     palmWidthNorm,
   } = await import('../src/hand/deskDepth');
   expect(DESK_TO_SCREEN_METERS).toBe(1);
@@ -143,8 +143,12 @@ test('desk depth: larger palm → closer; browsers assume 1 m desk', async () =>
   const far = estimateDepthFromPalmNorm(0.08);
   expect(near).toBeLessThan(far);
 
-  expect(applyDepthDeadzone(1.01, 1.0)).toBeCloseTo(1.0);
-  expect(applyDepthDeadzone(1.1, 1.0)).toBeGreaterThan(1.0);
+  // Palm ratio reach: bigger palm → smaller scene Z (toward parts)
+  const zNear = palmRatioToSceneZ(0.16, 0.1, 0.26, 0.4, 0.58);
+  const zFar = palmRatioToSceneZ(0.07, 0.1, 0.26, 0.4, 0.58);
+  const zMid = palmRatioToSceneZ(0.1, 0.1, 0.26, 0.4, 0.58);
+  expect(zNear).toBeLessThan(zMid);
+  expect(zFar).toBeGreaterThan(zMid);
 
   const pts = Array.from({ length: 21 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
   pts[5] = { x: 0.4, y: 0.5, z: 0 };

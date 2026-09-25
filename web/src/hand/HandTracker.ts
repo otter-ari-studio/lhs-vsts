@@ -1,15 +1,13 @@
 import type { HandLandmarker, HandLandmarkerResult } from '@mediapipe/tasks-vision';
 import {
-  applyDepthDeadzone,
-  DEPTH_REACH_GAIN,
   ema,
-  estimateDepthFromPalmNorm,
+  palmRatioToSceneZ,
   palmWidthNorm,
 } from './deskDepth';
 import {
   HAND_HOLD_MS,
-  HAND_Z_MAX,
-  HAND_Z_MIN,
+  HAND_Z_FAR,
+  HAND_Z_NEAR,
   IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,
   PINCH_OFF_METERS,
   PINCH_ON_METERS,
@@ -63,7 +61,7 @@ export class HandTracker {
   private readonly held: (HandSample | null)[] = [null, null];
   private readonly lastSeenAt: [number, number] = [0, 0];
   private readonly palmNormEma: [number | null, number | null] = [null, null];
-  private readonly originDepth: [number | null, number | null] = [null, null];
+  private readonly originPalm: [number | null, number | null] = [null, null];
 
   constructor(opts: HandTrackerOptions) {
     this.landmarker = opts.landmarker;
@@ -96,14 +94,14 @@ export class HandTracker {
     this.pinchState[1] = false;
     this.palmNormEma[0] = null;
     this.palmNormEma[1] = null;
-    this.originDepth[0] = null;
-    this.originDepth[1] = null;
+    this.originPalm[0] = null;
+    this.originPalm[1] = null;
   }
 
-  /** Call when UI requests Recalibrate — resets depth origin on next sample. */
+  /** Call when UI requests Recalibrate — resets palm-reach origin on next sample. */
   resetDepthCalibration(): void {
-    this.originDepth[0] = null;
-    this.originDepth[1] = null;
+    this.originPalm[0] = null;
+    this.originPalm[1] = null;
     this.palmNormEma[0] = null;
     this.palmNormEma[1] = null;
   }
@@ -134,7 +132,7 @@ export class HandTracker {
 
     const seen: [boolean, boolean] = [false, false];
     const count = result.landmarks?.length ?? 0;
-    const baseZ = SCREEN_WORKSPACE.center[2];
+    const centerZ = SCREEN_WORKSPACE.center[2];
 
     for (let i = 0; i < count; i++) {
       const image = result.landmarks[i];
@@ -146,17 +144,15 @@ export class HandTracker {
       const rawPalm = palmWidthNorm(image);
       this.palmNormEma[handId] = ema(this.palmNormEma[handId], rawPalm);
       const palm = this.palmNormEma[handId] ?? rawPalm;
-      let depth = estimateDepthFromPalmNorm(palm);
-      if (this.originDepth[handId] === null) {
-        this.originDepth[handId] = depth;
+      if (this.originPalm[handId] === null && palm > 1e-4) {
+        this.originPalm[handId] = palm;
       }
-      depth = applyDepthDeadzone(depth, this.originDepth[handId]!);
-      // Closer than calibrate depth → smaller scene Z (toward the hood), clamped
-      // so the glove stays on the front work plane instead of sinking into solids.
+      const originPalm = this.originPalm[handId] ?? palm;
+      // Larger palm (reach toward screen) → smaller scene Z toward parts.
       const reachZ = clampHandZ(
-        baseZ + (depth - this.originDepth[handId]!) * DEPTH_REACH_GAIN,
-        HAND_Z_MIN,
-        HAND_Z_MAX,
+        palmRatioToSceneZ(palm, originPalm, HAND_Z_NEAR, centerZ, HAND_Z_FAR),
+        HAND_Z_NEAR,
+        HAND_Z_FAR,
       );
 
       const mapped = imageLandmarksToSceneMeters(image, {

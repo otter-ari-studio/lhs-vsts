@@ -16,16 +16,24 @@ export const HAND_PALM_WIDTH_METERS = 0.085;
 export const WEBCAM_HFOV_DEG = 62;
 
 /**
- * How strongly depth changes map into scene Z (1 = 1 m closer → 1 m toward machine).
- * >1 makes “reach toward screen” feel more pronounced in the training volume.
+ * How strongly palm-size change maps into scene Z.
+ * Used by palm-ratio reach (not absolute meter depth).
  */
 export const DEPTH_REACH_GAIN = 0.9;
 
-/** EMA for palm-width samples (0–1, higher = snappier / noisier). */
-export const PALM_WIDTH_EMA = 0.18;
+/**
+ * Palm-ratio reach: at calibrate palm=1.
+ * scale ≥ 1 + PALM_CLOSER_SPAN → full reach toward parts (HAND_Z_NEAR).
+ * scale ≤ 1 - PALM_FARTHER_SPAN → full pull-back (HAND_Z_FAR).
+ */
+export const PALM_CLOSER_SPAN = 0.32;
+export const PALM_FARTHER_SPAN = 0.28;
 
-/** Ignore depth deltas smaller than this (meters) before publishing. */
-export const DEPTH_DEADZONE_METERS = 0.02;
+/** EMA for palm-width samples (0–1, higher = snappier / noisier). */
+export const PALM_WIDTH_EMA = 0.28;
+
+/** Ignore tiny palm-ratio jitter around 1.0 before applying reach. */
+export const PALM_RATIO_DEADZONE = 0.04;
 
 /** Clamp estimated camera distance (meters). */
 export const DEPTH_MIN_METERS = 0.35;
@@ -83,12 +91,40 @@ export function estimateDepthFromPalmNorm(
 export function applyDepthDeadzone(
   depth: number,
   originDepth: number,
-  deadzone = DEPTH_DEADZONE_METERS,
+  deadzone = 0.02,
 ): number {
   const d = depth - originDepth;
   if (Math.abs(d) < deadzone) return originDepth;
-  // Soften: shrink by deadzone toward origin so motion starts after threshold.
   return originDepth + (d > 0 ? d - deadzone : d + deadzone);
+}
+
+/**
+ * Map current/calibrate palm width → scene Z.
+ * Larger palm (reach toward screen) → smaller Z (toward hood parts).
+ */
+export function palmRatioToSceneZ(
+  palmNorm: number,
+  originPalmNorm: number,
+  nearZ: number,
+  centerZ: number,
+  farZ: number,
+  closerSpan = PALM_CLOSER_SPAN,
+  fartherSpan = PALM_FARTHER_SPAN,
+  deadzone = PALM_RATIO_DEADZONE,
+): number {
+  if (!(originPalmNorm > 1e-5) || !(palmNorm > 1e-5)) return centerZ;
+  let ratio = palmNorm / originPalmNorm;
+  if (Math.abs(ratio - 1) < deadzone) return centerZ;
+  // Soften past deadzone so motion starts cleanly.
+  if (ratio > 1) ratio = 1 + (ratio - 1 - deadzone);
+  else ratio = 1 - (1 - ratio - deadzone);
+
+  if (ratio >= 1) {
+    const u = Math.min(1, (ratio - 1) / Math.max(closerSpan, 1e-4));
+    return centerZ + (nearZ - centerZ) * u;
+  }
+  const u = Math.min(1, (1 - ratio) / Math.max(fartherSpan, 1e-4));
+  return centerZ + (farZ - centerZ) * u;
 }
 
 export function ema(prev: number | null, next: number, alpha = PALM_WIDTH_EMA): number {

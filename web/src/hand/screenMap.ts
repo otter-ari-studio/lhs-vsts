@@ -1,7 +1,7 @@
 import type { Vec3 } from './types';
 import {
-  HAND_Z_MAX,
-  HAND_Z_MIN,
+  HAND_Z_FAR,
+  HAND_Z_NEAR,
   IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,
 } from './defaults';
 
@@ -17,7 +17,7 @@ import {
  */
 export const SCREEN_WORKSPACE = {
   /** Scene point that corresponds to camera frame center (hood mid-front). */
-  center: [0, 0.14, 0.38] as Vec3,
+  center: [0, 0.14, 0.4] as Vec3,
   /** Full camera width → this many meters of scene X. */
   width: 0.95,
   /** Full camera height → this many meters of scene Y. */
@@ -35,7 +35,7 @@ export interface ImageToSceneOptions {
   workspace?: typeof SCREEN_WORKSPACE;
 }
 
-export function clampHandZ(z: number, lo = HAND_Z_MIN, hi = HAND_Z_MAX): number {
+export function clampHandZ(z: number, lo = HAND_Z_NEAR, hi = HAND_Z_FAR): number {
   return Math.min(hi, Math.max(lo, z));
 }
 

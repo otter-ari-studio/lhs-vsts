@@ -208,7 +208,8 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              双手入画：坐正约 1 米面对屏幕。右下角预览即完整摄像头画面（已镜像）：手在预览中间，虚拟手应在机型附近中间。
+              双手入画后点「重新标定」。前后够零件：手靠近屏幕（画面里变大）→
+              虚拟手靠近机型；远离屏幕 → 虚拟手后退。左右位置对齐镜像预览。
             </div>
           ) : null}
 
