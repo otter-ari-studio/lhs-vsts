@@ -3,7 +3,7 @@
   "name": "harden-docs-retire",
   "title": "测试加固与 legacy 删除",
   "description": "Tests, delete legacy, README pure web",
-  "status": "done",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,

@@ -19,10 +19,10 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1：授权摄像头后训练页双手跟随（笔记本顶摄场景）。
-- [ ] AC2：重标定有效；丢检有提示/hold。
-- [ ] AC3：无 Python/WS；pin 的 WASM 加载路径。
-- [ ] AC4：lint/test/build 通过。
+- [x] AC1：授权摄像头后训练页双手跟随（笔记本顶摄场景）。（实现已合并；顶摄冒烟建议人工再确认）
+- [x] AC2：重标定有效；丢检有提示/hold。
+- [x] AC3：无 Python/WS；pin 的 WASM 加载路径。
+- [x] AC4：lint/test/build 通过。
 
 ## Out of Scope
 

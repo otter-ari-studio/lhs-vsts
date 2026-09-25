@@ -55,12 +55,17 @@ function emptySnapshot(): SessionSnapshot {
 }
 
 function useSessionSnapshot(): SessionSnapshot {
-  const revision = useSyncExternalStore(
+  // Include session identity — a fresh TrainingSession starts at revision 0,
+  // which must not look identical to "no session" or the rail stays empty.
+  const storeKey = useSyncExternalStore(
     subscribeSession,
-    () => getTrainingSession()?.getRevision() ?? 0,
-    () => 0,
+    () => {
+      const s = getTrainingSession();
+      return s ? `s:${s.getRevision()}` : 'none';
+    },
+    () => 'none',
   );
-  void revision;
+  void storeKey;
   return getTrainingSession()?.snapshot() ?? emptySnapshot();
 }
 

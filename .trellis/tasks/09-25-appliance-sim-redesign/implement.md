@@ -72,9 +72,9 @@ pnpm run lint && pnpm run test
 
 ### P5 — Harden & delete legacy
 
-- [ ] 纯函数单测：prereqs、合格判定、dwell
+- [x] 纯函数单测：prereqs、合格判定、dwell
 - [x] 删除 `legacy/`；根 README 仅纯 Web
-- [ ] 确认无 Python 运行说明残留于主路径
+- [x] 确认无 Python 运行说明残留于主路径
 
 ## 验证命令（总）
 

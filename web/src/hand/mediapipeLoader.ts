@@ -49,30 +49,36 @@ async function resolveVisionFileset(wasmBase: string) {
 
 /**
  * Create a VIDEO-mode HandLandmarker for up to 2 hands.
- * Tries local wasm, then pinned CDN.
+ * Tries local wasm then pinned CDN; GPU then CPU delegate.
  */
 export async function createHandLandmarker(): Promise<CreateHandLandmarkerResult> {
   const bases = [MEDIAPIPE_WASM_LOCAL, MEDIAPIPE_WASM_CDN];
+  const delegates: Array<'GPU' | 'CPU'> = ['GPU', 'CPU'];
   let lastError: unknown;
 
   for (const wasmBase of bases) {
-    try {
-      const vision = await resolveVisionFileset(wasmBase);
-      const landmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: HAND_LANDMARKER_MODEL,
-          delegate: 'GPU',
-        },
-        runningMode: 'VIDEO',
-        numHands: 2,
-        minHandDetectionConfidence: 0.5,
-        minHandPresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
-      return { landmarker, wasmBase };
-    } catch (err) {
-      lastError = err;
-      console.warn(`[mediapipe] failed to load from ${wasmBase}`, err);
+    for (const delegate of delegates) {
+      try {
+        const vision = await resolveVisionFileset(wasmBase);
+        const landmarker = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: HAND_LANDMARKER_MODEL,
+            delegate,
+          },
+          runningMode: 'VIDEO',
+          numHands: 2,
+          minHandDetectionConfidence: 0.5,
+          minHandPresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        });
+        return { landmarker, wasmBase };
+      } catch (err) {
+        lastError = err;
+        console.warn(
+          `[mediapipe] failed to load from ${wasmBase} (${delegate})`,
+          err,
+        );
+      }
     }
   }
 
