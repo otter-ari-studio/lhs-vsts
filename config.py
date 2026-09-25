@@ -24,8 +24,9 @@ FRAME_HEIGHT = 720
 MP_STATIC_IMAGE_MODE = False
 MP_MAX_NUM_HANDS = 2
 MP_MODEL_COMPLEXITY = 1  # 0=lite, 1=full
-MP_MIN_DETECTION_CONFIDENCE = 0.6
-MP_MIN_TRACKING_CONFIDENCE = 0.5
+# Slightly more forgiving to reduce intermittent dropouts.
+MP_MIN_DETECTION_CONFIDENCE = 0.5
+MP_MIN_TRACKING_CONFIDENCE = 0.4
 
 # Mirror preview horizontally (selfie-style). Handedness labels follow image space.
 FLIP_HORIZONTAL = True
@@ -55,10 +56,15 @@ POS_OFFSET = [0.0, 1.2, 0.5]
 # ---------------------------------------------------------------------------
 # One-pole low-pass filter: out = alpha * new + (1 - alpha) * prev
 # Larger alpha → less smoothing / more responsive.
+# Lower values = smoother follow (less jitter).
 # ---------------------------------------------------------------------------
-LPF_POS_ALPHA = 0.35
-LPF_ROT_ALPHA = 0.30
-LPF_LMS_ALPHA = 0.35  # 21 landmarks
+LPF_POS_ALPHA = 0.22
+LPF_ROT_ALPHA = 0.18
+LPF_LMS_ALPHA = 0.20  # 21 landmarks
+
+# When MediaPipe briefly loses a hand, keep broadcasting the last good frame
+# for this many seconds so the web skeleton does not flicker off.
+HAND_HOLD_SECONDS = 0.85
 
 # Include full 21 MediaPipe landmarks per hand in JSON as "lms".
 # Protocol: pos MUST equal lms[0] in the same coordinate space.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import time
 import warnings
 
@@ -20,9 +21,10 @@ except ImportError as exc:  # pragma: no cover
 WINDOW_NAME = "Hand Tracking → Web WS"
 
 
-def _log_hands(hands: list) -> None:
+def _log_hands(hands: list, *, held: bool = False) -> None:
+    tag = "hold" if held else "live"
     if not hands:
-        print("[hands] count=0 (no detection)")
+        print(f"[hands/{tag}] count=0 (no detection)")
         return
     parts = []
     for h in hands:
@@ -33,7 +35,7 @@ def _log_hands(hands: list) -> None:
             f"{side}(id={h['id']} pinch={h['pinch']} "
             f"pos=[{pos[0]:.3f},{pos[1]:.3f},{pos[2]:.3f}] lms={n_lms})"
         )
-    print(f"[hands] count={len(hands)} | " + " | ".join(parts))
+    print(f"[hands/{tag}] count={len(hands)} | " + " | ".join(parts))
 
 
 def main() -> None:
@@ -43,6 +45,9 @@ def main() -> None:
     paused = False
     min_dt = 1.0 / max(cfg.TARGET_FPS, 1)
     last_send = 0.0
+    last_good_hands: list = []
+    last_good_at = 0.0
+    hold_s = float(getattr(cfg, "HAND_HOLD_SECONDS", 0.85))
 
     if not processor.open_camera():
         warnings.warn(
@@ -52,7 +57,7 @@ def main() -> None:
 
     print(
         f"WS → ws://{cfg.WS_HOST}:{cfg.WS_PORT} @ ≤{cfg.TARGET_FPS} fps | "
-        "SPACE=pause  q=quit"
+        f"hold={hold_s}s | SPACE=pause  q=quit"
     )
 
     try:
@@ -76,9 +81,22 @@ def main() -> None:
                 continue
 
             hands, annotated = processor.process_frame(frame)
-            _log_hands(hands)
-
             now = time.time()
+            held = False
+            if hands:
+                last_good_hands = copy.deepcopy(hands)
+                last_good_at = now
+            elif last_good_hands and (now - last_good_at) <= hold_s:
+                # Brief dropout: keep streaming last pose with fresh timestamp
+                # so the web client does not flicker the skeleton off.
+                hands = copy.deepcopy(last_good_hands)
+                held = True
+            else:
+                hands = []
+                last_good_hands = []
+
+            _log_hands(hands, held=held)
+
             if now - last_send >= min_dt:
                 payload = {"t": now, "hands": hands}
                 sender.send_json(payload)

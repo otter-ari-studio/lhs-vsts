@@ -5,6 +5,7 @@ import { findNearestInteractable, type HandInteractable } from '../interaction/r
 import { handDataHub } from './HandDataHub';
 import {
   HAND_DEFAULTS,
+  LANDMARK_MAX_STEP,
   LANDMARK_SMOOTH_SPEED,
   LANDMARK_STALE_HIDE_DELAY,
   LEFT_HAND_COLOR,
@@ -28,13 +29,16 @@ const _relRot = new Quaternion();
 const _targetRot = new Quaternion();
 const _world = new Vector3();
 const _lm = new Vector3();
+const _delta = new Vector3();
 
 /**
- * Ports Unity VirtualHandDriver: relative wrist drive + landmark skeleton.
+ * Relative wrist drive + landmark skeleton with per-frame smoothing
+ * (targets update on WS samples; display lerps every render frame).
  */
 export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDriverProps) {
   const palmRef = useRef<Group>(null);
   const palmMatRef = useRef<MeshStandardMaterial>(null);
+  const palmMeshVisible = useRef(true);
   const rigRef = useRef<LandmarkRigHandle>(null);
 
   const calibrated = useRef(false);
@@ -44,9 +48,12 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
   const palmTargetRot = useRef(new Quaternion());
   const prevPalmTs = useRef(-1);
   const prevLmTs = useRef(-1);
-  const lastLmUpdate = useRef(0);
+  const lastSampleAt = useRef(0);
   const lmVisible = useRef(false);
   const hasSmoothLm = useRef(false);
+  const lmTarget = useRef<Vector3[]>(
+    Array.from({ length: JOINT_COUNT }, () => new Vector3()),
+  );
   const smoothLm = useRef<Vector3[]>(
     Array.from({ length: JOINT_COUNT }, () => new Vector3()),
   );
@@ -63,7 +70,11 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
   useEffect(() => {
     calibrated.current = false;
     prevPalmTs.current = -1;
+    prevLmTs.current = -1;
+    hasSmoothLm.current = false;
+    lmVisible.current = false;
     handDataHub.clear(handId);
+    rigRef.current?.hideSkeleton();
   }, [calibrateToken, handId]);
 
   useEffect(() => {
@@ -76,9 +87,21 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
   useFrame((state, delta) => {
     const palm = palmRef.current;
     if (!palm) return;
+    const dt = Math.min(Math.max(delta, 0.0001), 0.05);
 
     const sample = handDataHub.tryGetLatest(handId);
     if (!sample) {
+      // No sample ever / cleared: keep rest pose, hide skeleton after delay
+      if (
+        lmVisible.current &&
+        state.clock.elapsedTime - lastSampleAt.current > LANDMARK_STALE_HIDE_DELAY
+      ) {
+        rigRef.current?.hideSkeleton();
+        lmVisible.current = false;
+        palmMeshVisible.current = true;
+        const mesh = palm.children[0];
+        if (mesh) mesh.visible = true;
+      }
       return;
     }
 
@@ -113,13 +136,14 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       palmTargetPos.current.copy(_targetPos);
       palmTargetRot.current.copy(_targetRot);
       prevPalmTs.current = sample.timestamp;
+      lastSampleAt.current = state.clock.elapsedTime;
     }
 
     if (justCalibrated || PALM_SMOOTH_SPEED <= 0) {
       palm.position.copy(palmTargetPos.current);
       palm.quaternion.copy(palmTargetRot.current);
     } else {
-      const t = 1 - Math.exp(-PALM_SMOOTH_SPEED * delta);
+      const t = 1 - Math.exp(-PALM_SMOOTH_SPEED * dt);
       palm.position.lerp(palmTargetPos.current, t);
       palm.quaternion.slerp(palmTargetRot.current, t);
     }
@@ -132,7 +156,6 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       mat.emissiveIntensity = pinch ? 0.45 : 0;
     }
 
-    // Pinch → nearest interactable (Unity VirtualHandDriver dispatch)
     const pinch = sample.pinching;
     const handPos = palm.position;
     const handRot = {
@@ -153,59 +176,66 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     lastPinch.current = pinch;
 
     const rig = rigRef.current;
-    if (!rig) {
-      prevLmTs.current = sample.timestamp;
-      return;
-    }
+    if (!rig) return;
 
-    if (hasLm) {
-      if (sample.timestamp !== prevLmTs.current) {
-        const now = state.clock.elapsedTime;
-        const dt = lmVisible.current
-          ? Math.max(now - lastLmUpdate.current, 0.0001)
-          : Number.POSITIVE_INFINITY;
-        const t =
-          LANDMARK_SMOOTH_SPEED <= 0 || dt > 10
-            ? 1
-            : 1 - Math.exp(-LANDMARK_SMOOTH_SPEED * dt);
-        for (let i = 0; i < JOINT_COUNT; i++) {
-          const lm = sample.landmarks![i];
-          _lm.set(lm[0], lm[1], lm[2]);
-          _world.copy(defaultPos.current).add(_lm).sub(originPos.current);
-          if (hasSmoothLm.current) {
-            smoothLm.current[i].lerp(_world, t);
+    // Update landmark *targets* only on new samples; display lerps every frame.
+    if (hasLm && sample.timestamp !== prevLmTs.current) {
+      for (let i = 0; i < JOINT_COUNT; i++) {
+        const lm = sample.landmarks![i];
+        _lm.set(lm[0], lm[1], lm[2]);
+        _world.copy(defaultPos.current).add(_lm).sub(originPos.current);
+        if (hasSmoothLm.current) {
+          _delta.copy(_world).sub(lmTarget.current[i]);
+          const len = _delta.length();
+          if (len > LANDMARK_MAX_STEP) {
+            _delta.multiplyScalar(LANDMARK_MAX_STEP / len);
+            lmTarget.current[i].add(_delta);
           } else {
-            smoothLm.current[i].copy(_world);
+            lmTarget.current[i].copy(_world);
           }
+        } else {
+          lmTarget.current[i].copy(_world);
+          smoothLm.current[i].copy(_world);
         }
-        hasSmoothLm.current = true;
-        rig.updateSkeleton(smoothLm.current);
-        lastLmUpdate.current = now;
-        lmVisible.current = true;
-      } else if (
-        lmVisible.current &&
-        state.clock.elapsedTime - lastLmUpdate.current > LANDMARK_STALE_HIDE_DELAY
-      ) {
-        rig.hideSkeleton();
-        lmVisible.current = false;
       }
-    } else if (lmVisible.current) {
-      hasSmoothLm.current = false;
-      rig.hideSkeleton();
-      lmVisible.current = false;
+      hasSmoothLm.current = true;
+      lmVisible.current = true;
+      lastSampleAt.current = state.clock.elapsedTime;
     }
     prevLmTs.current = sample.timestamp;
+
+    if (hasSmoothLm.current && lmVisible.current) {
+      const t = 1 - Math.exp(-LANDMARK_SMOOTH_SPEED * dt);
+      for (let i = 0; i < JOINT_COUNT; i++) {
+        smoothLm.current[i].lerp(lmTarget.current[i], t);
+      }
+      rig.updateSkeleton(smoothLm.current);
+      // Hide redundant wrist ball while skeleton is up
+      const mesh = palm.children[0];
+      if (mesh) mesh.visible = false;
+      palmMeshVisible.current = false;
+    }
+
+    const stale =
+      state.clock.elapsedTime - lastSampleAt.current > LANDMARK_STALE_HIDE_DELAY;
+    if (stale && lmVisible.current) {
+      rig.hideSkeleton();
+      lmVisible.current = false;
+      const mesh = palm.children[0];
+      if (mesh) mesh.visible = true;
+      palmMeshVisible.current = true;
+    }
   });
 
   return (
     <>
       <group ref={palmRef}>
         <mesh>
-          <sphereGeometry args={[0.028, 16, 16]} />
+          <sphereGeometry args={[0.02, 16, 16]} />
           <meshStandardMaterial ref={palmMatRef} color={baseColor} />
         </mesh>
       </group>
-      <LandmarkRig ref={rigRef} color={baseColor} />
+      <LandmarkRig ref={rigRef} color={baseColor} jointSize={0.014} />
     </>
   );
 }
