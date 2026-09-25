@@ -286,6 +286,7 @@ body,
   background: #0c121a;
   border-right: 1px solid #2a3542;
   font-size: 0.78rem;
+  color: #e8eef5;
 }
 
 .step-rail-title {
@@ -330,6 +331,7 @@ body,
 .step-label {
   display: block;
   line-height: 1.35;
+  color: #e8eef5;
 }
 
 .step-lock {

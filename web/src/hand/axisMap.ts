@@ -12,11 +12,13 @@ export interface AxisMapConfig {
 }
 
 /**
- * MediaPipe world landmarks → Three.js Y-up, mirrored to match selfie preview.
+ * MediaPipe capture-space points → Three.js Y-up, mirrored to match selfie preview.
  *
- * Capture space: X right, Y down, Z toward camera.
+ * Capture space (image landmarks scaled to meters, or world bone offsets):
+ *   X right, Y down, Z toward camera.
  * Scene: X right (mirrored), Y up, Z toward camera.
  *
+ * Palm translation must come from image landmarks (see HandTracker).
  * Single source of truth — do not flip axes elsewhere.
  */
 export const DEFAULT_AXIS_MAP: AxisMapConfig = {

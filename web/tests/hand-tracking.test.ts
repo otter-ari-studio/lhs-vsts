@@ -82,3 +82,14 @@ test('MediaPipe WASM URLs are pinned (not @latest)', () => {
   expect(MEDIAPIPE_WASM_CDN).toContain(`@${MEDIAPIPE_VERSION}`);
   expect(MEDIAPIPE_WASM_CDN).not.toContain('@latest');
 });
+
+test('imageLandmarksToCaptureMeters maps frame center to origin and scales edges', async () => {
+  const { imageLandmarksToCaptureMeters } = await import('../src/hand/HandTracker');
+  const pts = Array.from({ length: 21 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
+  pts[1] = { x: 1, y: 0, z: -0.1 };
+  const out = imageLandmarksToCaptureMeters(pts, 0.8, 0.8);
+  expect(out[0]).toEqual([0, 0, 0]);
+  expect(out[1][0]).toBeCloseTo(0.4);
+  expect(out[1][1]).toBeCloseTo(-0.4);
+  expect(out[1][2]).toBeCloseTo(-0.08);
+});

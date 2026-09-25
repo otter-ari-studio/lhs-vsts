@@ -6,10 +6,13 @@ export interface HandRestPose {
   eulerY: number;
 }
 
-/** Default rest poses in front of the range-hood placeholder (Y-up scene). */
+/**
+ * Rest poses near the kitbash hood (oil_box / filters around z≈0.2).
+ * Farther Z made world-landmark drive look “stuck” below the machine.
+ */
 export const HAND_DEFAULTS: Record<HandId, HandRestPose> = {
-  0: { position: [-0.18, -0.05, 0.8], eulerY: 180 },
-  1: { position: [0.18, -0.05, 0.8], eulerY: 180 },
+  0: { position: [-0.16, 0.06, 0.4], eulerY: 180 },
+  1: { position: [0.16, 0.06, 0.4], eulerY: 180 },
 };
 
 export const LEFT_HAND_COLOR = '#00ffff';
@@ -27,7 +30,7 @@ export const HAND_HOLD_MS = 400;
 export const LANDMARK_STALE_HIDE_DELAY = 1.4;
 
 /** Clamp landmark jump per new sample (meters). */
-export const LANDMARK_MAX_STEP = 0.045;
+export const LANDMARK_MAX_STEP = 0.12;
 
 /**
  * Pinch distance thresholds (meters, world-landmark space after scale).
@@ -36,5 +39,15 @@ export const LANDMARK_MAX_STEP = 0.045;
 export const PINCH_ON_METERS = 0.035;
 export const PINCH_OFF_METERS = 0.055;
 
-/** Scale MediaPipe world landmarks into scene meters (usually ~1). */
+/**
+ * Image landmarks (x,y ∈ [0,1], z ≈ x-scale) → capture meters before AxisMap.
+ * Full frame width ≈ this many meters of desk reach for relative drive.
+ *
+ * Do NOT drive palm XY from worldLandmarks: those are hand-centered (almost no
+ * translation when the user moves their arms).
+ */
+export const IMAGE_LANDMARK_XY_SPAN_METERS = 0.75;
+export const IMAGE_LANDMARK_Z_SPAN_METERS = 0.75;
+
+/** Scale MediaPipe world landmarks (pinch / bone lengths only). */
 export const WORLD_LANDMARK_SCALE = 1;

@@ -3,6 +3,8 @@ import { Matrix4 } from 'three';
 import { buildMapMatrix, mapPointTuple, type AxisMapConfig } from './axisMap';
 import {
   HAND_HOLD_MS,
+  IMAGE_LANDMARK_XY_SPAN_METERS,
+  IMAGE_LANDMARK_Z_SPAN_METERS,
   PINCH_OFF_METERS,
   PINCH_ON_METERS,
   WORLD_LANDMARK_SCALE,
@@ -31,7 +33,10 @@ export interface HandTrackerOptions {
 
 /**
  * VIDEO-mode detect loop → HandHub.
- * Applies axis map once, pinch hysteresis, and short hold on loss.
+ *
+ * Position / skeleton: image landmarks (carry arm translation).
+ * Pinch: world landmarks when available (metric finger spacing).
+ * Axis map once; pinch hysteresis; short hold on loss.
  */
 export class HandTracker {
   private readonly landmarker: HandLandmarker;
@@ -107,22 +112,22 @@ export class HandTracker {
     }
 
     const seen: [boolean, boolean] = [false, false];
-    const count = result.worldLandmarks?.length ?? 0;
+    const count = result.landmarks?.length ?? 0;
 
     for (let i = 0; i < count; i++) {
-      const world = result.worldLandmarks[i];
-      if (!world || world.length < JOINT_COUNT) continue;
+      const image = result.landmarks[i];
+      if (!image || image.length < JOINT_COUNT) continue;
 
       const handId = handednessToId(result.handedness?.[i]?.[0]?.categoryName);
       if (handId === null) continue;
 
-      const landmarks = worldLandmarksToVec3(world, WORLD_LANDMARK_SCALE);
-      // Axis map once here — consumers must not flip axes again.
-      const mapped: Vec3[] = landmarks.map((p) => mapPointTuple(p, this.map));
+      // Image landmarks carry translation; world landmarks do not.
+      const capture = imageLandmarksToCaptureMeters(image);
+      const mapped: Vec3[] = capture.map((p) => mapPointTuple(p, this.map));
       const wrist = mapped[0];
       const rotation = estimatePalmRotation(mapped);
 
-      const pinchDist = distance3(mapped[THUMB_TIP], mapped[INDEX_TIP]);
+      const pinchDist = pinchDistanceMeters(result.worldLandmarks?.[i], mapped);
       const pinching = updatePinchState(
         this.pinchState[handId],
         pinchDist,
@@ -193,6 +198,23 @@ function handednessToId(label: string | undefined): HandId | null {
   return null;
 }
 
+/**
+ * Normalized image landmarks → capture meters (origin ≈ frame center).
+ * x,y ∈ [0,1]; z ≈ x-scale with wrist origin (MediaPipe image landmark semantics).
+ */
+export function imageLandmarksToCaptureMeters(
+  image: { x: number; y: number; z: number }[],
+  xySpan = IMAGE_LANDMARK_XY_SPAN_METERS,
+  zSpan = IMAGE_LANDMARK_Z_SPAN_METERS,
+): Vec3[] {
+  const out: Vec3[] = [];
+  for (let i = 0; i < JOINT_COUNT; i++) {
+    const p = image[i];
+    out.push([(p.x - 0.5) * xySpan, (p.y - 0.5) * xySpan, p.z * zSpan]);
+  }
+  return out;
+}
+
 function worldLandmarksToVec3(
   world: { x: number; y: number; z: number }[],
   scale: number,
@@ -203,4 +225,16 @@ function worldLandmarksToVec3(
     out.push([p.x * scale, p.y * scale, p.z * scale]);
   }
   return out;
+}
+
+/** Prefer metric world tips; fall back to mapped image tips. */
+function pinchDistanceMeters(
+  world: { x: number; y: number; z: number }[] | undefined,
+  mappedImage: readonly Vec3[],
+): number {
+  if (world && world.length >= JOINT_COUNT) {
+    const tips = worldLandmarksToVec3(world, WORLD_LANDMARK_SCALE);
+    return distance3(tips[THUMB_TIP], tips[INDEX_TIP]);
+  }
+  return distance3(mappedImage[THUMB_TIP], mappedImage[INDEX_TIP]);
 }

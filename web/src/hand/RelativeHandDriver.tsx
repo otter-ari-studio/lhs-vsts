@@ -34,7 +34,7 @@ const _pinchMid = new Vector3();
 
 /**
  * Relative wrist drive + 21-point landmark skeleton.
- * Input: HandHub (browser MediaPipe). No grab/interaction — later task.
+ * Input: HandHub (image-landmark translation + pinch). Grab via InteractionRouter.
  */
 export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDriverProps) {
   const palmRef = useRef<Group>(null);

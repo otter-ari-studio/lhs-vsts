@@ -54,7 +54,7 @@ function emptySnapshot(): SessionSnapshot {
   };
 }
 
-function useSessionSnapshot(): SessionSnapshot {
+function useSessionSnapshot(sessionTick: number): SessionSnapshot {
   // Include session identity — a fresh TrainingSession starts at revision 0,
   // which must not look identical to "no session" or the rail stays empty.
   const storeKey = useSyncExternalStore(
@@ -66,17 +66,19 @@ function useSessionSnapshot(): SessionSnapshot {
     () => 'none',
   );
   void storeKey;
+  void sessionTick;
   return getTrainingSession()?.snapshot() ?? emptySnapshot();
 }
 
 export function TrainPage({ onBack }: TrainPageProps) {
   const [calibrateToken, setCalibrateToken] = useState(0);
   const [restartToken, setRestartToken] = useState(0);
+  const [sessionTick, setSessionTick] = useState(0);
   const [tip, setTip] = useState<string | null>(null);
   const { phase, error, presence, videoRef, retry } = useHandCamera(true);
   const status = statusLabel(phase, presence);
   const showOverlay = phase === 'denied' || phase === 'error';
-  const snap = useSessionSnapshot();
+  const snap = useSessionSnapshot(sessionTick);
 
   useEffect(() => {
     return subscribeTips((msg) => {
@@ -91,8 +93,9 @@ export function TrainPage({ onBack }: TrainPageProps) {
   }, [tip, setTip]);
 
   const onSessionReady = useCallback(() => {
-    // Snapshot subscription picks up setTrainingSession.
-  }, []);
+    // Ensure rail re-reads snapshot even if revision stays 0 after replace.
+    setSessionTick((n) => n + 1);
+  }, [setSessionTick]);
 
   const restart = () => {
     setRestartToken((n) => n + 1);

@@ -67,7 +67,7 @@ export function TrainingScene({
       {!def && !error ? <div className="scene-banner">加载机型…</div> : null}
       <Canvas
         shadows
-        camera={{ position: [0.75, 0.55, 1.35], fov: 45, near: 0.05, far: 50 }}
+        camera={{ position: [0, 0.28, 1.45], fov: 42, near: 0.05, far: 50 }}
         gl={{ antialias: true }}
       >
         <color attach="background" args={['#101725']} />
@@ -96,11 +96,14 @@ export function TrainingScene({
         <RelativeHandDriver handId={1} calibrateToken={calibrateToken} />
 
         <OrbitControls
-          target={[0, 0.2, 0.15]}
+          target={[0, 0.15, 0.1]}
           enablePan={false}
-          minDistance={0.7}
-          maxDistance={3.2}
+          minDistance={0.85}
+          maxDistance={2.8}
+          minPolarAngle={Math.PI * 0.28}
           maxPolarAngle={Math.PI * 0.48}
+          minAzimuthAngle={-Math.PI * 0.18}
+          maxAzimuthAngle={Math.PI * 0.18}
         />
       </Canvas>
     </div>
