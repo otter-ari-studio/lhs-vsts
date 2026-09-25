@@ -19,6 +19,34 @@ export function updatePinchState(
   return distanceMeters <= onThreshold;
 }
 
+/**
+ * Require `confirmFrames` consecutive disagreeing samples before flipping.
+ * Stops same-pose chatter when distance sits near the ON/OFF band.
+ */
+export function updatePinchStateConfirmed(
+  wasPinching: boolean,
+  distanceMeters: number,
+  onThreshold: number,
+  offThreshold: number,
+  pendingCount: number,
+  confirmFrames: number,
+): { pinching: boolean; pendingCount: number } {
+  const raw = updatePinchState(
+    wasPinching,
+    distanceMeters,
+    onThreshold,
+    offThreshold,
+  );
+  if (raw === wasPinching) {
+    return { pinching: wasPinching, pendingCount: 0 };
+  }
+  const next = pendingCount + 1;
+  if (next >= confirmFrames) {
+    return { pinching: raw, pendingCount: 0 };
+  }
+  return { pinching: wasPinching, pendingCount: next };
+}
+
 /** Euclidean distance between two 3D points. */
 export function distance3(
   a: readonly [number, number, number],

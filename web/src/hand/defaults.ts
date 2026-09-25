@@ -39,11 +39,16 @@ export const LANDMARK_MAX_STEP = 0.035;
 /**
  * Pinch distance thresholds (meters, world-landmark space after scale).
  * Enter pinch below ON; exit when distance ≥ OFF (hysteresis).
- * Tuned from capture 12-59-58: light contact ~0.05–0.06 was sticking for 10s+.
- * Require a clear close to grab; release once fingers open past ~rest gap.
+ * Capture 14-30-19 sat ~0.05–0.06 with the same finger gap — too-tight ON
+ * made highlight depend on whether you briefly closed first. Slightly wider
+ * band + EMA/confirm in HandTracker keeps the same pose stable.
  */
-export const PINCH_ON_METERS = 0.038;
-export const PINCH_OFF_METERS = 0.062;
+export const PINCH_ON_METERS = 0.045;
+export const PINCH_OFF_METERS = 0.07;
+/** EMA blend for raw pinch distance (higher = snappier). */
+export const PINCH_DIST_EMA = 0.4;
+/** Frames that must agree before pinch state flips. */
+export const PINCH_CONFIRM_FRAMES = 2;
 
 /**
  * Image XY: full frame ≈ desk FOV width at DESK_TO_SCREEN_METERS.

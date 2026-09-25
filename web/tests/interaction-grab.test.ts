@@ -2,6 +2,7 @@ import { expect, test } from '@rstest/core';
 import { Vector3 } from 'three';
 import {
   clearInteractables,
+  findHoverTargetSticky,
   findNearestInteractable,
   registerInteractable,
   type HandInteractable,
@@ -13,6 +14,7 @@ import {
   SOP_PICK_PRIORITY,
 } from '../src/interaction/defaults';
 import { partInventory } from '../src/interaction/partInventory';
+import { PROP_OFFER_POS } from '../src/interaction/partOffer';
 import {
   detectLateralThrow,
   pushThrowSample,
@@ -123,8 +125,25 @@ test('findNearest ignores out-of-radius even with high priority', () => {
   clearInteractables();
 });
 
-test('PROP_OFFER_POS sits in reachable front workspace', async () => {
-  const { PROP_OFFER_POS } = await import('../src/interaction/partOffer');
+test('hover sticky keeps target past enter radius until exit scale', () => {
+  clearInteractables();
+  const target = stub('part', [0, 0, 0], {
+    priority: INSTALLED_PICK_PRIORITY,
+    radius: 0.1,
+  });
+  registerInteractable(target);
+  const inside = findHoverTargetSticky(new Vector3(0.05, 0, 0), null);
+  expect(inside?.id).toBe('part');
+  // 0.12 > 0.1 enter but < 0.1*1.45 exit — stay
+  const edge = findHoverTargetSticky(new Vector3(0.12, 0, 0), inside);
+  expect(edge?.id).toBe('part');
+  // beyond exit
+  const out = findHoverTargetSticky(new Vector3(0.2, 0, 0), edge);
+  expect(out).toBeNull();
+  clearInteractables();
+});
+
+test('PROP_OFFER_POS sits in reachable front workspace', () => {
   expect(PROP_OFFER_POS[2]).toBeGreaterThan(0.3);
   expect(PROP_OFFER_POS[0]).toBeGreaterThan(0.2);
 });

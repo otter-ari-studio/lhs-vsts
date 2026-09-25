@@ -11,7 +11,7 @@ import {
   MEDIAPIPE_WASM_BASE,
   MEDIAPIPE_WASM_CDN,
 } from '../src/hand/mediapipeLoader';
-import { distance3, updatePinchState } from '../src/hand/pinch';
+import { distance3, updatePinchState, updatePinchStateConfirmed } from '../src/hand/pinch';
 import type { HandSample } from '../src/hand/types';
 
 test('DEFAULT_AXIS_MAP mirrors X and flips Y for selfie → Three', () => {
@@ -49,6 +49,45 @@ test('pinch hysteresis: enter below ON, stay until OFF', () => {
   expect(updatePinchState(true, 0.05, on, off)).toBe(true);
   expect(updatePinchState(true, 0.055, on, off)).toBe(false);
   expect(updatePinchState(true, 0.06, on, off)).toBe(false);
+});
+
+test('pinch confirm ignores single-frame flips near the band', () => {
+  const on = 0.045;
+  const off = 0.07;
+  let pending = 0;
+  let pinching = false;
+  // One frame below ON — not enough
+  ({ pinching, pendingCount: pending } = updatePinchStateConfirmed(
+    pinching,
+    0.04,
+    on,
+    off,
+    pending,
+    2,
+  ));
+  expect(pinching).toBe(false);
+  expect(pending).toBe(1);
+  // Second agreeing frame — enter
+  ({ pinching, pendingCount: pending } = updatePinchStateConfirmed(
+    pinching,
+    0.04,
+    on,
+    off,
+    pending,
+    2,
+  ));
+  expect(pinching).toBe(true);
+  expect(pending).toBe(0);
+  // Same mid-band pose while pinching — stays on (hysteresis)
+  ({ pinching, pendingCount: pending } = updatePinchStateConfirmed(
+    pinching,
+    0.055,
+    on,
+    off,
+    pending,
+    2,
+  ));
+  expect(pinching).toBe(true);
 });
 
 test('distance3 is Euclidean', () => {

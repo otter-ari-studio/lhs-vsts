@@ -15,6 +15,7 @@ export { detectLateralThrow, pushThrowSample } from './throwDetect';
 export {
   clearInteractables,
   findHoverTarget,
+  findHoverTargetSticky,
   findNearestInteractable,
   listInteractables,
   registerInteractable,

@@ -58,6 +58,30 @@ export function findNearestInteractable(handPos: Vector3): HandInteractable | nu
   return best;
 }
 
+/**
+ * Hover with exit hysteresis so the same pose at the radius edge doesn't flicker.
+ * Keeps `prev` until outside `interactionRadius * exitScale`, unless a higher-priority
+ * target enters its own radius.
+ */
+export function findHoverTargetSticky(
+  handPos: Vector3,
+  prev: HandInteractable | null,
+  exitScale = 1.45,
+): HandInteractable | null {
+  if (prev?.isInteractableNow()) {
+    const d = prev.distanceTo(handPos);
+    if (d <= prev.interactionRadius * exitScale) {
+      const challenger = findNearestInteractable(handPos);
+      if (!challenger || challenger.id === prev.id) return prev;
+      const cPri = challenger.pickPriority?.() ?? 0;
+      const pPri = prev.pickPriority?.() ?? 0;
+      if (cPri > pPri) return challenger;
+      return prev;
+    }
+  }
+  return findNearestInteractable(handPos);
+}
+
 /** Nearest among interactables within radius (for hover without pinch). */
 export function findHoverTarget(handPos: Vector3): HandInteractable | null {
   return findNearestInteractable(handPos);

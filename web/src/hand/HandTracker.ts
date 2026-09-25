@@ -17,13 +17,15 @@ import {
   HAND_Z_FAR,
   HAND_Z_NEAR,
   IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,
+  PINCH_CONFIRM_FRAMES,
+  PINCH_DIST_EMA,
   PINCH_OFF_METERS,
   PINCH_ON_METERS,
   WORLD_LANDMARK_SCALE,
 } from './defaults';
 import { handHub } from './HandHub';
 import { estimatePalmRotation } from './palmRotation';
-import { distance3, updatePinchState } from './pinch';
+import { distance3, updatePinchStateConfirmed } from './pinch';
 import {
   clampHandZ,
   imageLandmarksToSceneMeters,
@@ -68,6 +70,8 @@ export class HandTracker {
   private publishEnabled = true;
 
   private readonly pinchState: [boolean, boolean] = [false, false];
+  private readonly pinchDistEma: [number | null, number | null] = [null, null];
+  private readonly pinchFlipPending: [number, number] = [0, 0];
   private readonly held: (HandSample | null)[] = [null, null];
   private readonly lastSeenAt: [number, number] = [0, 0];
   private readonly palmNormEma: [number | null, number | null] = [null, null];
@@ -116,6 +120,10 @@ export class HandTracker {
     this.held[1] = null;
     this.pinchState[0] = false;
     this.pinchState[1] = false;
+    this.pinchDistEma[0] = null;
+    this.pinchDistEma[1] = null;
+    this.pinchFlipPending[0] = 0;
+    this.pinchFlipPending[1] = 0;
     this.palmNormEma[0] = null;
     this.palmNormEma[1] = null;
     this.clearOriginCalibration(0);
@@ -219,14 +227,24 @@ export class HandTracker {
       const wrist = mapped[0];
       const rotation = estimatePalmRotation(mapped);
 
-      const pinchDist = pinchDistanceMeters(result.worldLandmarks?.[i], mapped);
-      const pinching = updatePinchState(
+      const pinchDistRaw = pinchDistanceMeters(result.worldLandmarks?.[i], mapped);
+      this.pinchDistEma[handId] = ema(
+        this.pinchDistEma[handId],
+        pinchDistRaw,
+        PINCH_DIST_EMA,
+      );
+      const pinchDist = this.pinchDistEma[handId] ?? pinchDistRaw;
+      const pinchUpdate = updatePinchStateConfirmed(
         this.pinchState[handId],
         pinchDist,
         PINCH_ON_METERS,
         PINCH_OFF_METERS,
+        this.pinchFlipPending[handId],
+        PINCH_CONFIRM_FRAMES,
       );
-      this.pinchState[handId] = pinching;
+      this.pinchState[handId] = pinchUpdate.pinching;
+      this.pinchFlipPending[handId] = pinchUpdate.pendingCount;
+      const pinching = pinchUpdate.pinching;
 
       const imageVec = landmarkListToVec3(image);
       if (imageVec) {
@@ -296,6 +314,8 @@ export class HandTracker {
     }
     this.held[handId] = null;
     this.pinchState[handId] = false;
+    this.pinchDistEma[handId] = null;
+    this.pinchFlipPending[handId] = 0;
     if (this.publishEnabled) {
       handHub.clear(handId);
     }
