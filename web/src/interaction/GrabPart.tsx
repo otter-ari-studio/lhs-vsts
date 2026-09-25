@@ -2,8 +2,8 @@ import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { Group, Vector3 } from 'three';
 import { getLockManager } from '../machine/LockManager';
-import type { PartConfig } from '../machine/types';
 import type { PartLayout } from '../machine/partLayout';
+import type { PartConfig } from '../machine/types';
 import {
   registerInteractable,
   unregisterInteractable,
@@ -14,8 +14,6 @@ interface GrabPartProps {
   config: PartConfig;
   layout: PartLayout;
 }
-
-const _tmp = new Vector3();
 
 export function GrabPart({ config, layout }: GrabPartProps) {
   const groupRef = useRef<Group>(null);
@@ -36,7 +34,6 @@ export function GrabPart({ config, layout }: GrabPartProps) {
         const mgr = getLockManager();
         if (!mgr) return true;
         const st = mgr.getState(config.partId);
-        // removed parts can always be grabbed; installed need unlock path via TryBeginRemove
         return st === 'installed' || st === 'removed';
       },
       distanceTo(handPos: Vector3) {
@@ -66,16 +63,15 @@ export function GrabPart({ config, layout }: GrabPartProps) {
         const mgr = getLockManager();
         const g = groupRef.current;
         if (!mgr || !g) return;
-        const snap = config.snapRangeMeters || mgr.config.assemblyDefaults.snapRangeMeters;
+        const snap =
+          config.snapRangeMeters || mgr.config.assemblyDefaults.snapRangeMeters;
         const dist = g.position.distanceTo(installedPos);
         if (dist <= snap) {
           if (mgr.tryInstall(config.partId)) {
             g.position.copy(installedPos);
             followPos.current.copy(installedPos);
           }
-          // else stay where released (order lock tip already shown)
         }
-        // far from anchor: leave as removed on table
       },
     };
     return self;
@@ -95,8 +91,7 @@ export function GrabPart({ config, layout }: GrabPartProps) {
     }
   });
 
-  const opacity =
-    layout.color === '#88b8e0' ? 0.55 : 1;
+  const opacity = layout.color === '#88b8e0' ? 0.55 : 1;
 
   return (
     <group ref={groupRef} position={layout.position}>
@@ -113,6 +108,3 @@ export function GrabPart({ config, layout }: GrabPartProps) {
     </group>
   );
 }
-
-// silence unused
-void _tmp;

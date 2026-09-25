@@ -39,6 +39,16 @@ body,
   flex: 1;
   font-size: 0.85rem;
   opacity: 0.9;
+  min-width: 0;
+}
+
+.tip {
+  margin-left: 0.75rem;
+  color: #ffe082;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 42vw;
 }
 
 .dot {

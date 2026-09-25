@@ -79,9 +79,9 @@ export class LockManager {
 
   private penalize(key: string, amount: number, tip: string): void {
     const now = performance.now();
-    const last = this.lastPenaltyAt.get(key) ?? 0;
+    const last = this.lastPenaltyAt.get(key);
     emitTip(tip);
-    if (now - last < this.penaltyCooldownMs) return;
+    if (last !== undefined && now - last < this.penaltyCooldownMs) return;
     this.lastPenaltyAt.set(key, now);
     this.score = Math.max(0, this.score - amount);
     emitScore(this.score);

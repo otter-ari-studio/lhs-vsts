@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { Euler, Group, MeshStandardMaterial, Quaternion, Vector3 } from 'three';
+import { findNearestInteractable, type HandInteractable } from '../interaction/registry';
 import { handDataHub } from './HandDataHub';
 import {
   HAND_DEFAULTS,
@@ -49,6 +50,8 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
   const smoothLm = useRef<Vector3[]>(
     Array.from({ length: JOINT_COUNT }, () => new Vector3()),
   );
+  const lastPinch = useRef(false);
+  const engaged = useRef<HandInteractable | null>(null);
 
   const rest = HAND_DEFAULTS[handId];
   const defaultPos = useRef(new Vector3(...rest.position));
@@ -129,8 +132,31 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       mat.emissiveIntensity = pinch ? 0.45 : 0;
     }
 
+    // Pinch → nearest interactable (Unity VirtualHandDriver dispatch)
+    const pinch = sample.pinching;
+    const handPos = palm.position;
+    const handRot = {
+      x: palm.quaternion.x,
+      y: palm.quaternion.y,
+      z: palm.quaternion.z,
+      w: palm.quaternion.w,
+    };
+    if (pinch && !lastPinch.current) {
+      engaged.current = findNearestInteractable(handPos);
+      engaged.current?.onPinchStart(handPos, handRot);
+    } else if (pinch && lastPinch.current && engaged.current) {
+      engaged.current.onPinchHold(handPos, handRot);
+    } else if (!pinch && lastPinch.current) {
+      engaged.current?.onPinchEnd(handPos);
+      engaged.current = null;
+    }
+    lastPinch.current = pinch;
+
     const rig = rigRef.current;
-    if (!rig) return;
+    if (!rig) {
+      prevLmTs.current = sample.timestamp;
+      return;
+    }
 
     if (hasLm) {
       if (sample.timestamp !== prevLmTs.current) {

@@ -27,3 +27,10 @@ pnpm run dev
 - `pnpm run lint` / `pnpm run test` — lint & tests
 
 可选：改 `src/hand/defaults.ts` 中的 `WS_URL` 覆盖默认 WebSocket 地址。
+
+## 拆装交互（MVP B）
+
+- 机型配置：`public/machines/range_hood_generic.json`
+- 捏合靠近零件可抓取（集油盒等）；顺序错误会提示并扣分
+- 卡扣捏合开合；螺母暂仅提示（旋转手势后置）
+- 顶栏显示分数与 tip

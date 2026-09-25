@@ -1,6 +1,7 @@
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { RelativeHandDriver } from '../hand/RelativeHandDriver';
+import { MachineParts } from '../interaction/MachineParts';
 import { RangeHoodShell } from './RangeHoodShell';
 
 interface TrainingSceneProps {
@@ -36,6 +37,7 @@ export function TrainingScene({ calibrateToken }: TrainingSceneProps) {
       </mesh>
 
       <RangeHoodShell />
+      <MachineParts />
       <RelativeHandDriver handId={0} calibrateToken={calibrateToken} />
       <RelativeHandDriver handId={1} calibrateToken={calibrateToken} />
 

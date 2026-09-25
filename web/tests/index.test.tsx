@@ -8,6 +8,8 @@ test('renders training chrome', () => {
       statusLabel="连接中…"
       statusKind="wait"
       handCount={0}
+      score={100}
+      tip=""
       onRecalibrate={() => undefined}
     />,
   );
