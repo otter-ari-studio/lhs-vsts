@@ -32,9 +32,9 @@
       "anchor": { "position": [0, -0.02, 0.22] },
       "visual": { "adapter": "kitbash", "kitbashKey": "oil_box" },
       "removePrereqs": [],
-      "installPrereqs": ["install_filter_top"],
+      "installPrereqs": ["install_filter_top", "clean_oil_box"],
       "tips": {
-        "installLocked": "⚠️ 必须先回装上层滤网，才能回装集油盒"
+        "installLocked": "⚠️ 必须先回装上层滤网并完成集油盒清洁，才能回装集油盒"
       },
       "snapRangeMeters": 0.08
     },
@@ -45,10 +45,10 @@
       "anchor": { "position": [0, 0.08, 0.18] },
       "visual": { "adapter": "kitbash", "kitbashKey": "filter_top" },
       "removePrereqs": ["remove_oil_box"],
-      "installPrereqs": ["install_filter_bottom"],
+      "installPrereqs": ["install_filter_bottom", "clean_filter_top"],
       "tips": {
         "removeLocked": "⚠️ 必须先拆下集油盒，才能拆卸上层滤网",
-        "installLocked": "⚠️ 必须先回装下层滤网，才能回装上层滤网"
+        "installLocked": "⚠️ 必须先回装下层滤网并完成上层滤网清洁，才能回装上层滤网"
       },
       "snapRangeMeters": 0.08
     },
@@ -59,10 +59,10 @@
       "anchor": { "position": [0, 0.04, 0.18] },
       "visual": { "adapter": "kitbash", "kitbashKey": "filter_bottom" },
       "removePrereqs": ["remove_filter_top"],
-      "installPrereqs": ["close_clip_left", "close_clip_right"],
+      "installPrereqs": ["close_clip_left", "close_clip_right", "clean_filter_bottom"],
       "tips": {
         "removeLocked": "⚠️ 必须先拆下上层滤网，才能拆卸下层滤网",
-        "installLocked": "⚠️ 必须先回装玻璃面板并锁止左右卡扣，才能回装下层滤网"
+        "installLocked": "⚠️ 必须先回装玻璃面板、锁止左右卡扣并完成下层滤网清洁，才能回装下层滤网"
       },
       "snapRangeMeters": 0.08
     },
@@ -145,9 +145,10 @@
       "anchor": { "position": [0, 0.28, -0.08] },
       "visual": { "adapter": "kitbash", "kitbashKey": "wind_wheel" },
       "removePrereqs": ["remove_nut_wind"],
-      "installPrereqs": [],
+      "installPrereqs": ["clean_wind_wheel"],
       "tips": {
-        "removeLocked": "⚠️ 必须先拧下锁紧螺母，才能拆卸风轮叶轮"
+        "removeLocked": "⚠️ 必须先拧下锁紧螺母，才能拆卸风轮叶轮",
+        "installLocked": "⚠️ 必须先完成风轮叶轮清洁，才能回装风轮叶轮"
       },
       "snapRangeMeters": 0.08
     }

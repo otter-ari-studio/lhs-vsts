@@ -31,8 +31,8 @@ python3 ./.trellis/scripts/task.py create "<title>" --slug <slug> --parent 09-25
 ### P1 — Scaffold & retire path
 
 - [ ] 重建 `web/src` 应用骨架（路由/布局：引导 → 训练）
-- [ ] 移除运行时对 `net/handSocket`、Python WS 的引用
-- [ ] 根目录 Python 移入 `legacy/python-hand-ws/`（或等价）并在 README 标明「非产品」
+- [x] 移除运行时对 `net/handSocket`、Python WS 的引用
+- [x] 根目录 Python 已删除（曾短期位于 `legacy/python-hand-ws/`）
 - [ ] 接入（或确认）`@mediapipe/tasks-vision` 依赖与 WASM 加载策略
 
 **验证**
@@ -73,7 +73,7 @@ pnpm run lint && pnpm run test
 ### P5 — Harden & delete legacy
 
 - [ ] 纯函数单测：prereqs、合格判定、dwell
-- [ ] 删除 `legacy/`；根 README 仅纯 Web
+- [x] 删除 `legacy/`；根 README 仅纯 Web
 - [ ] 确认无 Python 运行说明残留于主路径
 
 ## 验证命令（总）

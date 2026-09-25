@@ -12,8 +12,9 @@ import {
   RIGHT_HAND_COLOR,
 } from './defaults';
 import { handHub } from './HandHub';
+import { handWorldHub } from './handWorldHub';
 import { LandmarkRig, type LandmarkRigHandle } from './LandmarkRig';
-import { JOINT_COUNT, type HandId } from './types';
+import { INDEX_TIP, JOINT_COUNT, THUMB_TIP, type HandId } from './types';
 
 interface RelativeHandDriverProps {
   handId: HandId;
@@ -29,6 +30,7 @@ const _targetRot = new Quaternion();
 const _world = new Vector3();
 const _lm = new Vector3();
 const _delta = new Vector3();
+const _pinchMid = new Vector3();
 
 /**
  * Relative wrist drive + 21-point landmark skeleton.
@@ -69,14 +71,14 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     prevPalmTs.current = -1;
     prevLmTs.current = -1;
     hasSmoothLm.current = false;
-  }, [calibrateToken, handId]);
+  }, [calibrateToken, handId, calibrated, hasSmoothLm, prevLmTs, prevPalmTs]);
 
   useEffect(() => {
     const palm = palmRef.current;
     if (!palm) return;
     palm.position.copy(defaultPos.current);
     palm.quaternion.copy(defaultRot.current);
-  }, []);
+  }, [defaultPos, defaultRot, palmRef]);
 
   useFrame((state, delta) => {
     const palm = palmRef.current;
@@ -85,6 +87,7 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
 
     const sample = handHub.tryGetLatest(handId);
     if (!sample) {
+      handWorldHub.clear(handId);
       if (
         lmVisible.current &&
         state.clock.elapsedTime - lastSampleAt.current > LANDMARK_STALE_HIDE_DELAY
@@ -148,9 +151,8 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     }
 
     const rig = rigRef.current;
-    if (!rig) return;
 
-    if (hasLm && sample.timestamp !== prevLmTs.current) {
+    if (rig && hasLm && sample.timestamp !== prevLmTs.current) {
       for (let i = 0; i < JOINT_COUNT; i++) {
         const lm = sample.landmarks![i];
         _lm.set(lm[0], lm[1], lm[2]);
@@ -175,7 +177,7 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     }
     prevLmTs.current = sample.timestamp;
 
-    if (hasSmoothLm.current && lmVisible.current) {
+    if (rig && hasSmoothLm.current && lmVisible.current) {
       const t = 1 - Math.exp(-LANDMARK_SMOOTH_SPEED * dt);
       for (let i = 0; i < JOINT_COUNT; i++) {
         smoothLm.current[i].lerp(lmTarget.current[i], t);
@@ -188,11 +190,31 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     const stale =
       state.clock.elapsedTime - lastSampleAt.current > LANDMARK_STALE_HIDE_DELAY;
     if (stale && lmVisible.current) {
-      rig.hideSkeleton();
+      rig?.hideSkeleton();
       lmVisible.current = false;
       const mesh = palm.children[0];
       if (mesh) mesh.visible = true;
     }
+
+    // Interaction point: pinch midpoint when skeleton live, else palm.
+    let ix = palm.position.x;
+    let iy = palm.position.y;
+    let iz = palm.position.z;
+    if (hasSmoothLm.current && lmVisible.current) {
+      const thumb = smoothLm.current[THUMB_TIP];
+      const index = smoothLm.current[INDEX_TIP];
+      _pinchMid.copy(thumb).add(index).multiplyScalar(0.5);
+      ix = _pinchMid.x;
+      iy = _pinchMid.y;
+      iz = _pinchMid.z;
+    }
+    handWorldHub.publish({
+      handId,
+      palm: [palm.position.x, palm.position.y, palm.position.z],
+      interactionPoint: [ix, iy, iz],
+      pinching: sample.pinching,
+      clockSec: state.clock.elapsedTime,
+    });
   });
 
   return (

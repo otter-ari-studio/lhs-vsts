@@ -60,7 +60,7 @@ export const LandmarkRig = forwardRef<LandmarkRigHandle, LandmarkRigProps>(
           if (groupRef.current) groupRef.current.visible = false;
         },
       }),
-      [lineGeo],
+      [lineGeo, groupRef, jointRefs],
     );
 
     return (

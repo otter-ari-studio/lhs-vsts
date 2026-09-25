@@ -59,8 +59,8 @@
 - [ ] AC2：可按 SOP 完成拆 → 清洁示意 → 回装全流程并得到「合格」。
 - [ ] AC3：故意乱序触发 tip 与扣分，仍可完成步骤并合格；结束页列出错因。
 - [ ] AC4：清洁可用停留或 UI 兜底完成。
-- [ ] AC5：仓库运行路径无 Python 动捕依赖；README 仅描述纯 Web 流程。
-- [ ] AC6：更换零件网格适配器（procedural → 未来 glTF）无需改 Lock/步骤逻辑。
+- [x] AC5：仓库运行路径无 Python 动捕依赖；README 仅描述纯 Web 流程。
+- [x] AC6：更换零件网格适配器（procedural → 未来 glTF）无需改 Lock/步骤逻辑。
 
 ## Out of Scope
 

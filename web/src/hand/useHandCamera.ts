@@ -120,7 +120,7 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
       stopMediaStream(stream);
       stream = null;
     };
-  }, [enabled, retryToken]);
+  }, [enabled, retryToken, videoRef, setPhase, setError, setPresence]);
 
   const retry = () => {
     setRetryToken((n) => n + 1);

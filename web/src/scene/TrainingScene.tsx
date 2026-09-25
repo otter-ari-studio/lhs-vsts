@@ -2,18 +2,32 @@ import { useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { RelativeHandDriver } from '../hand/RelativeHandDriver';
-import { loadMachineDef, type MachineDef } from '../machine';
+import { InteractionRouter } from '../interaction/InteractionRouter';
+import { clearInteractables } from '../interaction/registry';
+import { clearPartPoses } from '../interaction/partPoseHub';
+import {
+  loadMachineDef,
+  setTrainingSession,
+  TrainingSession,
+  type MachineDef,
+} from '../machine';
 import { MachineView } from '../visual/MachineView';
 
 interface TrainingSceneProps {
   calibrateToken: number;
+  /** Bumps to restart session with a fresh TrainingSession. */
+  restartToken: number;
+  onSessionReady?: (session: TrainingSession) => void;
 }
 
 /**
- * Training R3F scene: lighting, floor/wall, Kitbash machine, dual virtual hands.
- * Hand samples come from HandHub (owned by TrainPage / useHandCamera).
+ * Training R3F scene: lighting, Kitbash machine + interactions, dual virtual hands.
  */
-export function TrainingScene({ calibrateToken }: TrainingSceneProps) {
+export function TrainingScene({
+  calibrateToken,
+  restartToken,
+  onSessionReady,
+}: TrainingSceneProps) {
   const [def, setDef] = useState<MachineDef | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +46,20 @@ export function TrainingScene({ calibrateToken }: TrainingSceneProps) {
       cancelled = true;
     };
   }, [setDef, setError]);
+
+  useEffect(() => {
+    if (!def) return;
+    clearInteractables();
+    clearPartPoses();
+    const session = new TrainingSession(def);
+    setTrainingSession(session);
+    onSessionReady?.(session);
+    return () => {
+      setTrainingSession(null);
+      clearInteractables();
+      clearPartPoses();
+    };
+  }, [def, restartToken, onSessionReady]);
 
   return (
     <div className="training-scene-root">
@@ -61,7 +89,8 @@ export function TrainingScene({ calibrateToken }: TrainingSceneProps) {
           <meshStandardMaterial color="#243040" roughness={0.95} />
         </mesh>
 
-        {def ? <MachineView def={def} /> : null}
+        {def ? <MachineView key={restartToken} def={def} /> : null}
+        <InteractionRouter />
 
         <RelativeHandDriver handId={0} calibrateToken={calibrateToken} />
         <RelativeHandDriver handId={1} calibrateToken={calibrateToken} />

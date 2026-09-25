@@ -3,7 +3,7 @@
   "name": "harden-docs-retire",
   "title": "测试加固与 legacy 删除",
   "description": "Tests, delete legacy, README pure web",
-  "status": "planning",
+  "status": "done",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "heyongqi10",
   "assignee": "heyongqi10",
   "createdAt": "2026-09-25",
-  "completedAt": null,
+  "completedAt": "2026-09-25",
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,6 +21,6 @@
   "children": [],
   "parent": "09-25-appliance-sim-redesign",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "Deleted legacy/; pure-Web READMEs; visual adapter boundary test; lint/test/build green (25 tests).",
   "meta": {}
 }

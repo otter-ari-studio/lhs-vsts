@@ -139,3 +139,28 @@ test('kitbash registry covers range_hood part keys', () => {
     expect(keys.has(id)).toBe(true);
   }
 });
+
+test('public range_hood_generic.json has no prefabPath and anchors match kitbash', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { dirname, join } = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const jsonPath = join(
+    dirname(fileURLToPath(import.meta.url)),
+    '../public/machines/range_hood_generic.json',
+  );
+  const raw = JSON.parse(readFileSync(jsonPath, 'utf8')) as unknown;
+  expect(JSON.stringify(raw)).not.toContain('prefabPath');
+
+  const def = parseMachineDef(raw);
+  const keys = new Set(listKitbashKeys());
+  expect(listPartIds(def)).toHaveLength(10);
+  for (const part of def.parts) {
+    expect(part.visual.adapter).toBe('kitbash');
+    expect(part.visual.kitbashKey).toBe(part.partId);
+    expect(keys.has(part.partId)).toBe(true);
+    expect(part.anchor.position).toHaveLength(3);
+  }
+  for (const spot of def.cleanSpots) {
+    expect(findPart(def, spot.partId)).toBeDefined();
+  }
+});

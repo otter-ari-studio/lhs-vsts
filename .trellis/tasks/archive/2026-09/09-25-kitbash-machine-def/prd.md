@@ -17,9 +17,9 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1：训练页可见可辨识油烟机与零件（非旧大方块玩具感）。
-- [ ] AC2：partId 与锚点表一致，可供后续交互挂载。
-- [ ] AC3：lint/test/build 通过。
+- [x] AC1：训练页可见可辨识油烟机与零件（非旧大方块玩具感）。
+- [x] AC2：partId 与锚点表一致，可供后续交互挂载。
+- [x] AC3：lint/test/build 通过。
 
 ## Out of Scope
 
