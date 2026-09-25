@@ -10,6 +10,12 @@ import {
   REMOVED_PICK_PRIORITY,
   SOP_PICK_PRIORITY,
 } from './defaults';
+import {
+  claimDropSlot,
+  distanceToDropTray,
+  releaseDropSlot,
+} from './dropTray';
+import { setGrabHolding } from './grabHoldHub';
 import { setPartPose } from './partPoseHub';
 import {
   registerInteractable,
@@ -36,6 +42,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
     [part.anchor.position],
   );
   const [hover, setHover] = useState(false);
+  const tipShown = useRef(false);
   const sopRef = useRef(isSopTarget);
   sopRef.current = isSopTarget;
   const meshScaleRef = useRef<Group>(null);
@@ -45,14 +52,17 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
     const self: HandInteractable = {
       id: part.partId,
       kind: 'grabbable',
-      // Pick radius is generous; snapRangeMeters only gates reinstall snap.
       interactionRadius: COLLIDER_RADIUS.grabbable,
       isInteractableNow() {
         if (grabbed.current) return false;
         const mgr = getTrainingSession();
         if (!mgr) return true;
         const st = mgr.getState(part.partId);
-        return st === 'installed' || st === 'removed';
+        // Installed: can detach. Removed: only re-pick when it is the SOP install target
+        // (parts on the tray must not stick when the hand passes by).
+        if (st === 'installed') return true;
+        if (st === 'removed') return sopRef.current;
+        return false;
       },
       pickPriority() {
         if (sopRef.current) return SOP_PICK_PRIORITY;
@@ -75,10 +85,15 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
           mgr.notifyRemoved(part.partId);
         }
         grabbed.current = true;
+        setGrabHolding(part.partId, true);
         const g = groupRef.current;
         if (g) {
           g.getWorldPosition(_tmp);
           grabOffset.current.copy(_tmp).sub(handPos);
+        }
+        if (mgr && !tipShown.current) {
+          tipShown.current = true;
+          mgr.tip('捏紧约半秒取下 → 松开放到左侧绿色放置区；回装时对准机身闪烁位');
         }
       },
       onPinchHold(handPos) {
@@ -88,24 +103,34 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       onPinchEnd() {
         if (!grabbed.current) return;
         grabbed.current = false;
+        setGrabHolding(part.partId, false);
         const mgr = getTrainingSession();
         const g = groupRef.current;
         if (!mgr || !g) return;
         const range = part.snapRangeMeters ?? snapRange;
         g.getWorldPosition(_tmp);
-        const dist = _tmp.distanceTo(installedPos);
-        if (dist <= range) {
-          if (mgr.tryInstall(part.partId)) {
-            g.position.copy(installedPos);
-            followPos.current.copy(installedPos);
-          }
-        } else if (mgr.getState(part.partId) === 'removed') {
-          // Stay where dropped (already removed).
-        } else {
-          mgr.notifyToleranceFail(part.partId);
+        const distTray = distanceToDropTray(_tmp);
+
+        if (_tmp.distanceTo(installedPos) <= range && mgr.tryInstall(part.partId)) {
+          releaseDropSlot(part.partId);
           g.position.copy(installedPos);
           followPos.current.copy(installedPos);
+          return;
         }
+
+        if (mgr.getState(part.partId) === 'removed') {
+          const slot = claimDropSlot(part.partId);
+          g.position.set(slot[0], slot[1], slot[2]);
+          followPos.current.copy(g.position);
+          if (distTray > 0.15) {
+            mgr.tip('零件已放到左侧放置区');
+          }
+          return;
+        }
+
+        mgr.notifyToleranceFail(part.partId);
+        g.position.copy(installedPos);
+        followPos.current.copy(installedPos);
       },
       onHover(active) {
         setHover(active);
@@ -116,8 +141,14 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
 
   useEffect(() => {
     registerInteractable(api);
-    return () => unregisterInteractable(api);
-  }, [api]);
+    return () => {
+      unregisterInteractable(api);
+      if (grabbed.current) {
+        grabbed.current = false;
+        setGrabHolding(part.partId, false);
+      }
+    };
+  }, [api, part.partId]);
 
   useFrame(({ clock }, dt) => {
     const g = groupRef.current;
@@ -130,7 +161,11 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
 
     const mesh = meshScaleRef.current;
     if (mesh) {
-      const pulse = isSopTarget ? 1.04 + 0.05 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 7)) : hover ? 1.03 : 1;
+      const pulse = isSopTarget
+        ? 1.04 + 0.05 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 7))
+        : hover
+          ? 1.03
+          : 1;
       mesh.scale.setScalar(pulse);
     }
   });
@@ -154,6 +189,25 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         )}
       </group>
       <SopTargetHighlight active={isSopTarget} hover={hover} radius={0.03} ringRadius={0.07} />
+    </group>
+  );
+}
+
+/** Empty install slot marker at the part's home pose (when SOP is install). */
+export function GrabInstallGhost({ part, active }: { part: PartDef; active: boolean }) {
+  if (!active) return null;
+  const rotation: Vec3 = part.anchor.rotation ?? [0, 0, 0];
+  return (
+    <group
+      position={part.anchor.position}
+      rotation={rotation}
+      name={`${part.partId}:install-ghost`}
+    >
+      <mesh>
+        <boxGeometry args={[0.11, 0.07, 0.05]} />
+        <meshBasicMaterial color="#3ddc97" wireframe transparent opacity={0.65} />
+      </mesh>
+      <SopTargetHighlight active radius={0.035} ringRadius={0.08} />
     </group>
   );
 }

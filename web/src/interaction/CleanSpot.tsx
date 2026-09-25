@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Group, Vector3 } from 'three';
 import { getTrainingSession } from '../machine/TrainingSession';
 import type { CleanSpotDef, Vec3 } from '../machine/types';
+import { SOP_PICK_PRIORITY } from './defaults';
 import { createDwellTracker } from './dwell';
 import { getPartPose } from './partPoseHub';
 import {
@@ -10,6 +11,7 @@ import {
   unregisterInteractable,
   type HandInteractable,
 } from './registry';
+import { SopTargetHighlight } from './SopTargetHighlight';
 
 interface CleanSpotProps {
   spot: CleanSpotDef;
@@ -44,6 +46,8 @@ export function CleanSpotMesh({ spot, partWorldPos, isSopTarget }: CleanSpotProp
   const hoverRef = useRef(false);
   const progressRef = useRef(0);
   const activeRef = useRef(false);
+  const sopRef = useRef(isSopTarget);
+  sopRef.current = isSopTarget;
 
   const api = useMemo(() => {
     const self: HandInteractable = {
@@ -55,6 +59,7 @@ export function CleanSpotMesh({ spot, partWorldPos, isSopTarget }: CleanSpotProp
         if (!mgr) return false;
         return mgr.getActiveCleanIds().includes(spot.cleanId);
       },
+      pickPriority: () => (sopRef.current ? SOP_PICK_PRIORITY : 0),
       distanceTo(handPos) {
         const live = getPartPose(spot.partId) ?? partPosRef.current;
         const pos = resolveWorldPos(spot, live);
@@ -70,7 +75,7 @@ export function CleanSpotMesh({ spot, partWorldPos, isSopTarget }: CleanSpotProp
       },
     };
     return self;
-  }, [spot, partPosRef, hoverRef, setHover]);
+  }, [spot, partPosRef, hoverRef, setHover, sopRef]);
 
   useEffect(() => {
     registerInteractable(api);
@@ -115,14 +120,12 @@ export function CleanSpotMesh({ spot, partWorldPos, isSopTarget }: CleanSpotProp
 
   if (!active) return null;
 
-  const highlight = hover || isSopTarget;
-
   return (
     <group ref={groupRef} position={partWorldPos} name={`clean:${spot.cleanId}`}>
       <mesh>
         <sphereGeometry args={[spot.radiusMeters * 0.35, 16, 16]} />
         <meshBasicMaterial
-          color={highlight ? '#3ddc97' : '#5b9bd5'}
+          color={isSopTarget || hover ? '#3ddc97' : '#5b9bd5'}
           transparent
           opacity={0.35 + progress * 0.4}
           wireframe
@@ -143,6 +146,12 @@ export function CleanSpotMesh({ spot, partWorldPos, isSopTarget }: CleanSpotProp
           <meshBasicMaterial color="#3ddc97" />
         </mesh>
       ) : null}
+      <SopTargetHighlight
+        active={isSopTarget}
+        hover={hover}
+        radius={spot.radiusMeters * 0.25}
+        ringRadius={spot.radiusMeters * 0.55}
+      />
     </group>
   );
 }

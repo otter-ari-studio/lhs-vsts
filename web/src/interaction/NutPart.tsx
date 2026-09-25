@@ -3,13 +3,20 @@ import { Group, Vector3 } from 'three';
 import { getTrainingSession } from '../machine/TrainingSession';
 import type { PartDef, Vec3 } from '../machine/types';
 import { KitbashPart } from '../visual/kitbash/KitbashAdapter';
-import { COLLIDER_RADIUS, NUT_DWELL_MS } from './defaults';
+import {
+  COLLIDER_RADIUS,
+  INSTALLED_PICK_PRIORITY,
+  NUT_DWELL_MS,
+  REMOVED_PICK_PRIORITY,
+  SOP_PICK_PRIORITY,
+} from './defaults';
 import { createDwellTracker } from './dwell';
 import {
   registerInteractable,
   unregisterInteractable,
   type HandInteractable,
 } from './registry';
+import { SopTargetHighlight } from './SopTargetHighlight';
 
 interface NutPartProps {
   part: PartDef;
@@ -24,6 +31,8 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
   const [hover, setHover] = useState(false);
   const [progress, setProgress] = useState(0);
   const [removed, setRemoved] = useState(false);
+  const sopRef = useRef(isSopTarget);
+  sopRef.current = isSopTarget;
   const rotation: Vec3 = part.anchor.rotation ?? [0, 0, 0];
   const tipShown = useRef(false);
 
@@ -36,7 +45,16 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
         const mgr = getTrainingSession();
         if (!mgr) return true;
         const st = mgr.getState(part.partId);
-        return st === 'installed' || st === 'removed';
+        if (st === 'installed') return true;
+        if (st === 'removed') return sopRef.current;
+        return false;
+      },
+      pickPriority() {
+        if (sopRef.current) return SOP_PICK_PRIORITY;
+        const mgr = getTrainingSession();
+        const st = mgr?.getState(part.partId);
+        if (st === 'removed') return REMOVED_PICK_PRIORITY;
+        return INSTALLED_PICK_PRIORITY;
       },
       distanceTo(handPos) {
         const g = groupRef.current;
@@ -78,7 +96,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
       },
     };
     return self;
-  }, [part, dwell, groupRef, setHover, setProgress, setRemoved, tipShown]);
+  }, [part, dwell, groupRef, setHover, setProgress, setRemoved, tipShown, sopRef]);
 
   useEffect(() => {
     registerInteractable(api);
@@ -90,7 +108,6 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
     if (mgr) setRemoved(mgr.getState(part.partId) === 'removed');
   }, [part.partId, setRemoved]);
 
-  const highlight = hover || isSopTarget;
   const pos: Vec3 = removed
     ? [part.anchor.position[0] + 0.12, part.anchor.position[1], part.anchor.position[2]]
     : part.anchor.position;
@@ -103,7 +120,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
       rotation={rotation}
       userData={{ partId: part.partId, kind: part.kind }}
     >
-      <group scale={highlight ? 1.08 : 1}>
+      <group scale={isSopTarget || hover ? 1.08 : 1}>
         {part.visual.adapter === 'kitbash' && part.visual.kitbashKey ? (
           <KitbashPart kitbashKey={part.visual.kitbashKey} />
         ) : null}
@@ -114,16 +131,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
           <meshBasicMaterial color="#3ddc97" />
         </mesh>
       ) : null}
-      {highlight ? (
-        <mesh>
-          <sphereGeometry args={[0.015, 8, 8]} />
-          <meshBasicMaterial
-            color={isSopTarget ? '#3ddc97' : '#f0c14a'}
-            transparent
-            opacity={0.55}
-          />
-        </mesh>
-      ) : null}
+      <SopTargetHighlight active={isSopTarget} hover={hover} radius={0.018} ringRadius={0.04} />
     </group>
   );
 }

@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { Vector3 } from 'three';
 import type { HandId } from '../hand/types';
 import { handWorldHub } from '../hand/handWorldHub';
+import { GRAB_COMMIT_MS, TOGGLE_COMMIT_MS } from './defaults';
 import {
   findHoverTarget,
   findNearestInteractable,
@@ -11,20 +12,28 @@ import {
 
 const _pos = new Vector3();
 
+function commitMsFor(it: HandInteractable | null): number {
+  if (!it) return GRAB_COMMIT_MS;
+  return it.kind === 'grabbable' ? GRAB_COMMIT_MS : TOGGLE_COMMIT_MS;
+}
+
 interface HandInteractionState {
   lastPinch: boolean;
   engaged: HandInteractable | null;
   hover: HandInteractable | null;
+  /** Candidate chosen on pinch-down; engages only after GRAB_COMMIT_MS. */
+  pending: HandInteractable | null;
+  pendingMs: number;
 }
 
 /**
  * Routes HandWorldHub pinch edges + hover to registered interactables.
- * Mount once inside the R3F canvas (not per-hand).
+ * Grab commits only after a short sustained pinch (avoids “touch = stick”).
  */
 export function InteractionRouter() {
   const hands = useRef<HandInteractionState[]>([
-    { lastPinch: false, engaged: null, hover: null },
-    { lastPinch: false, engaged: null, hover: null },
+    { lastPinch: false, engaged: null, hover: null, pending: null, pendingMs: 0 },
+    { lastPinch: false, engaged: null, hover: null, pending: null, pendingMs: 0 },
   ]);
 
   useFrame((_, delta) => {
@@ -37,6 +46,13 @@ export function InteractionRouter() {
           state.hover.onHover?.(false);
           state.hover = null;
         }
+        if (state.engaged) {
+          state.engaged.onPinchEnd(_pos);
+          state.engaged = null;
+        }
+        state.pending = null;
+        state.pendingMs = 0;
+        state.lastPinch = false;
         continue;
       }
 
@@ -48,8 +64,8 @@ export function InteractionRouter() {
 
       const pinch = pose.pinching;
 
-      // Hover (when not engaged on pinch)
-      if (!state.engaged) {
+      // Hover (when not engaged / pending grab)
+      if (!state.engaged && !state.pending) {
         const nextHover = findHoverTarget(_pos);
         if (nextHover !== state.hover) {
           state.hover?.onHover?.(false);
@@ -59,13 +75,35 @@ export function InteractionRouter() {
       }
 
       if (pinch && !state.lastPinch) {
-        state.engaged = findNearestInteractable(_pos);
-        state.engaged?.onPinchStart(_pos);
-      } else if (pinch && state.lastPinch && state.engaged) {
+        // Rising edge: arm pending, do not attach yet.
+        state.pending = findNearestInteractable(_pos);
+        state.pendingMs = 0;
+      } else if (pinch && state.pending && !state.engaged) {
+        // Must stay near the same target while committing.
+        const still = findNearestInteractable(_pos);
+        if (!still || still.id !== state.pending.id) {
+          state.pending = still;
+          state.pendingMs = 0;
+        } else {
+          state.pendingMs += dt * 1000;
+          if (state.pendingMs >= commitMsFor(state.pending)) {
+            state.engaged = state.pending;
+            state.pending = null;
+            state.pendingMs = 0;
+            state.hover?.onHover?.(false);
+            state.hover = null;
+            state.engaged.onPinchStart(_pos);
+          }
+        }
+      } else if (pinch && state.engaged) {
         state.engaged.onPinchHold(_pos, dt);
       } else if (!pinch && state.lastPinch) {
-        state.engaged?.onPinchEnd(_pos);
-        state.engaged = null;
+        if (state.engaged) {
+          state.engaged.onPinchEnd(_pos);
+          state.engaged = null;
+        }
+        state.pending = null;
+        state.pendingMs = 0;
       }
       state.lastPinch = pinch;
     }

@@ -1,12 +1,15 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import type { MachineDef } from '../machine/types';
 import { getTrainingSession, subscribeSession } from '../machine';
 import { closeStep, installStep, openStep, removeStep } from '../machine/types';
 import { ClipPart } from '../interaction/ClipPart';
 import { CleanSpotMesh } from '../interaction/CleanSpot';
-import { GrabPart } from '../interaction/GrabPart';
+import { DropTrayVisual } from '../interaction/DropTrayVisual';
+import { GrabInstallGhost, GrabPart } from '../interaction/GrabPart';
 import { NutPart } from '../interaction/NutPart';
 import { getPartPose } from '../interaction/partPoseHub';
+import { resetDropTraySlots } from '../interaction/dropTray';
+import { resetGrabHold } from '../interaction/grabHoldHub';
 import { KitbashPart } from './kitbash/KitbashAdapter';
 
 interface MachineViewProps {
@@ -64,24 +67,31 @@ export function MachineView({ def }: MachineViewProps) {
     () => 0,
   );
 
+  useEffect(() => {
+    resetDropTraySlots();
+    resetGrabHold();
+  }, [def.machineId]);
+
   const sopTargets = currentSopPartIds(def);
   const snapRange = def.assemblyDefaults.snapRangeMeters;
+  const session = getTrainingSession();
 
   return (
     <group name={`machine:${def.machineId}`}>
+      <DropTrayVisual />
       {def.parts.map((part) => {
         const isTarget = sopTargets.has(part.partId);
         if (part.kind === 'fixed_shell') {
           return <FixedShell key={part.partId} part={part} />;
         }
         if (part.kind === 'grabbable') {
+          const showInstallGhost =
+            isTarget && session?.getState(part.partId) === 'removed';
           return (
-            <GrabPart
-              key={part.partId}
-              part={part}
-              snapRange={snapRange}
-              isSopTarget={isTarget}
-            />
+            <group key={part.partId}>
+              <GrabPart part={part} snapRange={snapRange} isSopTarget={isTarget} />
+              <GrabInstallGhost part={part} active={!!showInstallGhost} />
+            </group>
           );
         }
         if (part.kind === 'clip') {

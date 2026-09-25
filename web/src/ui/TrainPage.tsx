@@ -261,8 +261,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              双手举到胸前停约半秒后点「重新标定」。前后够零件：手靠近屏幕（画面里变大）→
-              虚拟手靠近机型；远离屏幕 → 虚拟手后退。左右对齐镜像预览。
+              双手举到胸前停约半秒后点「重新标定」。捏紧约半秒抓住闪烁零件，松开放到左侧绿色放置区；回装对准机身闪烁框。卡扣需伸向前上方闪烁处捏一下。
             </div>
           ) : null}
 

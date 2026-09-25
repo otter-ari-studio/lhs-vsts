@@ -38,11 +38,12 @@ export const LANDMARK_MAX_STEP = 0.035;
 
 /**
  * Pinch distance thresholds (meters, world-landmark space after scale).
- * Enter pinch below ON; exit above OFF (hysteresis).
- * Looser ON — capture logs often sat at ~0.05 while user thought they pinched.
+ * Enter pinch below ON; exit when distance ≥ OFF (hysteresis).
+ * Tuned from capture 12-59-58: light contact ~0.05–0.06 was sticking for 10s+.
+ * Require a clear close to grab; release once fingers open past ~rest gap.
  */
-export const PINCH_ON_METERS = 0.05;
-export const PINCH_OFF_METERS = 0.075;
+export const PINCH_ON_METERS = 0.038;
+export const PINCH_OFF_METERS = 0.062;
 
 /**
  * Image XY: full frame ≈ desk FOV width at DESK_TO_SCREEN_METERS.
@@ -57,9 +58,9 @@ export const IMAGE_LANDMARK_FINGER_Z_SPAN_METERS = 0.1;
 
 /**
  * Scene Z work slab for forward/back reach.
- * NEAR ≈ front of oil_box / filters; FAR = pulled back toward viewer.
+ * NEAR must reach clips/panel (~z 0.14–0.22); FAR = pulled back toward viewer.
  */
-export const HAND_Z_NEAR = 0.26;
+export const HAND_Z_NEAR = 0.2;
 export const HAND_Z_FAR = 0.58;
 /** @deprecated alias — prefer HAND_Z_NEAR */
 export const HAND_Z_MIN = HAND_Z_NEAR;
