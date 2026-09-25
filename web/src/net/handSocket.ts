@@ -1,7 +1,7 @@
-import { buildMapMatrix, mapPointTuple, mapRotationTuple } from './axisMap';
-import { handDataHub } from './HandDataHub';
-import { parseHandFrame, type HandSample } from './protocol';
-import { WS_URL } from './defaults';
+import { buildMapMatrix, mapPointTuple, mapRotationTuple } from '../hand/axisMap';
+import { handDataHub } from '../hand/HandDataHub';
+import { WS_URL } from '../hand/defaults';
+import { parseHandFrame, type HandSample } from '../hand/protocol';
 
 export type SocketStatus = 'connecting' | 'open' | 'closed' | 'error';
 
