@@ -43,7 +43,7 @@ function stub(
 }
 
 test('grab pick radius is larger than former snap-only 0.08m', () => {
-  expect(COLLIDER_RADIUS.grabbable).toBeGreaterThan(0.15);
+  expect(COLLIDER_RADIUS.grabbable).toBeGreaterThan(0.2);
 });
 
 test('nut pick radius stays smaller than grabbable so impeller can win after nut-off', () => {

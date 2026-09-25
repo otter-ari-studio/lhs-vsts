@@ -2,6 +2,10 @@ import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { Euler, Group, MeshStandardMaterial, Quaternion, Vector3 } from 'three';
 import {
+  GRASP_CONFIRM_FRAMES,
+  GRASP_OFF_RATIO,
+  GRASP_ON_RATIO,
+  GRASP_RATIO_EMA,
   HAND_DEFAULTS,
   LANDMARK_MAX_STEP,
   LANDMARK_SMOOTH_SPEED,
@@ -11,10 +15,12 @@ import {
   PINCH_COLOR,
   RIGHT_HAND_COLOR,
 } from './defaults';
+import { ema } from './deskDepth';
+import { fingerOpenRatio, updateGraspStateConfirmed } from './grasp';
 import { handHub } from './HandHub';
 import { handWorldHub } from './handWorldHub';
 import { LandmarkRig, type LandmarkRigHandle } from './LandmarkRig';
-import { INDEX_TIP, JOINT_COUNT, THUMB_TIP, type HandId } from './types';
+import { JOINT_COUNT, type HandId, type Vec3 } from './types';
 
 interface RelativeHandDriverProps {
   handId: HandId;
@@ -29,11 +35,11 @@ const _targetRot = new Quaternion();
 const _relRot = new Quaternion();
 const _lm = new Vector3();
 const _delta = new Vector3();
-const _pinchMid = new Vector3();
+const _tmpVecs: Vec3[] = Array.from({ length: JOINT_COUNT }, () => [0, 0, 0]);
 
 /**
  * Absolute screen-mapped wrist + glove (HandHub already in scene meters).
- * XY follows mirrored webcam frame; Z uses desk-depth reach. Grab via InteractionRouter.
+ * Grasp = finger curl (recomputed here so capture replay also uses curl, not tip-pinch).
  */
 export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDriverProps) {
   const palmRef = useRef<Group>(null);
@@ -55,6 +61,9 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
   const smoothLm = useRef<Vector3[]>(
     Array.from({ length: JOINT_COUNT }, () => new Vector3()),
   );
+  const graspState = useRef(false);
+  const graspRatioEma = useRef<number | null>(null);
+  const graspPending = useRef(0);
 
   const rest = HAND_DEFAULTS[handId];
   const defaultPos = useRef(new Vector3(...rest.position));
@@ -68,6 +77,9 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     prevPalmTs.current = -1;
     prevLmTs.current = -1;
     hasSmoothLm.current = false;
+    graspState.current = false;
+    graspRatioEma.current = null;
+    graspPending.current = 0;
   }, [calibrateToken, handId]);
 
   useEffect(() => {
@@ -137,14 +149,6 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       palm.quaternion.slerp(palmTargetRot.current, t);
     }
 
-    const mat = palmMatRef.current;
-    if (mat) {
-      const pinch = sample.pinching;
-      mat.color.set(pinch ? PINCH_COLOR : baseColor);
-      mat.emissive.set(pinch ? PINCH_COLOR : '#000000');
-      mat.emissiveIntensity = pinch ? 0.45 : 0;
-    }
-
     const rig = rigRef.current;
 
     if (rig && hasLm && sample.timestamp !== prevLmTs.current) {
@@ -171,12 +175,43 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     }
     prevLmTs.current = sample.timestamp;
 
-    if (rig && hasSmoothLm.current && lmVisible.current) {
+    if (hasSmoothLm.current && lmVisible.current) {
       const t = 1 - Math.exp(-LANDMARK_SMOOTH_SPEED * dt);
       for (let i = 0; i < JOINT_COUNT; i++) {
         smoothLm.current[i].lerp(lmTarget.current[i], t);
       }
-      rig.updateSkeleton(smoothLm.current, { pinching: sample.pinching });
+    }
+
+    let grasping = sample.pinching;
+    if (hasSmoothLm.current && lmVisible.current) {
+      for (let i = 0; i < JOINT_COUNT; i++) {
+        const v = smoothLm.current[i]!;
+        _tmpVecs[i] = [v.x, v.y, v.z];
+      }
+      const openRaw = fingerOpenRatio(_tmpVecs);
+      graspRatioEma.current = ema(graspRatioEma.current, openRaw, GRASP_RATIO_EMA);
+      const upd = updateGraspStateConfirmed(
+        graspState.current,
+        graspRatioEma.current,
+        GRASP_ON_RATIO,
+        GRASP_OFF_RATIO,
+        graspPending.current,
+        GRASP_CONFIRM_FRAMES,
+      );
+      graspState.current = upd.grasping;
+      graspPending.current = upd.pendingCount;
+      grasping = upd.grasping;
+    }
+
+    const mat = palmMatRef.current;
+    if (mat) {
+      mat.color.set(grasping ? PINCH_COLOR : baseColor);
+      mat.emissive.set(grasping ? PINCH_COLOR : '#000000');
+      mat.emissiveIntensity = grasping ? 0.45 : 0;
+    }
+
+    if (rig && hasSmoothLm.current && lmVisible.current) {
+      rig.updateSkeleton(smoothLm.current, { pinching: grasping });
       const mesh = palm.children[0];
       if (mesh) mesh.visible = false;
     }
@@ -190,22 +225,12 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       if (mesh) mesh.visible = true;
     }
 
-    let ix = palm.position.x;
-    let iy = palm.position.y;
-    let iz = palm.position.z;
-    if (hasSmoothLm.current && lmVisible.current) {
-      const thumb = smoothLm.current[THUMB_TIP];
-      const index = smoothLm.current[INDEX_TIP];
-      _pinchMid.copy(thumb).add(index).multiplyScalar(0.5);
-      ix = _pinchMid.x;
-      iy = _pinchMid.y;
-      iz = _pinchMid.z;
-    }
+    // Palm = interaction point (power-grasp), not thumb–index midpoint.
     handWorldHub.publish({
       handId,
       palm: [palm.position.x, palm.position.y, palm.position.z],
-      interactionPoint: [ix, iy, iz],
-      pinching: sample.pinching,
+      interactionPoint: [palm.position.x, palm.position.y, palm.position.z],
+      pinching: grasping,
       clockSec: state.clock.elapsedTime,
     });
   });

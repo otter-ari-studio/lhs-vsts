@@ -281,7 +281,7 @@ export class TrainingSession {
     return true;
   }
 
-  /** Pinch-dwell remove/install for rotate_nut. */
+  /** Grasp remove/install for rotate_nut (same edge as grabbable). */
   tryNutAction(partId: string): boolean {
     const cfg = this.partById.get(partId);
     if (!cfg || cfg.kind !== 'rotate_nut') return false;

@@ -1,5 +1,5 @@
-/** Nut pinch dwell before remove/install (ms). */
-export const NUT_DWELL_MS = 1200;
+/** @deprecated Nuts use instant grasp like grabbable; kept for old imports. */
+export const NUT_DWELL_MS = 700;
 
 /** Default clean dwell when MachineDef omits (should not happen). */
 export const DEFAULT_CLEAN_DWELL_MS = 1500;
@@ -7,7 +7,7 @@ export const DEFAULT_CLEAN_DWELL_MS = 1500;
 /** Collider radii by kind (meters) — pick range for pinch start. */
 export const COLLIDER_RADIUS = {
   /** Grab pick (install snap still uses part.snapRangeMeters). */
-  grabbable: 0.22,
+  grabbable: 0.26,
   /** Clips sit deeper (z≈0.14–0.22); need larger pick than filters. */
   clip: 0.28,
   /** Keep nut smaller than wheel so after nut-off the impeller wins nearby pinches. */
@@ -16,9 +16,16 @@ export const COLLIDER_RADIUS = {
 } as const;
 
 /** Must hold pinch this long before a grabbable attaches (ms). */
-export const GRAB_COMMIT_MS = 280;
+export const GRAB_COMMIT_MS = 160;
+/**
+ * When the part is already highlighted (hover / SOP), a light squeeze commits fast.
+ */
+export const HIGHLIGHT_GRAB_COMMIT_MS = 40;
 /** Clips / nuts / cleans commit faster — toggles, not carry. */
-export const TOGGLE_COMMIT_MS = 120;
+export const TOGGLE_COMMIT_MS = 80;
+
+/** Keep pending grab if hand stays within radius * this (avoids neighbor flicker). */
+export const PENDING_EXIT_SCALE = 1.5;
 
 /** pickPriority() for current SOP target — beats non-target removed parts. */
 export const SOP_PICK_PRIORITY = 2;

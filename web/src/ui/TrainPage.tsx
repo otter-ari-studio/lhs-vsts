@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from '
 import { useHandCamera } from '../hand/useHandCamera';
 import { partInventory } from '../interaction/partInventory';
 import { currentInstallOfferPartId } from '../interaction/partOffer';
+import { selectionHub } from '../interaction/selectionHub';
 import {
   APPLIANCE_WASH_DURATION_MS,
   getTrainingSession,
@@ -106,6 +107,11 @@ export function TrainPage({ onBack }: TrainPageProps) {
   const session = getTrainingSession();
   const partName = (id: string) =>
     session?.def.parts.find((p) => p.partId === id)?.displayName ?? id;
+  const selection = useSyncExternalStore(
+    (cb) => selectionHub.subscribe(cb),
+    () => selectionHub.get(),
+    () => null,
+  );
 
   useEffect(() => {
     return subscribeTips((msg) => {
@@ -127,6 +133,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
   const restart = () => {
     recalibrateDepth();
     partInventory.clear();
+    selectionHub.clear();
     setRestartToken((n) => n + 1);
     setCalibrateToken((n) => n + 1);
     setTip(null);
@@ -271,6 +278,21 @@ export function TrainPage({ onBack }: TrainPageProps) {
             aria-label="摄像头预览（镜像）"
           />
 
+          <aside className="selection-card" aria-live="polite">
+            {selection ? (
+              <>
+                <div className="selection-kicker">当前选中</div>
+                <div className="selection-name">{selection.displayName}</div>
+                <div className="selection-hint">{selection.hint}</div>
+              </>
+            ) : (
+              <>
+                <div className="selection-kicker">当前选中</div>
+                <div className="selection-empty">靠近零件以高亮选中</div>
+              </>
+            )}
+          </aside>
+
           {tip ? (
             <div className="tip-toast" role="status">
               {tip}
@@ -309,7 +331,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              拆下后甩手入物品栏。回装时当前零件会弹出到右侧，抓住后放回机身绿色安装位松手即可自动拧上。
+              拆下：靠近高亮后轻握即可取下，再甩手入物品栏。回装：道具弹出后抓住放回绿色安装位。
             </div>
           ) : null}
 

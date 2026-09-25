@@ -9,7 +9,11 @@ export interface HandInteractable {
   isInteractableNow(): boolean;
   /** Distance from interaction point (palm / pinch midpoint) to collider. */
   distanceTo(handPos: Vector3): number;
-  onPinchStart(handPos: Vector3): void;
+  /**
+   * Begin pinch engagement. Return `false` to cancel (e.g. order-locked remove)
+   * so the router does not keep a dead engage.
+   */
+  onPinchStart(handPos: Vector3): boolean | void;
   onPinchHold(handPos: Vector3, dtSec: number): void;
   onPinchEnd(handPos: Vector3): void;
   /** Optional hover enter/leave for highlight. */

@@ -1,4 +1,4 @@
-export { COLLIDER_RADIUS, DEFAULT_CLEAN_DWELL_MS, GRAB_COMMIT_MS, NUT_DWELL_MS, TOGGLE_COMMIT_MS } from './defaults';
+export { COLLIDER_RADIUS, DEFAULT_CLEAN_DWELL_MS, GRAB_COMMIT_MS, HIGHLIGHT_GRAB_COMMIT_MS, NUT_DWELL_MS, TOGGLE_COMMIT_MS } from './defaults';
 export { accumulateDwell, createDwellTracker } from './dwell';
 export { InteractionRouter } from './InteractionRouter';
 export { GrabInstallGhost, GrabPart } from './GrabPart';
@@ -11,6 +11,7 @@ export {
   isInstallOfferPart,
   PROP_OFFER_POS,
 } from './partOffer';
+export { selectionHub, type SelectionInfo } from './selectionHub';
 export { detectLateralThrow, pushThrowSample } from './throwDetect';
 export {
   clearInteractables,

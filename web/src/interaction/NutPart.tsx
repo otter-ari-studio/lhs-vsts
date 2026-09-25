@@ -7,11 +7,9 @@ import { KitbashPart } from '../visual/kitbash/KitbashAdapter';
 import {
   COLLIDER_RADIUS,
   INSTALLED_PICK_PRIORITY,
-  NUT_DWELL_MS,
   REMOVED_PICK_PRIORITY,
   SOP_PICK_PRIORITY,
 } from './defaults';
-import { createDwellTracker } from './dwell';
 import { isInstallOfferPart, PROP_OFFER_POS } from './partOffer';
 import {
   registerInteractable,
@@ -31,15 +29,11 @@ const PARK_OFFSET: Vec3 = [0.22, 0.08, 0.12];
 export function NutPart({ part, isSopTarget }: NutPartProps) {
   const groupRef = useRef<Group>(null);
   const meshRef = useRef<Group>(null);
-  const dwell = useRef(createDwellTracker(NUT_DWELL_MS));
   const [hover, setHover] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [removed, setRemoved] = useState(false);
   const sopRef = useRef(isSopTarget);
   sopRef.current = isSopTarget;
   const rotation: Vec3 = part.anchor.rotation ?? [0, 0, 0];
-  const tipShown = useRef(false);
-  const actedThisPinch = useRef(false);
   const carrying = useRef(false);
   const grabOffset = useRef(new Vector3());
   const followPos = useRef(new Vector3(...part.anchor.position));
@@ -88,9 +82,6 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
         return g.getWorldPosition(_tmp).distanceTo(handPos);
       },
       onPinchStart(handPos) {
-        actedThisPinch.current = false;
-        dwell.current.reset();
-        setProgress(0);
         const mgr = getTrainingSession();
         const st = mgr?.getState(part.partId);
 
@@ -101,53 +92,26 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
             g.getWorldPosition(_tmp);
             grabOffset.current.copy(_tmp).sub(handPos);
           }
-          // Tighten radius while carrying doesn't matter — already engaged
-          return;
+          return true;
         }
 
-        // Tighten for dwell-unscrew: use smaller effective check via distance already
-        if (
-          mgr &&
-          !tipShown.current &&
-          part.thread === 'reverse' &&
-          part.tips.wrongDirection
-        ) {
-          tipShown.current = true;
-          mgr.tip(part.tips.wrongDirection);
-        }
-      },
-      onPinchHold(handPos, dtSec) {
-        if (actedThisPinch.current) return;
-        const mgr = getTrainingSession();
-        const st = mgr?.getState(part.partId);
-
-        if (carrying.current) {
-          followPos.current.copy(handPos).add(grabOffset.current);
-          return;
-        }
-
-        if (st === 'removed') {
-          dwell.current.reset();
-          setProgress(0);
-          return;
-        }
-
-        const done = dwell.current.tick(true, dtSec * 1000);
-        setProgress(dwell.current.progress());
-        if (done) {
-          if (mgr?.tryNutAction(part.partId)) {
-            actedThisPinch.current = true;
-            setRemoved(mgr.getState(part.partId) === 'removed');
-            dwell.current.reset();
-            setProgress(0);
-            if (mgr.getState(part.partId) === 'removed') {
-              mgr.tip('螺母已拧下 · 再捏住风轮叶轮取下');
-            }
+        if (st === 'installed') {
+          if (!mgr?.tryNutAction(part.partId)) return false;
+          setRemoved(true);
+          const follow = '螺母已拧下 · 再轻握风轮叶轮取下';
+          if (part.thread === 'reverse' && part.tips.wrongDirection) {
+            mgr.tip(`${part.tips.wrongDirection} · ${follow}`);
           } else {
-            dwell.current.reset();
-            setProgress(0);
+            mgr.tip(follow);
           }
+          return true;
         }
+
+        return false;
+      },
+      onPinchHold(handPos) {
+        if (!carrying.current) return;
+        followPos.current.copy(handPos).add(grabOffset.current);
       },
       onPinchEnd() {
         const mgr = getTrainingSession();
@@ -158,14 +122,11 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
           const range = Math.max(part.snapRangeMeters ?? 0.08, 0.12);
           if (_tmp.distanceTo(homePos) <= range && mgr.canInstall(part.partId)) {
             if (mgr.tryInstall(part.partId)) {
-              actedThisPinch.current = true;
               setRemoved(false);
               g.position.copy(homePos);
               followPos.current.copy(homePos);
               spinUntil.current = performance.now() + 700;
               mgr.tip(`✅ 已自动拧上 ${part.displayName}`);
-              dwell.current.reset();
-              setProgress(0);
               return;
             }
           }
@@ -173,15 +134,11 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
           followPos.current.set(...PROP_OFFER_POS);
           mgr.tip('放到螺母安装位松手，即可自动拧上');
         }
-        actedThisPinch.current = false;
-        dwell.current.reset();
-        setProgress(0);
       },
       onHover(active) {
         setHover(active);
       },
     };
-    // Prefer smaller pick when unscrewing so wheel isn't stolen — mutate per-frame via getter-like
     Object.defineProperty(self, 'interactionRadius', {
       get() {
         return isInstallOfferPart(part.partId)
@@ -262,12 +219,6 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
           <KitbashPart kitbashKey={part.visual.kitbashKey} />
         ) : null}
       </group>
-      {progress > 0 ? (
-        <mesh position={[0, 0.04, 0]}>
-          <ringGeometry args={[0.025, 0.032, 24, 1, 0, progress * Math.PI * 2]} />
-          <meshBasicMaterial color="#3ddc97" />
-        </mesh>
-      ) : null}
       <SopTargetHighlight
         active={isSopTarget || (removed && isInstallOfferPart(part.partId))}
         hover={hover}

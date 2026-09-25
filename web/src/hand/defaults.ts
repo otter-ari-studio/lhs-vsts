@@ -37,17 +37,23 @@ export const LANDMARK_STALE_HIDE_DELAY = 1.6;
 export const LANDMARK_MAX_STEP = 0.035;
 
 /**
- * Pinch distance thresholds (meters, world-landmark space after scale).
- * Enter pinch below ON; exit when distance ≥ OFF (hysteresis).
- * Capture 14-30-19 sat ~0.05–0.06 with the same finger gap — too-tight ON
- * made highlight depend on whether you briefly closed first. Slightly wider
- * band + EMA/confirm in HandTracker keeps the same pose stable.
+ * Grasp = finger openness ratio (not thumb–index pinch).
+ * Enter when openRatio ≤ ON; exit when ≥ OFF.
+ * Tuned so light curl near parts counts; fully open hand does not.
  */
-export const PINCH_ON_METERS = 0.045;
-export const PINCH_OFF_METERS = 0.07;
-/** EMA blend for raw pinch distance (higher = snappier). */
+export const GRASP_ON_RATIO = 1.75;
+export const GRASP_OFF_RATIO = 2.1;
+/** EMA for open-ratio. */
+export const GRASP_RATIO_EMA = 0.35;
+/** Frames that must agree before grasp flips. */
+export const GRASP_CONFIRM_FRAMES = 2;
+
+/**
+ * @deprecated Pinch tip-distance — kept for old tests; interaction uses grasp ratios.
+ */
+export const PINCH_ON_METERS = 0.066;
+export const PINCH_OFF_METERS = 0.09;
 export const PINCH_DIST_EMA = 0.4;
-/** Frames that must agree before pinch state flips. */
 export const PINCH_CONFIRM_FRAMES = 2;
 
 /**

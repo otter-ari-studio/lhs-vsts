@@ -103,11 +103,11 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         return g.getWorldPosition(_tmp).distanceTo(handPos);
       },
       onPinchStart(handPos) {
-        if (grabbed.current) return;
+        if (grabbed.current) return true;
         const mgr = getTrainingSession();
         const st = mgr?.getState(part.partId) ?? 'installed';
         if (st === 'installed') {
-          if (!mgr?.tryBeginRemove(part.partId)) return;
+          if (!mgr?.tryBeginRemove(part.partId)) return false;
           mgr.notifyRemoved(part.partId);
         }
         grabbed.current = true;
@@ -120,8 +120,9 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         }
         if (mgr && !tipShown.current) {
           tipShown.current = true;
-          mgr.tip('拆下后甩手入栏；回装时道具会弹出，抓起放回安装位自动拧上');
+          mgr.tip('高亮后轻握拆下；甩手入栏。回装时道具弹出，抓住放回安装位');
         }
+        return true;
       },
       onPinchHold(handPos) {
         if (!grabbed.current) return;
@@ -192,6 +193,15 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         setHover(active);
       },
     };
+    Object.defineProperty(self, 'interactionRadius', {
+      get() {
+        return sopRef.current || isInstallOfferPart(part.partId)
+          ? COLLIDER_RADIUS.grabbable + 0.06
+          : COLLIDER_RADIUS.grabbable;
+      },
+      enumerable: true,
+      configurable: true,
+    });
     return self;
   }, [part, snapRange, installedPos, followPos, grabOffset, grabbed, groupRef, setHover, sopRef]);
 

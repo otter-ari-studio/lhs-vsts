@@ -12,7 +12,8 @@ import {
   MEDIAPIPE_WASM_CDN,
 } from '../src/hand/mediapipeLoader';
 import { distance3, updatePinchState, updatePinchStateConfirmed } from '../src/hand/pinch';
-import type { HandSample } from '../src/hand/types';
+import { fingerOpenRatio, updateGraspStateConfirmed } from '../src/hand/grasp';
+import type { HandSample, Vec3 } from '../src/hand/types';
 
 test('DEFAULT_AXIS_MAP mirrors X and flips Y for selfie → Three', () => {
   expect(DEFAULT_AXIS_MAP.invertX).toBe(true);
@@ -88,6 +89,26 @@ test('pinch confirm ignores single-frame flips near the band', () => {
     2,
   ));
   expect(pinching).toBe(true);
+});
+
+test('fingerOpenRatio lower when tips curl toward wrist', () => {
+  const open: Vec3[] = Array.from({ length: 21 }, () => [0, 0, 0] as Vec3);
+  open[0] = [0, 0, 0];
+  open[9] = [0, 0.08, 0];
+  for (const tip of [8, 12, 16, 20]) open[tip] = [0, 0.2, 0];
+  const closed = open.map((p) => [...p] as Vec3);
+  for (const tip of [8, 12, 16, 20]) closed[tip] = [0, 0.05, 0];
+  expect(fingerOpenRatio(open)).toBeGreaterThan(fingerOpenRatio(closed));
+  expect(fingerOpenRatio(closed)).toBeLessThan(1.75);
+});
+
+test('grasp hysteresis: enter when openRatio ≤ ON, leave when ≥ OFF', () => {
+  const on = 1.75;
+  const off = 2.1;
+  expect(updateGraspStateConfirmed(false, 1.9, on, off, 0, 1).grasping).toBe(false);
+  expect(updateGraspStateConfirmed(false, 1.5, on, off, 0, 1).grasping).toBe(true);
+  expect(updateGraspStateConfirmed(true, 1.9, on, off, 0, 1).grasping).toBe(true);
+  expect(updateGraspStateConfirmed(true, 2.1, on, off, 0, 1).grasping).toBe(false);
 });
 
 test('distance3 is Euclidean', () => {

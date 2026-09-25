@@ -3,26 +3,59 @@ import { useRef } from 'react';
 import { Vector3 } from 'three';
 import type { HandId } from '../hand/types';
 import { handWorldHub } from '../hand/handWorldHub';
-import { GRAB_COMMIT_MS, TOGGLE_COMMIT_MS } from './defaults';
+import {
+  GRAB_COMMIT_MS,
+  HIGHLIGHT_GRAB_COMMIT_MS,
+  PENDING_EXIT_SCALE,
+  SOP_PICK_PRIORITY,
+  TOGGLE_COMMIT_MS,
+} from './defaults';
 import {
   findHoverTargetSticky,
   findNearestInteractable,
   type HandInteractable,
 } from './registry';
+import {
+  selectionFromInteractable,
+  selectionFromSopFallback,
+} from './selectionInfo';
+import { selectionHub } from './selectionHub';
 
 const _pos = new Vector3();
 const _hoverPos = new Vector3();
 
-function commitMsFor(it: HandInteractable | null): number {
+function commitMsFor(
+  it: HandInteractable | null,
+  alreadyHighlighted: boolean,
+): number {
   if (!it) return GRAB_COMMIT_MS;
   if (it.id.endsWith(':install-slot')) return TOGGLE_COMMIT_MS;
-  return it.kind === 'grabbable' ? GRAB_COMMIT_MS : TOGGLE_COMMIT_MS;
+  if (it.kind !== 'grabbable') return TOGGLE_COMMIT_MS;
+  if (alreadyHighlighted || (it.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY) {
+    return HIGHLIGHT_GRAB_COMMIT_MS;
+  }
+  return GRAB_COMMIT_MS;
+}
+
+function stillPendingTarget(it: HandInteractable, handPos: Vector3): boolean {
+  if (!it.isInteractableNow()) return false;
+  return it.distanceTo(handPos) <= it.interactionRadius * PENDING_EXIT_SCALE;
+}
+
+/** Prefer the HUD-highlighted part so light squeeze grabs what you see. */
+function pickPendingTarget(
+  handPos: Vector3,
+  highlighted: HandInteractable | null,
+): HandInteractable | null {
+  if (highlighted && stillPendingTarget(highlighted, handPos)) {
+    return highlighted;
+  }
+  return findNearestInteractable(handPos);
 }
 
 interface HandInteractionState {
   lastPinch: boolean;
   engaged: HandInteractable | null;
-  /** Per-hand sticky candidate (not directly driving onHover). */
   hoverCand: HandInteractable | null;
   pending: HandInteractable | null;
   pendingMs: number;
@@ -30,8 +63,7 @@ interface HandInteractionState {
 
 /**
  * Routes HandWorldHub pinch edges + hover to registered interactables.
- * Grab commits only after a short sustained pinch (avoids “touch = stick”).
- * Hover is aggregated across both hands so one hand leaving doesn't clear the other.
+ * Highlighted targets commit on a short squeeze; hover feeds the right-side HUD.
  */
 export function InteractionRouter() {
   const hands = useRef<HandInteractionState[]>([
@@ -68,33 +100,47 @@ export function InteractionRouter() {
 
       if (!state.engaged && !state.pending) {
         state.hoverCand = findHoverTargetSticky(_pos, state.hoverCand);
-      } else {
+      } else if (state.engaged) {
         state.hoverCand = null;
       }
 
       if (pinch && !state.lastPinch) {
-        state.pending = findNearestInteractable(_pos);
+        state.pending = pickPendingTarget(_pos, globalHover.current);
         state.pendingMs = 0;
       } else if (pinch && state.pending && !state.engaged) {
-        const still = findNearestInteractable(_pos);
-        if (!still || still.id !== state.pending.id) {
-          state.pending = still;
+        if (!stillPendingTarget(state.pending, _pos)) {
+          state.pending = pickPendingTarget(_pos, globalHover.current);
           state.pendingMs = 0;
         } else {
+          const alreadyHi =
+            globalHover.current?.id === state.pending.id ||
+            state.hoverCand?.id === state.pending.id ||
+            (state.pending.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY;
           state.pendingMs += dt * 1000;
-          if (state.pendingMs >= commitMsFor(state.pending)) {
-            state.engaged = state.pending;
+          if (state.pendingMs >= commitMsFor(state.pending, alreadyHi)) {
+            const target = state.pending;
             state.pending = null;
             state.pendingMs = 0;
             state.hoverCand = null;
-            state.engaged.onPinchStart(_pos);
+            const ok = target.onPinchStart(_pos);
+            if (ok === false) {
+              // Order-locked / rejected — do not keep a dead engage
+              state.engaged = null;
+            } else {
+              state.engaged = target;
+            }
           }
         }
       } else if (pinch && state.engaged) {
-        if (!state.engaged.isInteractableNow()) {
+        // Only auto-drop rotate_nut when it becomes non-interactable (just removed).
+        // Grabbables set isInteractableNow=false while carrying — must NOT drop them.
+        if (
+          state.engaged.kind === 'rotate_nut' &&
+          !state.engaged.isInteractableNow()
+        ) {
           state.engaged.onPinchEnd(_pos);
           state.engaged = null;
-          state.pending = findNearestInteractable(_pos);
+          state.pending = pickPendingTarget(_pos, globalHover.current);
           state.pendingMs = 0;
         } else {
           state.engaged.onPinchHold(_pos, dt);
@@ -110,7 +156,6 @@ export function InteractionRouter() {
       state.lastPinch = pinch;
     }
 
-    // Aggregate hover: prefer higher pickPriority, then closer hand tip.
     let best: HandInteractable | null = null;
     let bestPri = Number.NEGATIVE_INFINITY;
     let bestDist = Number.POSITIVE_INFINITY;
@@ -138,6 +183,11 @@ export function InteractionRouter() {
       best?.onHover?.(true);
       globalHover.current = best;
     }
+
+    const sel = best
+      ? selectionFromInteractable(best)
+      : selectionFromSopFallback();
+    selectionHub.set(sel);
   });
 
   return null;
