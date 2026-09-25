@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useHandCamera } from '../hand/useHandCamera';
 import { partInventory } from '../interaction/partInventory';
+import { currentInstallOfferPartId } from '../interaction/partOffer';
 import {
   APPLIANCE_WASH_DURATION_MS,
   getTrainingSession,
@@ -105,18 +106,6 @@ export function TrainPage({ onBack }: TrainPageProps) {
   const session = getTrainingSession();
   const partName = (id: string) =>
     session?.def.parts.find((p) => p.partId === id)?.displayName ?? id;
-
-  const tryUiInstall = (partId: string) => {
-    const mgr = getTrainingSession();
-    if (!mgr) return;
-    if (!mgr.canInstall(partId)) {
-      mgr.tip(mgr.installBlockReason(partId) ?? '暂时无法回装');
-      return;
-    }
-    if (mgr.tryInstall(partId)) {
-      partInventory.dequeue(partId);
-    }
-  };
 
   useEffect(() => {
     return subscribeTips((msg) => {
@@ -236,24 +225,14 @@ export function TrainPage({ onBack }: TrainPageProps) {
               <li className="inv-empty">空 · 取下后左右甩手松手入队</li>
             ) : (
               inventory.map((id, i) => {
-                const ready = session?.canInstall(id) ?? false;
+                const offered = currentInstallOfferPartId() === id;
                 return (
-                  <li key={`${id}-${i}`} className={`inv-row ${ready ? 'ready' : ''}`}>
+                  <li key={`${id}-${i}`} className={`inv-row ${offered ? 'ready' : ''}`}>
                     <span className="inv-idx">{i + 1}</span>
                     <span className="inv-name">{partName(id)}</span>
-                    <button
-                      type="button"
-                      className="inv-install-btn"
-                      disabled={!ready}
-                      title={
-                        ready
-                          ? '回装到机身'
-                          : (session?.installBlockReason(id) ?? '顺序未到')
-                      }
-                      onClick={() => tryUiInstall(id)}
-                    >
-                      {ready ? '回装' : '锁定'}
-                    </button>
+                    <span className="inv-status">
+                      {offered ? '已弹出' : '排队中'}
+                    </span>
                   </li>
                 );
               })
@@ -330,7 +309,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              拆下后甩手入物品栏。回装：左侧列表点「回装」，或对准机身绿色闪烁框捏合（须按 SOP 顺序，前置未完成会提示锁定）。
+              拆下后甩手入物品栏。回装时当前零件会弹出到右侧，抓住后放回机身绿色安装位松手即可自动拧上。
             </div>
           ) : null}
 

@@ -44,6 +44,10 @@ test('grab pick radius is larger than former snap-only 0.08m', () => {
   expect(COLLIDER_RADIUS.grabbable).toBeGreaterThan(0.15);
 });
 
+test('nut pick radius stays smaller than grabbable so impeller can win after nut-off', () => {
+  expect(COLLIDER_RADIUS.rotate_nut).toBeLessThan(COLLIDER_RADIUS.grabbable);
+});
+
 test('clip pick radius reaches deep hood clips', () => {
   expect(COLLIDER_RADIUS.clip).toBeGreaterThanOrEqual(0.25);
 });
@@ -117,4 +121,10 @@ test('findNearest ignores out-of-radius even with high priority', () => {
   const hit = findNearestInteractable(new Vector3(0, 0, 0));
   expect(hit?.id).toBe('near');
   clearInteractables();
+});
+
+test('PROP_OFFER_POS sits in reachable front workspace', async () => {
+  const { PROP_OFFER_POS } = await import('../src/interaction/partOffer');
+  expect(PROP_OFFER_POS[2]).toBeGreaterThan(0.3);
+  expect(PROP_OFFER_POS[0]).toBeGreaterThan(0.2);
 });

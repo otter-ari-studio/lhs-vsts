@@ -84,17 +84,14 @@ export function MachineView({ def }: MachineViewProps) {
           return <FixedShell key={part.partId} part={part} />;
         }
         if (part.kind === 'grabbable') {
-          const inInv = partInventory.has(part.partId);
           const showInstallGhost =
-            inInv && session?.getState(part.partId) === 'removed';
+            isTarget &&
+            session?.getState(part.partId) === 'removed' &&
+            !!session?.canInstall(part.partId);
           return (
             <group key={part.partId}>
               <GrabPart part={part} snapRange={snapRange} isSopTarget={isTarget} />
-              <GrabInstallGhost
-                part={part}
-                active={!!showInstallGhost}
-                snapRange={snapRange}
-              />
+              <GrabInstallGhost part={part} active={!!showInstallGhost} />
             </group>
           );
         }

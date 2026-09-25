@@ -389,6 +389,18 @@ body,
   cursor: not-allowed;
 }
 
+.inv-status {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  color: #8a9aab;
+  white-space: nowrap;
+}
+
+.inv-row.ready .inv-status {
+  color: #3ddc97;
+  font-weight: 600;
+}
+
 .step-list {
   margin: 0;
   padding: 0;

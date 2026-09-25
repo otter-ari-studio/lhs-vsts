@@ -7,10 +7,11 @@ export const DEFAULT_CLEAN_DWELL_MS = 1500;
 /** Collider radii by kind (meters) — pick range for pinch start. */
 export const COLLIDER_RADIUS = {
   /** Grab pick (install snap still uses part.snapRangeMeters). */
-  grabbable: 0.18,
+  grabbable: 0.22,
   /** Clips sit deeper (z≈0.14–0.22); need larger pick than filters. */
   clip: 0.28,
-  rotate_nut: 0.11,
+  /** Keep nut smaller than wheel so after nut-off the impeller wins nearby pinches. */
+  rotate_nut: 0.09,
   clean: 0.14,
 } as const;
 

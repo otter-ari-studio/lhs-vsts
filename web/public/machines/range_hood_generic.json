@@ -142,7 +142,7 @@
       "partId": "wind_wheel",
       "displayName": "风轮叶轮",
       "kind": "grabbable",
-      "anchor": { "position": [0, 0.26, 0.06] },
+      "anchor": { "position": [0, 0.26, 0.1] },
       "visual": { "adapter": "kitbash", "kitbashKey": "wind_wheel" },
       "removePrereqs": ["remove_nut_wind"],
       "installPrereqs": ["clean_wind_wheel"],

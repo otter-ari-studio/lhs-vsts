@@ -98,7 +98,16 @@ export function InteractionRouter() {
           }
         }
       } else if (pinch && state.engaged) {
-        state.engaged.onPinchHold(_pos, dt);
+        // Target may become invalid mid-hold (e.g. nut just removed) — release and
+        // re-arm pending so the same pinch can commit the next SOP part (wind_wheel).
+        if (!state.engaged.isInteractableNow()) {
+          state.engaged.onPinchEnd(_pos);
+          state.engaged = null;
+          state.pending = findNearestInteractable(_pos);
+          state.pendingMs = 0;
+        } else {
+          state.engaged.onPinchHold(_pos, dt);
+        }
       } else if (!pinch && state.lastPinch) {
         if (state.engaged) {
           state.engaged.onPinchEnd(_pos);

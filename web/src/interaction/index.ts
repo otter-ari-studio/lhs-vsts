@@ -6,6 +6,11 @@ export { ClipPart } from './ClipPart';
 export { NutPart } from './NutPart';
 export { CleanSpotMesh } from './CleanSpot';
 export { partInventory, INVENTORY_PARK } from './partInventory';
+export {
+  currentInstallOfferPartId,
+  isInstallOfferPart,
+  PROP_OFFER_POS,
+} from './partOffer';
 export { detectLateralThrow, pushThrowSample } from './throwDetect';
 export {
   clearInteractables,
