@@ -1,8 +1,16 @@
 import type { HandLandmarker, HandLandmarkerResult } from '@mediapipe/tasks-vision';
 import {
+  handCaptureRecorder,
+  landmarkListToVec3,
+  type HandCaptureHandFrame,
+} from './captureLog';
+import {
   ema,
+  median,
   palmRatioToSceneZ,
   palmWidthNorm,
+  PALM_ORIGIN_MIN_SAMPLES,
+  PALM_ORIGIN_SAMPLE_MS,
 } from './deskDepth';
 import {
   HAND_HOLD_MS,
@@ -56,18 +64,34 @@ export class HandTracker {
   private running = false;
   private lastVideoTime = -1;
   private lastTs = 0;
+  /** When false, detect may still run but does not publish (replay mode). */
+  private publishEnabled = true;
 
   private readonly pinchState: [boolean, boolean] = [false, false];
   private readonly held: (HandSample | null)[] = [null, null];
   private readonly lastSeenAt: [number, number] = [0, 0];
   private readonly palmNormEma: [number | null, number | null] = [null, null];
   private readonly originPalm: [number | null, number | null] = [null, null];
+  /** Raw palm samples while origin is unlocked (median → origin). */
+  private readonly originPalmSamples: [number[], number[]] = [[], []];
+  private readonly originPalmStartedAt: [number | null, number | null] = [null, null];
 
   constructor(opts: HandTrackerOptions) {
     this.landmarker = opts.landmarker;
     this.video = opts.video;
     this.holdMs = opts.holdMs ?? HAND_HOLD_MS;
     this.onPresence = opts.onPresence;
+  }
+
+  setPublishEnabled(enabled: boolean): void {
+    this.publishEnabled = enabled;
+    if (!enabled) {
+      handHub.clearAll();
+    }
+  }
+
+  isPublishEnabled(): boolean {
+    return this.publishEnabled;
   }
 
   start(): void {
@@ -94,16 +118,50 @@ export class HandTracker {
     this.pinchState[1] = false;
     this.palmNormEma[0] = null;
     this.palmNormEma[1] = null;
-    this.originPalm[0] = null;
-    this.originPalm[1] = null;
+    this.clearOriginCalibration(0);
+    this.clearOriginCalibration(1);
   }
 
-  /** Call when UI requests Recalibrate — resets palm-reach origin on next sample. */
+  /** Call when UI requests Recalibrate — re-sample palm origin (~0.45 s). */
   resetDepthCalibration(): void {
-    this.originPalm[0] = null;
-    this.originPalm[1] = null;
     this.palmNormEma[0] = null;
     this.palmNormEma[1] = null;
+    this.clearOriginCalibration(0);
+    this.clearOriginCalibration(1);
+  }
+
+  private clearOriginCalibration(handId: HandId): void {
+    this.originPalm[handId] = null;
+    this.originPalmSamples[handId] = [];
+    this.originPalmStartedAt[handId] = null;
+  }
+
+  /**
+   * While unlocked, accumulate palm samples; lock median after window.
+   * Returns the origin to use this frame (running median until locked).
+   */
+  private resolveOriginPalm(handId: HandId, palm: number, now: number): number {
+    if (this.originPalm[handId] !== null) {
+      return this.originPalm[handId]!;
+    }
+    if (!(palm > 1e-4)) return palm;
+
+    const samples = this.originPalmSamples[handId];
+    samples.push(palm);
+    if (this.originPalmStartedAt[handId] === null) {
+      this.originPalmStartedAt[handId] = now;
+    }
+    const started = this.originPalmStartedAt[handId]!;
+    const ready =
+      samples.length >= PALM_ORIGIN_MIN_SAMPLES &&
+      now - started >= PALM_ORIGIN_SAMPLE_MS;
+    const running = median(samples);
+    if (ready) {
+      this.originPalm[handId] = running;
+      this.originPalmSamples[handId] = [];
+      this.originPalmStartedAt[handId] = null;
+    }
+    return running;
   }
 
   private tick(): void {
@@ -133,22 +191,20 @@ export class HandTracker {
     const seen: [boolean, boolean] = [false, false];
     const count = result.landmarks?.length ?? 0;
     const centerZ = SCREEN_WORKSPACE.center[2];
+    const logHands: HandCaptureHandFrame[] = [];
 
     for (let i = 0; i < count; i++) {
       const image = result.landmarks[i];
       if (!image || image.length < JOINT_COUNT) continue;
 
-      const handId = handednessToId(result.handedness?.[i]?.[0]?.categoryName);
+      const label = result.handedness?.[i]?.[0]?.categoryName ?? '';
+      const handId = handednessToId(label);
       if (handId === null) continue;
 
       const rawPalm = palmWidthNorm(image);
       this.palmNormEma[handId] = ema(this.palmNormEma[handId], rawPalm);
       const palm = this.palmNormEma[handId] ?? rawPalm;
-      if (this.originPalm[handId] === null && palm > 1e-4) {
-        this.originPalm[handId] = palm;
-      }
-      const originPalm = this.originPalm[handId] ?? palm;
-      // Larger palm (reach toward screen) → smaller scene Z toward parts.
+      const originPalm = this.resolveOriginPalm(handId, palm, now);
       const reachZ = clampHandZ(
         palmRatioToSceneZ(palm, originPalm, HAND_Z_NEAR, centerZ, HAND_Z_FAR),
         HAND_Z_NEAR,
@@ -172,6 +228,25 @@ export class HandTracker {
       );
       this.pinchState[handId] = pinching;
 
+      const imageVec = landmarkListToVec3(image);
+      if (imageVec) {
+        logHands.push({
+          handId,
+          label,
+          image: imageVec,
+          world: landmarkListToVec3(result.worldLandmarks?.[i]),
+          palmRaw: rawPalm,
+          palmEma: palm,
+          originPalm,
+          reachZ,
+          sceneWrist: wrist,
+          sceneLandmarks: mapped,
+          rotation,
+          pinching,
+          pinchDist,
+        });
+      }
+
       const sample: HandSample = {
         handId,
         position: wrist,
@@ -183,8 +258,12 @@ export class HandTracker {
       this.held[handId] = sample;
       this.lastSeenAt[handId] = now;
       seen[handId] = true;
-      handHub.publish(sample);
+      if (this.publishEnabled) {
+        handHub.publish(sample);
+      }
     }
+
+    handCaptureRecorder.append(logHands);
 
     for (const id of [0, 1] as const) {
       if (!seen[id]) {
@@ -204,20 +283,26 @@ export class HandTracker {
   private applyHoldForHand(handId: HandId, now: number): void {
     const held = this.held[handId];
     if (!held) {
-      handHub.clear(handId);
+      if (this.publishEnabled) {
+        handHub.clear(handId);
+      }
       return;
     }
     if (now - this.lastSeenAt[handId] <= this.holdMs) {
-      handHub.publish(held);
+      if (this.publishEnabled) {
+        handHub.publish(held);
+      }
       return;
     }
     this.held[handId] = null;
     this.pinchState[handId] = false;
-    handHub.clear(handId);
+    if (this.publishEnabled) {
+      handHub.clear(handId);
+    }
   }
 
   private emitPresence(): void {
-    if (!this.onPresence) return;
+    if (!this.onPresence || !this.publishEnabled) return;
     const l = handHub.tryGetLatest(0) !== null;
     const r = handHub.tryGetLatest(1) !== null;
     const presence: TrackingPresence = l && r ? 'both' : l || r ? 'partial' : 'none';

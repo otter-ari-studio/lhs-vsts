@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useHandCamera } from '../hand/useHandCamera';
 import {
   getTrainingSession,
@@ -75,7 +75,16 @@ export function TrainPage({ onBack }: TrainPageProps) {
   const [restartToken, setRestartToken] = useState(0);
   const [sessionTick, setSessionTick] = useState(0);
   const [tip, setTip] = useState<string | null>(null);
-  const { phase, error, presence, videoRef, retry, recalibrateDepth } = useHandCamera(true);
+  const {
+    phase,
+    error,
+    presence,
+    videoRef,
+    retry,
+    recalibrateDepth,
+    capture,
+  } = useHandCamera(true);
+  const captureFileRef = useRef<HTMLInputElement | null>(null);
   const status = statusLabel(phase, presence);
   const showOverlay = phase === 'denied' || phase === 'error';
   const snap = useSessionSnapshot(sessionTick);
@@ -130,10 +139,54 @@ export function TrainPage({ onBack }: TrainPageProps) {
             recalibrateDepth();
             setCalibrateToken((n) => n + 1);
           }}
-          disabled={phase !== 'tracking'}
+          disabled={phase !== 'tracking' || capture.replaying}
         >
           重新标定
         </button>
+        {capture.recording ? (
+          <button
+            type="button"
+            className="recal-btn capture-active"
+            onClick={() => capture.stopAndDownload()}
+          >
+            停止并下载 ({capture.frameCount})
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="recal-btn"
+            onClick={() => capture.startRecording()}
+            disabled={phase !== 'tracking' || capture.replaying}
+          >
+            录制手部日志
+          </button>
+        )}
+        <button
+          type="button"
+          className="recal-btn"
+          onClick={() => captureFileRef.current?.click()}
+          disabled={capture.recording}
+        >
+          {capture.replaying ? '重放中…' : '重放日志'}
+        </button>
+        {capture.replaying ? (
+          <button type="button" className="recal-btn" onClick={() => capture.stopReplay()}>
+            停止重放
+          </button>
+        ) : null}
+        <input
+          ref={captureFileRef}
+          type="file"
+          accept="application/json,.json"
+          className="capture-file-input"
+          aria-hidden
+          tabIndex={-1}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (file) void capture.loadAndReplay(file);
+          }}
+        />
         <button type="button" className="recal-btn" onClick={onBack}>
           返回引导
         </button>
@@ -208,8 +261,8 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              双手入画后点「重新标定」。前后够零件：手靠近屏幕（画面里变大）→
-              虚拟手靠近机型；远离屏幕 → 虚拟手后退。左右位置对齐镜像预览。
+              双手举到胸前停约半秒后点「重新标定」。前后够零件：手靠近屏幕（画面里变大）→
+              虚拟手靠近机型；远离屏幕 → 虚拟手后退。左右对齐镜像预览。
             </div>
           ) : null}
 

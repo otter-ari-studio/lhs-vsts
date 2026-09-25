@@ -15,14 +15,20 @@ import {
  * Browser CSS pixel sizes are not required: MediaPipe already gives normalized
  * [0,1] image coords; we scale those into a fixed scene workspace in meters.
  */
-export const SCREEN_WORKSPACE = {
+export interface ScreenWorkspace {
   /** Scene point that corresponds to camera frame center (hood mid-front). */
-  center: [0, 0.14, 0.4] as Vec3,
+  center: Vec3;
   /** Full camera width → this many meters of scene X. */
-  width: 0.95,
+  width: number;
   /** Full camera height → this many meters of scene Y. */
+  height: number;
+}
+
+export const SCREEN_WORKSPACE: ScreenWorkspace = {
+  center: [0, 0.14, 0.4],
+  width: 0.95,
   height: 0.7,
-} as const;
+};
 
 export interface ImageToSceneOptions {
   /** Scene Z for the wrist (desk-depth reach model). */
@@ -32,7 +38,7 @@ export interface ImageToSceneOptions {
   mirrorX?: boolean;
   /** When true (default), keep Z on the front work slab. */
   clampZ?: boolean;
-  workspace?: typeof SCREEN_WORKSPACE;
+  workspace?: ScreenWorkspace;
 }
 
 export function clampHandZ(z: number, lo = HAND_Z_NEAR, hi = HAND_Z_FAR): number {

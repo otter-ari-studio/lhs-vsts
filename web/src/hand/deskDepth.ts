@@ -25,15 +25,25 @@ export const DEPTH_REACH_GAIN = 0.9;
  * Palm-ratio reach: at calibrate palm=1.
  * scale ≥ 1 + PALM_CLOSER_SPAN → full reach toward parts (HAND_Z_NEAR).
  * scale ≤ 1 - PALM_FARTHER_SPAN → full pull-back (HAND_Z_FAR).
+ *
+ * Tuned from capture 2026-09-25: left hand only grew ~+20% palm vs origin,
+ * so span 0.32 never hit NEAR. ~0.18 matches natural forward reach.
  */
-export const PALM_CLOSER_SPAN = 0.32;
-export const PALM_FARTHER_SPAN = 0.28;
+export const PALM_CLOSER_SPAN = 0.18;
+export const PALM_FARTHER_SPAN = 0.18;
 
 /** EMA for palm-width samples (0–1, higher = snappier / noisier). */
-export const PALM_WIDTH_EMA = 0.28;
+export const PALM_WIDTH_EMA = 0.4;
 
 /** Ignore tiny palm-ratio jitter around 1.0 before applying reach. */
-export const PALM_RATIO_DEADZONE = 0.04;
+export const PALM_RATIO_DEADZONE = 0.02;
+
+/**
+ * Accumulate palm samples this long before locking origin (avoids first-frame lock
+ * when one hand is already closer — left origin was 0.157 vs median ~0.137).
+ */
+export const PALM_ORIGIN_SAMPLE_MS = 450;
+export const PALM_ORIGIN_MIN_SAMPLES = 8;
 
 /** Clamp estimated camera distance (meters). */
 export const DEPTH_MIN_METERS = 0.35;
@@ -130,6 +140,15 @@ export function palmRatioToSceneZ(
 export function ema(prev: number | null, next: number, alpha = PALM_WIDTH_EMA): number {
   if (prev === null || !Number.isFinite(prev)) return next;
   return prev * (1 - alpha) + next * alpha;
+}
+
+/** Median of a non-empty number list (used for palm-origin lock). */
+export function median(values: readonly number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 1) return sorted[mid];
+  return (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 function clamp(v: number, lo: number, hi: number): number {

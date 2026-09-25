@@ -149,9 +149,78 @@ test('desk depth: larger palm → closer; browsers assume 1 m desk', async () =>
   const zMid = palmRatioToSceneZ(0.1, 0.1, 0.26, 0.4, 0.58);
   expect(zNear).toBeLessThan(zMid);
   expect(zFar).toBeGreaterThan(zMid);
+  // Full near within ~+18% palm growth
+  expect(zNear).toBeCloseTo(0.26);
+
+  // Capture 2026-09-25 left max (~+20%): must reach NEAR with current spans
+  const leftCaptureNear = palmRatioToSceneZ(0.1886, 0.156893, 0.26, 0.4, 0.58);
+  expect(leftCaptureNear).toBeCloseTo(0.26, 2);
 
   const pts = Array.from({ length: 21 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
   pts[5] = { x: 0.4, y: 0.5, z: 0 };
   pts[17] = { x: 0.55, y: 0.5, z: 0 };
   expect(palmWidthNorm(pts)).toBeCloseTo(0.15);
+});
+
+test('median origin helper prefers mid sample', async () => {
+  const { median } = await import('../src/hand/deskDepth');
+  expect(median([0.2, 0.1, 0.15])).toBeCloseTo(0.15);
+  expect(median([0.1, 0.2])).toBeCloseTo(0.15);
+});
+
+test('capture log: record → parse → replay publishes HandHub', async () => {
+  const {
+    HAND_CAPTURE_LOG_VERSION,
+    handCaptureRecorder,
+    parseHandCaptureLog,
+    HandCaptureReplayer,
+  } = await import('../src/hand/captureLog');
+  const { handHub: hub } = await import('../src/hand/HandHub');
+  const { JOINT_COUNT } = await import('../src/hand/types');
+
+  hub.clearAll();
+  handCaptureRecorder.clear();
+  handCaptureRecorder.start('unit');
+  const landmarks = Array.from({ length: JOINT_COUNT }, (_, i) => [i * 0.01, 0.1, 0.4] as [
+    number,
+    number,
+    number,
+  ]);
+  handCaptureRecorder.append([
+    {
+      handId: 0,
+      label: 'Left',
+      image: landmarks,
+      world: null,
+      palmRaw: 0.12,
+      palmEma: 0.12,
+      originPalm: 0.12,
+      reachZ: 0.4,
+      sceneWrist: [0, 0.1, 0.4],
+      sceneLandmarks: landmarks,
+      rotation: [0, 0, 0, 1],
+      pinching: false,
+      pinchDist: 0.08,
+    },
+  ]);
+  const log = handCaptureRecorder.stop();
+  expect(log.version).toBe(HAND_CAPTURE_LOG_VERSION);
+  expect(log.frames).toHaveLength(1);
+  expect(log.meta.note).toBe('unit');
+
+  const parsed = parseHandCaptureLog(JSON.parse(JSON.stringify(log)));
+  expect(parsed.frames[0].hands[0].reachZ).toBeCloseTo(0.4);
+
+  await new Promise<void>((resolve) => {
+    const replayer = new HandCaptureReplayer(parsed, { onDone: () => resolve() });
+    replayer.start();
+  });
+  expect(hub.tryGetLatest(0)?.position[2]).toBeCloseTo(0.4);
+  hub.clearAll();
+  handCaptureRecorder.clear();
+});
+
+test('parseHandCaptureLog rejects bad version', async () => {
+  const { parseHandCaptureLog } = await import('../src/hand/captureLog');
+  expect(() => parseHandCaptureLog({ version: 99, frames: [] })).toThrow();
 });

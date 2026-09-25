@@ -38,10 +38,11 @@ export const LANDMARK_MAX_STEP = 0.035;
 
 /**
  * Pinch distance thresholds (meters, world-landmark space after scale).
- * Enter pinch below ON; exit above OFF (hysteresis). Slightly looser for stability.
+ * Enter pinch below ON; exit above OFF (hysteresis).
+ * Looser ON — capture logs often sat at ~0.05 while user thought they pinched.
  */
-export const PINCH_ON_METERS = 0.04;
-export const PINCH_OFF_METERS = 0.065;
+export const PINCH_ON_METERS = 0.05;
+export const PINCH_OFF_METERS = 0.075;
 
 /**
  * Image XY: full frame ≈ desk FOV width at DESK_TO_SCREEN_METERS.

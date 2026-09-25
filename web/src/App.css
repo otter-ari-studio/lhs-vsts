@@ -272,6 +272,23 @@ body,
   cursor: not-allowed;
 }
 
+.recal-btn.capture-active {
+  border-color: #a34848;
+  background: #3a1c1c;
+}
+
+.recal-btn.capture-active:hover {
+  background: #4a2424;
+}
+
+.capture-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .train-body {
   display: flex;
   flex: 1;

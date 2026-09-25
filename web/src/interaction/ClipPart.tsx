@@ -3,12 +3,13 @@ import { Group, Vector3 } from 'three';
 import { getTrainingSession } from '../machine/TrainingSession';
 import type { PartDef, Vec3 } from '../machine/types';
 import { KitbashPart } from '../visual/kitbash/KitbashAdapter';
-import { COLLIDER_RADIUS } from './defaults';
+import { COLLIDER_RADIUS, SOP_PICK_PRIORITY } from './defaults';
 import {
   registerInteractable,
   unregisterInteractable,
   type HandInteractable,
 } from './registry';
+import { SopTargetHighlight } from './SopTargetHighlight';
 
 interface ClipPartProps {
   part: PartDef;
@@ -21,6 +22,8 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
   const groupRef = useRef<Group>(null);
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
+  const sopRef = useRef(isSopTarget);
+  sopRef.current = isSopTarget;
   const rotation: Vec3 = part.anchor.rotation ?? [0, 0, 0];
 
   const api = useMemo(() => {
@@ -29,6 +32,7 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
       kind: 'clip',
       interactionRadius: COLLIDER_RADIUS.clip,
       isInteractableNow: () => true,
+      pickPriority: () => (sopRef.current ? SOP_PICK_PRIORITY : 0),
       distanceTo(handPos) {
         const g = groupRef.current;
         if (!g) return Number.POSITIVE_INFINITY;
@@ -48,7 +52,7 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
       },
     };
     return self;
-  }, [part.partId, groupRef, setHover, setOpen]);
+  }, [part.partId, groupRef, setHover, setOpen, sopRef]);
 
   useEffect(() => {
     registerInteractable(api);
@@ -61,8 +65,6 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
     if (mgr) setOpen(mgr.getState(part.partId) === 'clip_open');
   }, [part.partId, setOpen]);
 
-  const highlight = hover || isSopTarget;
-
   return (
     <group
       ref={groupRef}
@@ -71,21 +73,12 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
       rotation={[rotation[0], rotation[1], rotation[2] + (open ? 0.7 : 0)]}
       userData={{ partId: part.partId, kind: part.kind }}
     >
-      <group scale={highlight ? 1.05 : 1}>
+      <group scale={isSopTarget || hover ? 1.05 : 1}>
         {part.visual.adapter === 'kitbash' && part.visual.kitbashKey ? (
           <KitbashPart kitbashKey={part.visual.kitbashKey} />
         ) : null}
       </group>
-      {highlight ? (
-        <mesh>
-          <sphereGeometry args={[0.015, 8, 8]} />
-          <meshBasicMaterial
-            color={isSopTarget ? '#3ddc97' : '#f0c14a'}
-            transparent
-            opacity={0.55}
-          />
-        </mesh>
-      ) : null}
+      <SopTargetHighlight active={isSopTarget} hover={hover} radius={0.02} ringRadius={0.045} />
     </group>
   );
 }

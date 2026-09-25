@@ -14,6 +14,11 @@ export interface HandInteractable {
   onPinchEnd(handPos: Vector3): void;
   /** Optional hover enter/leave for highlight. */
   onHover?(active: boolean): void;
+  /**
+   * Higher wins when multiple targets are in range.
+   * SOP current target should return ≥ 2 so dropped parts don't steal grabs.
+   */
+  pickPriority?(): number;
 }
 
 const list: HandInteractable[] = [];
@@ -31,13 +36,21 @@ export function clearInteractables(): void {
   list.length = 0;
 }
 
+/**
+ * Nearest interactable within its radius.
+ * Prefer higher `pickPriority` (SOP targets) so removed oil_box doesn't steal filter_top.
+ */
 export function findNearestInteractable(handPos: Vector3): HandInteractable | null {
   let best: HandInteractable | null = null;
+  let bestPri = Number.NEGATIVE_INFINITY;
   let bestDist = Number.POSITIVE_INFINITY;
   for (const it of list) {
     if (!it.isInteractableNow()) continue;
     const d = it.distanceTo(handPos);
-    if (d <= it.interactionRadius && d < bestDist) {
+    if (d > it.interactionRadius) continue;
+    const pri = it.pickPriority?.() ?? 0;
+    if (pri > bestPri || (pri === bestPri && d < bestDist)) {
+      bestPri = pri;
       bestDist = d;
       best = it;
     }

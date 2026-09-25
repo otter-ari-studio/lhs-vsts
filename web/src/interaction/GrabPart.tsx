@@ -4,13 +4,19 @@ import { Group, Vector3 } from 'three';
 import { getTrainingSession } from '../machine/TrainingSession';
 import type { PartDef, Vec3 } from '../machine/types';
 import { KitbashPart } from '../visual/kitbash/KitbashAdapter';
-import { COLLIDER_RADIUS } from './defaults';
+import {
+  COLLIDER_RADIUS,
+  INSTALLED_PICK_PRIORITY,
+  REMOVED_PICK_PRIORITY,
+  SOP_PICK_PRIORITY,
+} from './defaults';
 import { setPartPose } from './partPoseHub';
 import {
   registerInteractable,
   unregisterInteractable,
   type HandInteractable,
 } from './registry';
+import { SopTargetHighlight } from './SopTargetHighlight';
 
 interface GrabPartProps {
   part: PartDef;
@@ -30,19 +36,30 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
     [part.anchor.position],
   );
   const [hover, setHover] = useState(false);
+  const sopRef = useRef(isSopTarget);
+  sopRef.current = isSopTarget;
+  const meshScaleRef = useRef<Group>(null);
   const rotation: Vec3 = part.anchor.rotation ?? [0, 0, 0];
 
   const api = useMemo(() => {
     const self: HandInteractable = {
       id: part.partId,
       kind: 'grabbable',
-      interactionRadius: part.snapRangeMeters ?? COLLIDER_RADIUS.grabbable,
+      // Pick radius is generous; snapRangeMeters only gates reinstall snap.
+      interactionRadius: COLLIDER_RADIUS.grabbable,
       isInteractableNow() {
         if (grabbed.current) return false;
         const mgr = getTrainingSession();
         if (!mgr) return true;
         const st = mgr.getState(part.partId);
         return st === 'installed' || st === 'removed';
+      },
+      pickPriority() {
+        if (sopRef.current) return SOP_PICK_PRIORITY;
+        const mgr = getTrainingSession();
+        const st = mgr?.getState(part.partId);
+        if (st === 'removed') return REMOVED_PICK_PRIORITY;
+        return INSTALLED_PICK_PRIORITY;
       },
       distanceTo(handPos) {
         const g = groupRef.current;
@@ -95,14 +112,14 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       },
     };
     return self;
-  }, [part, snapRange, installedPos, followPos, grabOffset, grabbed, groupRef, setHover]);
+  }, [part, snapRange, installedPos, followPos, grabOffset, grabbed, groupRef, setHover, sopRef]);
 
   useEffect(() => {
     registerInteractable(api);
     return () => unregisterInteractable(api);
   }, [api]);
 
-  useFrame((_, dt) => {
+  useFrame(({ clock }, dt) => {
     const g = groupRef.current;
     if (!g) return;
     if (grabbed.current) {
@@ -110,9 +127,13 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       g.position.lerp(followPos.current, t);
     }
     setPartPose(part.partId, [g.position.x, g.position.y, g.position.z]);
-  });
 
-  const highlight = hover || isSopTarget;
+    const mesh = meshScaleRef.current;
+    if (mesh) {
+      const pulse = isSopTarget ? 1.04 + 0.05 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 7)) : hover ? 1.03 : 1;
+      mesh.scale.setScalar(pulse);
+    }
+  });
 
   return (
     <group
@@ -122,7 +143,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       rotation={rotation}
       userData={{ partId: part.partId, kind: part.kind }}
     >
-      <group scale={highlight ? 1.03 : 1}>
+      <group ref={meshScaleRef}>
         {part.visual.adapter === 'kitbash' && part.visual.kitbashKey ? (
           <KitbashPart kitbashKey={part.visual.kitbashKey} />
         ) : (
@@ -132,16 +153,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
           </mesh>
         )}
       </group>
-      {highlight ? (
-        <mesh>
-          <sphereGeometry args={[0.02, 8, 8]} />
-          <meshBasicMaterial
-            color={isSopTarget ? '#3ddc97' : '#f0c14a'}
-            transparent
-            opacity={0.55}
-          />
-        </mesh>
-      ) : null}
+      <SopTargetHighlight active={isSopTarget} hover={hover} radius={0.03} ringRadius={0.07} />
     </group>
   );
 }
