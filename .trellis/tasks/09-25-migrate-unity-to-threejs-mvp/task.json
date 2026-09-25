@@ -1,0 +1,8 @@
+{
+  "id": "09-25-migrate-unity-to-threejs-mvp",
+  "title": "Migrate Unity RangeHood preview to Three.js web (MVP A)",
+  "status": "planning",
+  "priority": "P0",
+  "package": "web",
+  "slug": "migrate-unity-to-threejs-mvp"
+}
