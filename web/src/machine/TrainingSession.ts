@@ -45,6 +45,7 @@ export interface SessionSnapshot {
 export class TrainingSession {
   readonly def: MachineDef;
   readonly requiredSteps: string[];
+  private readonly sessionId = `ts_${Math.random().toString(36).slice(2, 10)}`;
   private readonly stepPrereqs: Map<string, string[]>;
   private readonly completed = new Set<string>();
   private readonly states: Map<string, PartRuntimeState>;
@@ -60,6 +61,10 @@ export class TrainingSession {
     this.states = initialPartStates(def);
     this.partById = new Map(def.parts.map((p) => [p.partId, p]));
     this.scores = createScoreBook(def.scoring);
+  }
+
+  getSessionId(): string {
+    return this.sessionId;
   }
 
   getRevision(): number {
@@ -177,6 +182,21 @@ export class TrainingSession {
     emitTip(`✅ 已回装 ${cfg.displayName}`);
     this.bump();
     return true;
+  }
+
+  /** True when part is removed and install prereqs are satisfied (no penalty). */
+  canInstall(partId: string): boolean {
+    if (this.getState(partId) !== 'removed') return false;
+    return prereqsMet(installStep(partId), this.completed, this.stepPrereqs);
+  }
+
+  /** Human-readable why install is locked, or null if ready. */
+  installBlockReason(partId: string): string | null {
+    const cfg = this.partById.get(partId);
+    if (!cfg) return '未知零件';
+    if (this.getState(partId) !== 'removed') return '零件未在物品栏';
+    if (this.canInstall(partId)) return null;
+    return cfg.tips.installLocked ?? `需先完成前置步骤才能回装 ${cfg.displayName}`;
   }
 
   notifyToleranceFail(partId: string): void {

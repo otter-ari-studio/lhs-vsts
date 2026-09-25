@@ -78,7 +78,13 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
           <KitbashPart kitbashKey={part.visual.kitbashKey} />
         ) : null}
       </group>
-      <SopTargetHighlight active={isSopTarget} hover={hover} radius={0.02} ringRadius={0.045} />
+      <SopTargetHighlight
+        active={isSopTarget}
+        hover={hover}
+        radius={0.035}
+        ringRadius={0.07}
+        label={isSopTarget ? part.displayName : undefined}
+      />
     </group>
   );
 }

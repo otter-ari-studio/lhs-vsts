@@ -113,7 +113,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         }
         if (mgr && !tipShown.current) {
           tipShown.current = true;
-          mgr.tip('取下后向左或向右甩一下松手 → 进入左侧物品栏；回装捏闪烁安装位');
+          mgr.tip('取下后左右甩手松手 → 物品栏；回装点列表「回装」或捏机身绿色框');
         }
       },
       onPinchHold(handPos) {
@@ -232,15 +232,17 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       <SopTargetHighlight
         active={isSopTarget && !inInventory}
         hover={hover}
-        radius={0.03}
-        ringRadius={0.07}
+        radius={0.05}
+        ringRadius={0.1}
+        label={isSopTarget && !inInventory ? part.displayName : undefined}
       />
     </group>
   );
 }
 
 /**
- * Install-slot interactable: pinch here while part is in inventory → reinstall.
+ * Install-slot interactable: pinch the flashing home while part is in inventory.
+ * Works whenever the part is bagged; tryInstall explains order locks via tip.
  */
 export function GrabInstallGhost({
   part,
@@ -252,21 +254,24 @@ export function GrabInstallGhost({
   snapRange: number;
 }) {
   const groupRef = useRef<Group>(null);
-  const sopActive = useRef(active);
-  sopActive.current = active;
+  const activeRef = useRef(active);
+  activeRef.current = active;
   const rotation: Vec3 = part.anchor.rotation ?? [0, 0, 0];
-  const _local = useMemo(() => new Vector3(), []);
 
   const api = useMemo(() => {
     const home = new Vector3(...part.anchor.position);
     const self: HandInteractable = {
       id: `${part.partId}:install-slot`,
       kind: 'grabbable',
-      interactionRadius: Math.max(COLLIDER_RADIUS.grabbable, snapRange * 1.5),
+      interactionRadius: Math.max(0.28, COLLIDER_RADIUS.grabbable, snapRange * 2),
       isInteractableNow() {
-        return sopActive.current && partInventory.has(part.partId);
+        return activeRef.current && partInventory.has(part.partId);
       },
-      pickPriority: () => SOP_PICK_PRIORITY,
+      pickPriority() {
+        const mgr = getTrainingSession();
+        if (mgr?.canInstall(part.partId)) return SOP_PICK_PRIORITY + 1;
+        return SOP_PICK_PRIORITY;
+      },
       distanceTo(handPos) {
         return home.distanceTo(handPos);
       },
@@ -275,26 +280,18 @@ export function GrabInstallGhost({
         if (!mgr || !partInventory.has(part.partId)) return;
         if (mgr.tryInstall(part.partId)) {
           partInventory.dequeue(part.partId);
-          mgr.tip(`已回装 · ${part.displayName}`);
         }
       },
       onPinchHold() {},
       onPinchEnd() {},
     };
     return self;
-  }, [part, snapRange, _local]);
+  }, [part, snapRange]);
 
   useEffect(() => {
     registerInteractable(api);
     return () => unregisterInteractable(api);
   }, [api]);
-
-  // Sync mesh visibility when install succeeds elsewhere
-  useEffect(() => {
-    return partInventory.subscribe(() => {
-      /* GrabPart listens too — ghost only needs active prop from parent */
-    });
-  }, []);
 
   if (!active) return null;
 
@@ -306,10 +303,10 @@ export function GrabInstallGhost({
       name={`${part.partId}:install-ghost`}
     >
       <mesh>
-        <boxGeometry args={[0.11, 0.07, 0.05]} />
-        <meshBasicMaterial color="#3ddc97" wireframe transparent opacity={0.65} />
+        <boxGeometry args={[0.12, 0.08, 0.06]} />
+        <meshBasicMaterial color="#3ddc97" wireframe transparent opacity={0.7} />
       </mesh>
-      <SopTargetHighlight active radius={0.035} ringRadius={0.08} />
+      <SopTargetHighlight active radius={0.04} ringRadius={0.09} />
     </group>
   );
 }

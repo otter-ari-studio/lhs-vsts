@@ -14,6 +14,8 @@ const _pos = new Vector3();
 
 function commitMsFor(it: HandInteractable | null): number {
   if (!it) return GRAB_COMMIT_MS;
+  // Install slots & toggles commit quickly
+  if (it.id.endsWith(':install-slot')) return TOGGLE_COMMIT_MS;
   return it.kind === 'grabbable' ? GRAB_COMMIT_MS : TOGGLE_COMMIT_MS;
 }
 

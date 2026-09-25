@@ -53,6 +53,7 @@ export function TrainingScene({
     clearPartPoses();
     const session = new TrainingSession(def);
     setTrainingSession(session);
+    // Force chrome to leave empty-snapshot state (rev stays meaningful after first bump).
     onSessionReady?.(session);
     return () => {
       setTrainingSession(null);

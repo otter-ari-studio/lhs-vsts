@@ -134,11 +134,16 @@ export function WindCoverKitbash() {
     <group>
       <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.11, 0.11, 0.04, 24]} />
-        <meshStandardMaterial {...MAT.metalLight} />
+        <meshStandardMaterial {...MAT.metalLight} color="#6a8aa8" emissive="#1a3a4a" emissiveIntensity={0.25} />
       </mesh>
       <mesh position={[0, 0, 0.015]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.06, 0.06, 0.01, 16]} />
         <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      {/* Front face disc so it reads after glass is gone */}
+      <mesh position={[0, 0, 0.028]} rotation={[Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.1, 24]} />
+        <meshStandardMaterial color="#4a7a9a" metalness={0.4} roughness={0.45} />
       </mesh>
     </group>
   );

@@ -41,34 +41,38 @@ function statusLabel(
   return { text: '准备中…', tone: 'wait' };
 }
 
-function emptySnapshot(): SessionSnapshot {
-  return {
-    score: 100,
-    faultLog: [],
-    completedSteps: [],
-    requiredSteps: [],
-    passed: false,
-    finished: false,
-    partStates: {},
-    steps: [],
-    activeCleanIds: [],
-  };
+const EMPTY_SNAP: SessionSnapshot = {
+  score: 100,
+  faultLog: [],
+  completedSteps: [],
+  requiredSteps: [],
+  passed: false,
+  finished: false,
+  partStates: {},
+  steps: [],
+  activeCleanIds: [],
+};
+
+/** One immutable snapshot per session revision (useSyncExternalStore contract). */
+let snapCache: { key: string; snap: SessionSnapshot } | null = null;
+
+function readSessionSnapshot(): SessionSnapshot {
+  const s = getTrainingSession();
+  if (!s) {
+    snapCache = null;
+    return EMPTY_SNAP;
+  }
+  const key = `${s.getSessionId()}:${s.getRevision()}`;
+  if (snapCache?.key === key) return snapCache.snap;
+  const snap = s.snapshot();
+  snapCache = { key, snap };
+  return snap;
 }
 
 function useSessionSnapshot(sessionTick: number): SessionSnapshot {
-  // Include session identity — a fresh TrainingSession starts at revision 0,
-  // which must not look identical to "no session" or the rail stays empty.
-  const storeKey = useSyncExternalStore(
-    subscribeSession,
-    () => {
-      const s = getTrainingSession();
-      return s ? `s:${s.getRevision()}` : 'none';
-    },
-    () => 'none',
-  );
-  void storeKey;
+  // sessionTick: TrainingScene calls onSessionReady after creating a rev-0 session.
   void sessionTick;
-  return getTrainingSession()?.snapshot() ?? emptySnapshot();
+  return useSyncExternalStore(subscribeSession, readSessionSnapshot, () => EMPTY_SNAP);
 }
 
 export function TrainPage({ onBack }: TrainPageProps) {
@@ -95,8 +99,21 @@ export function TrainPage({ onBack }: TrainPageProps) {
     () => '',
   );
   const inventory = inventoryIds ? inventoryIds.split('|') : [];
+  const session = getTrainingSession();
   const partName = (id: string) =>
-    getTrainingSession()?.def.parts.find((p) => p.partId === id)?.displayName ?? id;
+    session?.def.parts.find((p) => p.partId === id)?.displayName ?? id;
+
+  const tryUiInstall = (partId: string) => {
+    const mgr = getTrainingSession();
+    if (!mgr) return;
+    if (!mgr.canInstall(partId)) {
+      mgr.tip(mgr.installBlockReason(partId) ?? '暂时无法回装');
+      return;
+    }
+    if (mgr.tryInstall(partId)) {
+      partInventory.dequeue(partId);
+    }
+  };
 
   useEffect(() => {
     return subscribeTips((msg) => {
@@ -209,24 +226,44 @@ export function TrainPage({ onBack }: TrainPageProps) {
             {inventory.length === 0 ? (
               <li className="inv-empty">空 · 取下后左右甩手松手入队</li>
             ) : (
-              inventory.map((id, i) => (
-                <li key={`${id}-${i}`} className="inv-row">
-                  <span className="inv-idx">{i + 1}</span>
-                  <span className="inv-name">{partName(id)}</span>
-                </li>
-              ))
+              inventory.map((id, i) => {
+                const ready = session?.canInstall(id) ?? false;
+                return (
+                  <li key={`${id}-${i}`} className={`inv-row ${ready ? 'ready' : ''}`}>
+                    <span className="inv-idx">{i + 1}</span>
+                    <span className="inv-name">{partName(id)}</span>
+                    <button
+                      type="button"
+                      className="inv-install-btn"
+                      disabled={!ready}
+                      title={
+                        ready
+                          ? '回装到机身'
+                          : (session?.installBlockReason(id) ?? '顺序未到')
+                      }
+                      onClick={() => tryUiInstall(id)}
+                    >
+                      {ready ? '回装' : '锁定'}
+                    </button>
+                  </li>
+                );
+              })
             )}
           </ol>
           <h2 className="step-rail-title">SOP 步骤</h2>
           <ol className="step-list">
-            {snap.steps.map((row) => (
-              <li key={row.stepId} className={`step-row ${row.status}`}>
-                <span className="step-label">{row.label}</span>
-                {row.status === 'locked' && row.lockReason ? (
-                  <span className="step-lock">{row.lockReason}</span>
-                ) : null}
-              </li>
-            ))}
+            {snap.steps.length === 0 ? (
+              <li className="inv-empty">步骤加载中…若一直为空请点「重新标定」</li>
+            ) : (
+              snap.steps.map((row) => (
+                <li key={row.stepId} className={`step-row ${row.status}`}>
+                  <span className="step-label">{row.label}</span>
+                  {row.status === 'locked' && row.lockReason ? (
+                    <span className="step-lock">{row.lockReason}</span>
+                  ) : null}
+                </li>
+              ))
+            )}
           </ol>
           {activeCleans.length > 0 ? (
             <div className="clean-fallback">
@@ -284,7 +321,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              双手举到胸前停约半秒后点「重新标定」。捏紧取下闪烁零件，向左或向右甩一下松手 → 进入左侧物品栏；回装时对准机身闪烁框捏合。
+              拆下后甩手入物品栏。回装：左侧列表点「回装」，或对准机身绿色闪烁框捏合（须按 SOP 顺序，前置未完成会提示锁定）。
             </div>
           ) : null}
 

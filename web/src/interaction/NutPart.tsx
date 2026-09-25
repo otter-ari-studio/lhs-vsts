@@ -131,7 +131,13 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
           <meshBasicMaterial color="#3ddc97" />
         </mesh>
       ) : null}
-      <SopTargetHighlight active={isSopTarget} hover={hover} radius={0.018} ringRadius={0.04} />
+      <SopTargetHighlight
+        active={isSopTarget}
+        hover={hover}
+        radius={0.04}
+        ringRadius={0.08}
+        label={isSopTarget ? part.displayName : undefined}
+      />
     </group>
   );
 }
