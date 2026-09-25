@@ -467,6 +467,110 @@ body,
   background: #243142;
 }
 
+.wash-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: rgba(8, 14, 22, 0.88);
+  backdrop-filter: blur(4px);
+}
+
+.wash-title {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #e8eef5;
+}
+
+.wash-sub {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.75;
+  color: #c5d0dc;
+}
+
+.wash-drum {
+  width: 7.5rem;
+  height: 7.5rem;
+  border-radius: 50%;
+  border: 0.35rem solid #4a6a8a;
+  background: radial-gradient(circle at 40% 35%, #2a4058 0%, #121a24 70%);
+  box-shadow: inset 0 0 1.5rem rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  animation: wash-spin 1.1s linear infinite;
+}
+
+.wash-drum-inner {
+  position: relative;
+  width: 4.8rem;
+  height: 4.8rem;
+  border-radius: 50%;
+  border: 0.2rem dashed #6a90b0;
+}
+
+.wash-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(160, 210, 255, 0.55);
+  animation: wash-bob 1.6s ease-in-out infinite;
+}
+
+.wash-bubble.b1 {
+  width: 0.7rem;
+  height: 0.7rem;
+  left: 18%;
+  top: 28%;
+}
+
+.wash-bubble.b2 {
+  width: 1rem;
+  height: 1rem;
+  right: 16%;
+  top: 22%;
+  animation-delay: 0.25s;
+}
+
+.wash-bubble.b3 {
+  width: 0.55rem;
+  height: 0.55rem;
+  left: 30%;
+  bottom: 20%;
+  animation-delay: 0.5s;
+}
+
+.wash-bubble.b4 {
+  width: 0.8rem;
+  height: 0.8rem;
+  right: 28%;
+  bottom: 26%;
+  animation-delay: 0.75s;
+}
+
+@keyframes wash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes wash-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateY(-0.35rem);
+    opacity: 0.9;
+  }
+}
+
 .score-chip {
   margin-left: 0.5rem;
   padding: 0.15rem 0.45rem;

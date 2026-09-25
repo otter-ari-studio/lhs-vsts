@@ -122,12 +122,11 @@ test('TrainingSession: illegal order deducts but can still pass', () => {
 
   expect(session.tryBeginRemove('oil_box')).toBe(true);
   session.notifyRemoved('oil_box');
-  // UI「标记已清洁」and hover dwell both call completeClean.
-  expect(session.completeClean('oil_box')).toBe(true);
-
   expect(session.tryBeginRemove('filter_top')).toBe(true);
   session.notifyRemoved('filter_top');
-  expect(session.completeClean('filter_top')).toBe(true);
+  expect(session.isApplianceWashPending()).toBe(true);
+  expect(session.completeAllCleans()).toBe(true);
+  expect(session.isApplianceWashDone()).toBe(true);
 
   expect(session.tryInstall('filter_top')).toBe(true);
   expect(session.tryInstall('oil_box')).toBe(true);
@@ -139,15 +138,39 @@ test('TrainingSession: illegal order deducts but can still pass', () => {
   expect(snap.faultLog.length).toBeGreaterThan(0);
 });
 
-test('completeClean blocked until part removed; UI path same as dwell', () => {
+test('completeAllCleans blocked until all cleanable parts removed', () => {
   const session = new TrainingSession(miniDef);
-  expect(session.completeClean('oil_box')).toBe(false);
+  expect(session.completeAllCleans()).toBe(false);
   expect(session.getActiveCleanIds()).toEqual([]);
   session.notifyRemoved('oil_box');
-  expect(session.getActiveCleanIds()).toContain('oil_box');
-  expect(session.completeClean('oil_box')).toBe(true);
+  expect(session.isApplianceWashReady()).toBe(false);
+  expect(session.completeAllCleans()).toBe(false);
+  session.notifyRemoved('filter_top');
+  expect(session.isApplianceWashPending()).toBe(true);
+  expect(session.completeAllCleans()).toBe(true);
   expect(session.isStepComplete('clean_oil_box')).toBe(true);
-  expect(session.completeClean('oil_box')).toBe(false);
+  expect(session.isStepComplete('clean_filter_top')).toBe(true);
+  expect(session.completeAllCleans()).toBe(false);
+});
+
+test('chrome collapses cleans into single appliance_wash row', () => {
+  const session = new TrainingSession(miniDef);
+  const steps0 = session.buildChromeSteps();
+  expect(steps0.some((s) => s.stepId.startsWith('clean_'))).toBe(false);
+  const wash = steps0.find((s) => s.stepId === 'appliance_wash');
+  expect(wash?.label).toBe('家电清洗');
+  expect(wash?.status).toBe('locked');
+
+  session.notifyRemoved('oil_box');
+  session.notifyRemoved('filter_top');
+  const steps1 = session.buildChromeSteps();
+  expect(steps1.find((s) => s.stepId === 'appliance_wash')?.status).toBe('current');
+  expect(session.snapshot().applianceWashPending).toBe(true);
+
+  session.completeAllCleans();
+  const steps2 = session.buildChromeSteps();
+  expect(steps2.find((s) => s.stepId === 'appliance_wash')?.status).toBe('done');
+  expect(steps2.find((s) => s.stepId === 'install_filter_top')?.status).toBe('current');
 });
 
 test('clean dwell accumulate completes at threshold', () => {
@@ -188,10 +211,9 @@ test('visual adapter swap does not change StepGraph / TrainingSession', () => {
   const session = new TrainingSession(parsed);
   expect(session.tryBeginRemove('oil_box')).toBe(true);
   session.notifyRemoved('oil_box');
-  expect(session.completeClean('oil_box')).toBe(true);
   expect(session.tryBeginRemove('filter_top')).toBe(true);
   session.notifyRemoved('filter_top');
-  expect(session.completeClean('filter_top')).toBe(true);
+  expect(session.completeAllCleans()).toBe(true);
   expect(session.tryInstall('filter_top')).toBe(true);
   expect(session.tryInstall('oil_box')).toBe(true);
   expect(session.getPassed()).toBe(true);
@@ -230,13 +252,7 @@ test('public range_hood requiredSteps include cleans and pass after SOP', async 
   for (const id of order) {
     expect(session.tryBeginRemove(id)).toBe(true);
     session.notifyRemoved(id);
-    if (id !== 'filter_bottom') {
-      // cleans for oil and filters
-    }
   }
-  expect(session.completeClean('oil_box')).toBe(true);
-  expect(session.completeClean('filter_top')).toBe(true);
-  expect(session.completeClean('filter_bottom')).toBe(true);
 
   expect(session.tryToggleClip('clip_left')).toBe(true);
   expect(session.tryToggleClip('clip_right')).toBe(true);
@@ -247,7 +263,12 @@ test('public range_hood requiredSteps include cleans and pass after SOP', async 
   expect(session.tryNutAction('nut_wind')).toBe(true);
   expect(session.tryBeginRemove('wind_wheel')).toBe(true);
   session.notifyRemoved('wind_wheel');
-  expect(session.completeClean('wind_wheel')).toBe(true);
+
+  expect(session.isApplianceWashPending()).toBe(true);
+  expect(session.buildChromeSteps().some((s) => s.stepId.startsWith('clean_'))).toBe(
+    false,
+  );
+  expect(session.completeAllCleans()).toBe(true);
 
   expect(session.tryInstall('wind_wheel')).toBe(true);
   expect(session.tryNutAction('nut_wind')).toBe(true);

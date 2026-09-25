@@ -3,10 +3,8 @@ import type { MachineDef } from '../machine/types';
 import { getTrainingSession, subscribeSession } from '../machine';
 import { closeStep, installStep, openStep, removeStep } from '../machine/types';
 import { ClipPart } from '../interaction/ClipPart';
-import { CleanSpotMesh } from '../interaction/CleanSpot';
 import { GrabInstallGhost, GrabPart } from '../interaction/GrabPart';
 import { NutPart } from '../interaction/NutPart';
-import { getPartPose } from '../interaction/partPoseHub';
 import { partInventory } from '../interaction/partInventory';
 import { resetGrabHold } from '../interaction/grabHoldHub';
 import { KitbashPart } from './kitbash/KitbashAdapter';
@@ -48,9 +46,6 @@ function currentSopPartIds(def: MachineDef): Set<string> {
     ) {
       ids.add(part.partId);
     }
-  }
-  for (const spot of def.cleanSpots) {
-    if (id === spot.stepId) ids.add(`clean:${spot.cleanId}`);
   }
   return ids;
 }
@@ -110,19 +105,6 @@ export function MachineView({ def }: MachineViewProps) {
           return <NutPart key={part.partId} part={part} isSopTarget={isTarget} />;
         }
         return null;
-      })}
-      {def.cleanSpots.map((spot) => {
-        const part = def.parts.find((p) => p.partId === spot.partId);
-        const pose =
-          getPartPose(spot.partId) ?? part?.anchor.position ?? ([0, 0, 0] as const);
-        return (
-          <CleanSpotMesh
-            key={spot.cleanId}
-            spot={spot}
-            partWorldPos={[pose[0], pose[1], pose[2]]}
-            isSopTarget={sopTargets.has(`clean:${spot.cleanId}`)}
-          />
-        );
       })}
     </group>
   );

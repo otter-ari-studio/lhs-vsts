@@ -18,6 +18,10 @@ import {
   type MachineDef,
   type PartDef,
 } from './types';
+import {
+  APPLIANCE_WASH_STEP_ID,
+  isCleanStepId,
+} from './wash';
 
 export interface StepChromeRow {
   stepId: string;
@@ -36,6 +40,8 @@ export interface SessionSnapshot {
   partStates: Record<string, PartRuntimeState>;
   steps: StepChromeRow[];
   activeCleanIds: string[];
+  /** True after full teardown of cleanable parts, before batch wash finishes. */
+  applianceWashPending: boolean;
 }
 
 /**
@@ -136,14 +142,45 @@ export class TrainingSession {
     return this.partById.get(partId);
   }
 
-  /** Active clean spots: owning part removed and clean step not done. */
+  /**
+   * Per-spot clean interaction disabled — wash is a single post-teardown overlay.
+   * Kept empty so legacy CleanSpotMesh / UI fallback never activate.
+   */
   getActiveCleanIds(): string[] {
-    return this.def.cleanSpots
-      .filter((s) => {
-        if (this.completed.has(s.stepId)) return false;
-        return this.getState(s.partId) === 'removed';
-      })
-      .map((s) => s.cleanId);
+    return [];
+  }
+
+  /** Every part that has a clean spot is removed. */
+  isApplianceWashReady(): boolean {
+    if (this.def.cleanSpots.length === 0) return false;
+    return this.def.cleanSpots.every((s) => this.getState(s.partId) === 'removed');
+  }
+
+  /** All clean_* steps already completed. */
+  isApplianceWashDone(): boolean {
+    if (this.def.cleanSpots.length === 0) return true;
+    return this.def.cleanSpots.every((s) => this.completed.has(s.stepId));
+  }
+
+  /** Ready for wash overlay: teardown done, cleans not yet batch-completed. */
+  isApplianceWashPending(): boolean {
+    return this.isApplianceWashReady() && !this.isApplianceWashDone();
+  }
+
+  /** Complete every clean_* step at once (after wash animation). */
+  completeAllCleans(): boolean {
+    if (!this.isApplianceWashReady()) {
+      emitTip('⚠️ 请先拆完所有待清洁零件');
+      this.bump();
+      return false;
+    }
+    if (this.isApplianceWashDone()) return false;
+    for (const spot of this.def.cleanSpots) {
+      this.complete(spot.stepId);
+    }
+    emitTip('✅ 家电清洗完毕');
+    this.bump();
+    return true;
   }
 
   tryBeginRemove(partId: string): boolean {
@@ -284,27 +321,94 @@ export class TrainingSession {
     return true;
   }
 
-  buildChromeSteps(): StepChromeRow[] {
-    let sawIncomplete = false;
-    return this.requiredSteps.map((stepId) => {
-      const label = stepLabel(this.def, stepId);
-      if (this.completed.has(stepId)) {
-        return { stepId, label, status: 'done' as const };
+  private isInstallPhaseStep(stepId: string): boolean {
+    for (const part of this.def.parts) {
+      if (stepId === installStep(part.partId) || stepId === closeStep(part.partId)) {
+        return true;
       }
-      const missing = missingPrereqs(stepId, this.completed, this.stepPrereqs);
-      if (missing.length > 0) {
+    }
+    return false;
+  }
+
+  /**
+   * Chrome SOP: teardown → single「家电清洗」→ reinstall.
+   * Individual clean_* steps stay in the graph for install prereqs but are hidden here.
+   */
+  buildChromeSteps(): StepChromeRow[] {
+    const teardown: { stepId: string; label: string }[] = [];
+    const reinstall: { stepId: string; label: string }[] = [];
+
+    for (const stepId of this.requiredSteps) {
+      if (isCleanStepId(stepId, this.def)) continue;
+      const row = { stepId, label: stepLabel(this.def, stepId) };
+      if (this.isInstallPhaseStep(stepId)) reinstall.push(row);
+      else teardown.push(row);
+    }
+
+    const display: { stepId: string; label: string; kind: 'normal' | 'wash' }[] = [
+      ...teardown.map((r) => ({ ...r, kind: 'normal' as const })),
+    ];
+    if (this.def.cleanSpots.length > 0) {
+      display.push({
+        stepId: APPLIANCE_WASH_STEP_ID,
+        label: '家电清洗',
+        kind: 'wash',
+      });
+    }
+    display.push(...reinstall.map((r) => ({ ...r, kind: 'normal' as const })));
+
+    let sawIncomplete = false;
+    return display.map((item) => {
+      if (item.kind === 'wash') {
+        if (this.isApplianceWashDone()) {
+          return { stepId: item.stepId, label: item.label, status: 'done' as const };
+        }
+        if (!this.isApplianceWashReady()) {
+          const missing = this.def.cleanSpots
+            .filter((s) => this.getState(s.partId) !== 'removed')
+            .map((s) => this.partById.get(s.partId)?.displayName ?? s.partId);
+          const unique = [...new Set(missing)];
+          return {
+            stepId: item.stepId,
+            label: item.label,
+            status: 'locked' as const,
+            lockReason: `需先拆完：${unique.join('、')}`,
+          };
+        }
+        if (!sawIncomplete) {
+          sawIncomplete = true;
+          return { stepId: item.stepId, label: item.label, status: 'current' as const };
+        }
+        return { stepId: item.stepId, label: item.label, status: 'todo' as const };
+      }
+
+      if (this.completed.has(item.stepId)) {
+        return { stepId: item.stepId, label: item.label, status: 'done' as const };
+      }
+      const missing = missingPrereqs(item.stepId, this.completed, this.stepPrereqs);
+      // Treat incomplete cleans as missing when they block install — surface wash instead.
+      const missingVisible = missing.filter((m) => !isCleanStepId(m, this.def));
+      if (missingVisible.length > 0) {
         return {
-          stepId,
-          label,
+          stepId: item.stepId,
+          label: item.label,
           status: 'locked' as const,
-          lockReason: `需先完成：${missing.map((m) => stepLabel(this.def, m)).join('、')}`,
+          lockReason: `需先完成：${missingVisible.map((m) => stepLabel(this.def, m)).join('、')}`,
+        };
+      }
+      if (missing.some((m) => isCleanStepId(m, this.def)) && !this.isApplianceWashDone()) {
+        return {
+          stepId: item.stepId,
+          label: item.label,
+          status: 'locked' as const,
+          lockReason: '需先完成：家电清洗',
         };
       }
       if (!sawIncomplete) {
         sawIncomplete = true;
-        return { stepId, label, status: 'current' as const };
+        return { stepId: item.stepId, label: item.label, status: 'current' as const };
       }
-      return { stepId, label, status: 'todo' as const };
+      return { stepId: item.stepId, label: item.label, status: 'todo' as const };
     });
   }
 
@@ -319,6 +423,7 @@ export class TrainingSession {
       partStates: Object.fromEntries(this.states),
       steps: this.buildChromeSteps(),
       activeCleanIds: this.getActiveCleanIds(),
+      applianceWashPending: this.isApplianceWashPending(),
     };
   }
 }

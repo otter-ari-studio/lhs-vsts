@@ -60,3 +60,9 @@ export {
   subscribeSession,
   subscribeTips,
 } from './sessionEvents';
+
+export {
+  APPLIANCE_WASH_DURATION_MS,
+  APPLIANCE_WASH_STEP_ID,
+  isCleanStepId,
+} from './wash';

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from '
 import { useHandCamera } from '../hand/useHandCamera';
 import { partInventory } from '../interaction/partInventory';
 import {
+  APPLIANCE_WASH_DURATION_MS,
   getTrainingSession,
   subscribeSession,
   subscribeTips,
@@ -51,6 +52,7 @@ const EMPTY_SNAP: SessionSnapshot = {
   partStates: {},
   steps: [],
   activeCleanIds: [],
+  applianceWashPending: false,
 };
 
 /** One immutable snapshot per session revision (useSyncExternalStore contract). */
@@ -80,6 +82,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
   const [restartToken, setRestartToken] = useState(0);
   const [sessionTick, setSessionTick] = useState(0);
   const [tip, setTip] = useState<string | null>(null);
+  const [washPlaying, setWashPlaying] = useState(false);
   const {
     phase,
     error,
@@ -138,17 +141,23 @@ export function TrainPage({ onBack }: TrainPageProps) {
     setRestartToken((n) => n + 1);
     setCalibrateToken((n) => n + 1);
     setTip(null);
-  };
-
-  const markClean = (cleanId: string) => {
-    getTrainingSession()?.completeClean(cleanId);
+    setWashPlaying(false);
   };
 
   const showEnd = snap.finished || snap.passed;
-  const activeCleans =
-    getTrainingSession()?.def.cleanSpots.filter((s) =>
-      snap.activeCleanIds.includes(s.cleanId),
-    ) ?? [];
+  const showWash = washPlaying || snap.applianceWashPending;
+
+  useEffect(() => {
+    if (!snap.applianceWashPending || showEnd) {
+      setWashPlaying(false);
+      return;
+    }
+    setWashPlaying(true);
+    const t = window.setTimeout(() => {
+      getTrainingSession()?.completeAllCleans();
+    }, APPLIANCE_WASH_DURATION_MS);
+    return () => window.clearTimeout(t);
+  }, [snap.applianceWashPending, showEnd]);
 
   return (
     <div className="train-page">
@@ -265,21 +274,6 @@ export function TrainPage({ onBack }: TrainPageProps) {
               ))
             )}
           </ol>
-          {activeCleans.length > 0 ? (
-            <div className="clean-fallback">
-              <h3>清洁（UI 兜底）</h3>
-              {activeCleans.map((c) => (
-                <button
-                  key={c.cleanId}
-                  type="button"
-                  className="clean-btn"
-                  onClick={() => markClean(c.cleanId)}
-                >
-                  标记已清洁 · {c.displayName}
-                </button>
-              ))}
-            </div>
-          ) : null}
         </aside>
 
         <main className="viewport">
@@ -304,7 +298,22 @@ export function TrainPage({ onBack }: TrainPageProps) {
             </div>
           ) : null}
 
-  {showOverlay ? (
+          {showWash && !showEnd ? (
+            <div className="wash-overlay" role="status" aria-live="polite">
+              <div className="wash-drum" aria-hidden>
+                <div className="wash-drum-inner">
+                  <span className="wash-bubble b1" />
+                  <span className="wash-bubble b2" />
+                  <span className="wash-bubble b3" />
+                  <span className="wash-bubble b4" />
+                </div>
+              </div>
+              <p className="wash-title">家电清洗中…</p>
+              <p className="wash-sub">清洗完成后将进入回装步骤</p>
+            </div>
+          ) : null}
+
+          {showOverlay ? (
             <div className="cam-overlay" role="alertdialog" aria-labelledby="cam-fail-title">
               <h2 id="cam-fail-title">无法启动摄像头追踪</h2>
               <p>{error?.message ?? '未知错误'}</p>
