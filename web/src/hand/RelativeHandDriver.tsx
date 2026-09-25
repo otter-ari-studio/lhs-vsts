@@ -18,32 +18,30 @@ import { INDEX_TIP, JOINT_COUNT, THUMB_TIP, type HandId } from './types';
 
 interface RelativeHandDriverProps {
   handId: HandId;
-  /** Bumps when UI requests Recalibrate. */
+  /** Bumps when UI requests Recalibrate (depth origin only; XY is absolute). */
   calibrateToken: number;
 }
 
 const _wrist = new Vector3();
 const _rawRot = new Quaternion();
 const _targetPos = new Vector3();
-const _relRot = new Quaternion();
 const _targetRot = new Quaternion();
-const _world = new Vector3();
+const _relRot = new Quaternion();
 const _lm = new Vector3();
 const _delta = new Vector3();
 const _pinchMid = new Vector3();
 
 /**
- * Relative wrist drive + 21-point landmark skeleton.
- * Input: HandHub (image-landmark translation + pinch). Grab via InteractionRouter.
+ * Absolute screen-mapped wrist + glove (HandHub already in scene meters).
+ * XY follows mirrored webcam frame; Z uses desk-depth reach. Grab via InteractionRouter.
  */
 export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDriverProps) {
   const palmRef = useRef<Group>(null);
   const palmMatRef = useRef<MeshStandardMaterial>(null);
   const rigRef = useRef<LandmarkRigHandle>(null);
 
-  const calibrated = useRef(false);
-  const originPos = useRef(new Vector3());
   const originRot = useRef(new Quaternion());
+  const hasRotOrigin = useRef(false);
   const palmTargetPos = useRef(new Vector3());
   const palmTargetRot = useRef(new Quaternion());
   const prevPalmTs = useRef(-1);
@@ -66,12 +64,11 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
   const baseColor = handId === 0 ? LEFT_HAND_COLOR : RIGHT_HAND_COLOR;
 
   useEffect(() => {
-    // Re-origin from the next (or current) sample — do not clear HandHub.
-    calibrated.current = false;
+    hasRotOrigin.current = false;
     prevPalmTs.current = -1;
     prevLmTs.current = -1;
     hasSmoothLm.current = false;
-  }, [calibrateToken, handId, calibrated, hasSmoothLm, prevLmTs, prevPalmTs]);
+  }, [calibrateToken, handId]);
 
   useEffect(() => {
     const palm = palmRef.current;
@@ -114,26 +111,24 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       sample.rotation[3],
     );
 
-    let justCalibrated = false;
-    if (!calibrated.current) {
-      originPos.current.copy(_wrist);
+    if (!hasRotOrigin.current) {
       originRot.current.copy(_rawRot);
-      calibrated.current = true;
-      justCalibrated = true;
+      hasRotOrigin.current = true;
     }
 
-    _targetPos.copy(defaultPos.current).add(_wrist).sub(originPos.current);
+    // Absolute scene position from screen map (already mirrored in HandTracker).
+    _targetPos.copy(_wrist);
     _relRot.copy(originRot.current).invert().multiply(_rawRot);
     _targetRot.copy(defaultRot.current).multiply(_relRot);
 
-    if (justCalibrated || sample.timestamp !== prevPalmTs.current) {
+    if (sample.timestamp !== prevPalmTs.current) {
       palmTargetPos.current.copy(_targetPos);
       palmTargetRot.current.copy(_targetRot);
       prevPalmTs.current = sample.timestamp;
       lastSampleAt.current = state.clock.elapsedTime;
     }
 
-    if (justCalibrated || PALM_SMOOTH_SPEED <= 0) {
+    if (PALM_SMOOTH_SPEED <= 0) {
       palm.position.copy(palmTargetPos.current);
       palm.quaternion.copy(palmTargetRot.current);
     } else {
@@ -156,19 +151,18 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       for (let i = 0; i < JOINT_COUNT; i++) {
         const lm = sample.landmarks![i];
         _lm.set(lm[0], lm[1], lm[2]);
-        _world.copy(defaultPos.current).add(_lm).sub(originPos.current);
         if (hasSmoothLm.current) {
-          _delta.copy(_world).sub(lmTarget.current[i]);
+          _delta.copy(_lm).sub(lmTarget.current[i]);
           const len = _delta.length();
           if (len > LANDMARK_MAX_STEP) {
             _delta.multiplyScalar(LANDMARK_MAX_STEP / len);
             lmTarget.current[i].add(_delta);
           } else {
-            lmTarget.current[i].copy(_world);
+            lmTarget.current[i].copy(_lm);
           }
         } else {
-          lmTarget.current[i].copy(_world);
-          smoothLm.current[i].copy(_world);
+          lmTarget.current[i].copy(_lm);
+          smoothLm.current[i].copy(_lm);
         }
       }
       hasSmoothLm.current = true;
@@ -182,7 +176,7 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       for (let i = 0; i < JOINT_COUNT; i++) {
         smoothLm.current[i].lerp(lmTarget.current[i], t);
       }
-      rig.updateSkeleton(smoothLm.current);
+      rig.updateSkeleton(smoothLm.current, { pinching: sample.pinching });
       const mesh = palm.children[0];
       if (mesh) mesh.visible = false;
     }
@@ -196,7 +190,6 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       if (mesh) mesh.visible = true;
     }
 
-    // Interaction point: pinch midpoint when skeleton live, else palm.
     let ix = palm.position.x;
     let iy = palm.position.y;
     let iz = palm.position.z;
@@ -225,7 +218,7 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
           <meshStandardMaterial ref={palmMatRef} color={baseColor} />
         </mesh>
       </group>
-      <LandmarkRig ref={rigRef} color={baseColor} jointSize={0.014} />
+      <LandmarkRig ref={rigRef} color={baseColor} />
     </>
   );
 }

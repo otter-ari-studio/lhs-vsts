@@ -14,11 +14,11 @@ export interface AxisMapConfig {
 /**
  * MediaPipe capture-space points → Three.js Y-up, mirrored to match selfie preview.
  *
- * Capture space (image landmarks scaled to meters, or world bone offsets):
- *   X right, Y down, Z toward camera.
- * Scene: X right (mirrored), Y up, Z toward camera.
+ * Capture space:
+ *   X right, Y down, Z = estimated desk depth (meters; larger = farther from cam).
+ * Scene: X mirrored, Y up, Z unchanged — closer hands (smaller Z) move toward the hood.
  *
- * Palm translation must come from image landmarks (see HandTracker).
+ * Palm XY from image landmarks; palm Z from palm-size depth (deskDepth), not wrist.z.
  * Single source of truth — do not flip axes elsewhere.
  */
 export const DEFAULT_AXIS_MAP: AxisMapConfig = {

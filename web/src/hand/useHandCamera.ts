@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HandLandmarker } from '@mediapipe/tasks-vision';
 import { requestUserCamera, stopMediaStream, type CameraError } from './camera';
 import { HandTracker, type TrackingPresence } from './HandTracker';
@@ -18,6 +18,8 @@ export interface UseHandCameraResult {
   presence: TrackingPresence;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   retry: () => void;
+  /** Reset palm-size depth origin (pair with RelativeHandDriver recalibrate). */
+  recalibrateDepth: () => void;
 }
 
 /**
@@ -26,6 +28,7 @@ export interface UseHandCameraResult {
  */
 export function useHandCamera(enabled: boolean): UseHandCameraResult {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const trackerRef = useRef<HandTracker | null>(null);
   const [phase, setPhase] = useState<HandCameraPhase>('idle');
   const [error, setError] = useState<CameraError | null>(null);
   const [presence, setPresence] = useState<TrackingPresence>('none');
@@ -38,6 +41,7 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
       return;
     }
 
+    const trackerBox = trackerRef;
     let cancelled = false;
     let stream: MediaStream | null = null;
     let landmarker: HandLandmarker | null = null;
@@ -95,6 +99,7 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
             if (!cancelled) setPresence(p);
           },
         });
+        trackerBox.current = tracker;
         tracker.start();
         setPhase('tracking');
       } catch (err) {
@@ -112,6 +117,7 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
       cancelled = true;
       tracker?.stop();
       tracker = null;
+      trackerBox.current = null;
       landmarker?.close();
       landmarker = null;
       if (videoEl) {
@@ -120,11 +126,15 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
       stopMediaStream(stream);
       stream = null;
     };
-  }, [enabled, retryToken, videoRef, setPhase, setError, setPresence]);
+  }, [enabled, retryToken, videoRef, setPhase, setError, setPresence, trackerRef]);
 
   const retry = () => {
     setRetryToken((n) => n + 1);
   };
 
-  return { phase, error, presence, videoRef, retry };
+  const recalibrateDepth = useCallback(() => {
+    trackerRef.current?.resetDepthCalibration();
+  }, [trackerRef]);
+
+  return { phase, error, presence, videoRef, retry, recalibrateDepth };
 }

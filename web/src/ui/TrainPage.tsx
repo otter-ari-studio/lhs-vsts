@@ -75,7 +75,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
   const [restartToken, setRestartToken] = useState(0);
   const [sessionTick, setSessionTick] = useState(0);
   const [tip, setTip] = useState<string | null>(null);
-  const { phase, error, presence, videoRef, retry } = useHandCamera(true);
+  const { phase, error, presence, videoRef, retry, recalibrateDepth } = useHandCamera(true);
   const status = statusLabel(phase, presence);
   const showOverlay = phase === 'denied' || phase === 'error';
   const snap = useSessionSnapshot(sessionTick);
@@ -98,6 +98,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
   }, [setSessionTick]);
 
   const restart = () => {
+    recalibrateDepth();
     setRestartToken((n) => n + 1);
     setCalibrateToken((n) => n + 1);
     setTip(null);
@@ -125,7 +126,10 @@ export function TrainPage({ onBack }: TrainPageProps) {
         <button
           type="button"
           className="recal-btn"
-          onClick={() => setCalibrateToken((n) => n + 1)}
+          onClick={() => {
+            recalibrateDepth();
+            setCalibrateToken((n) => n + 1);
+          }}
           disabled={phase !== 'tracking'}
         >
           重新标定
@@ -187,12 +191,12 @@ export function TrainPage({ onBack }: TrainPageProps) {
             </div>
           ) : null}
 
-          {showOverlay ? (
+  {showOverlay ? (
             <div className="cam-overlay" role="alertdialog" aria-labelledby="cam-fail-title">
               <h2 id="cam-fail-title">无法启动摄像头追踪</h2>
               <p>{error?.message ?? '未知错误'}</p>
               <ul className="cam-overlay-tips">
-                <li>请坐正，双手举到胸前入画，手心大致朝向屏幕。</li>
+                <li>请坐正，双手举到胸前入画，手心大致朝向屏幕（默认按约 1 米桌距建模）。</li>
                 <li>本机请使用 localhost；部署须 HTTPS。</li>
                 <li>若曾拒绝权限，请在地址栏重新允许摄像头。</li>
               </ul>
@@ -204,7 +208,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              双手入画：坐正，双手举到胸前，手心朝向屏幕，然后保持片刻完成标定。
+              双手入画：坐正约 1 米面对屏幕。右下角预览即完整摄像头画面（已镜像）：手在预览中间，虚拟手应在机型附近中间。
             </div>
           ) : null}
 

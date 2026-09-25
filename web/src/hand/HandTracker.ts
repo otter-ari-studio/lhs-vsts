@@ -1,10 +1,16 @@
 import type { HandLandmarker, HandLandmarkerResult } from '@mediapipe/tasks-vision';
-import { Matrix4 } from 'three';
-import { buildMapMatrix, mapPointTuple, type AxisMapConfig } from './axisMap';
+import {
+  applyDepthDeadzone,
+  DEPTH_REACH_GAIN,
+  ema,
+  estimateDepthFromPalmNorm,
+  palmWidthNorm,
+} from './deskDepth';
 import {
   HAND_HOLD_MS,
-  IMAGE_LANDMARK_XY_SPAN_METERS,
-  IMAGE_LANDMARK_Z_SPAN_METERS,
+  HAND_Z_MAX,
+  HAND_Z_MIN,
+  IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,
   PINCH_OFF_METERS,
   PINCH_ON_METERS,
   WORLD_LANDMARK_SCALE,
@@ -12,6 +18,11 @@ import {
 import { handHub } from './HandHub';
 import { estimatePalmRotation } from './palmRotation';
 import { distance3, updatePinchState } from './pinch';
+import {
+  clampHandZ,
+  imageLandmarksToSceneMeters,
+  SCREEN_WORKSPACE,
+} from './screenMap';
 import {
   INDEX_TIP,
   JOINT_COUNT,
@@ -26,22 +37,20 @@ export type TrackingPresence = 'none' | 'partial' | 'both';
 export interface HandTrackerOptions {
   landmarker: HandLandmarker;
   video: HTMLVideoElement;
-  axisMap?: AxisMapConfig;
   holdMs?: number;
   onPresence?: (presence: TrackingPresence) => void;
 }
 
 /**
- * VIDEO-mode detect loop → HandHub.
+ * VIDEO-mode detect loop → HandHub (scene meters).
  *
- * Position / skeleton: image landmarks (carry arm translation).
- * Pinch: world landmarks when available (metric finger spacing).
- * Axis map once; pinch hysteresis; short hold on loss.
+ * XY: absolute screen map (mirrored webcam frame ↔ 3D workspace).
+ * Z: palm-size depth vs 1 m desk assumption.
+ * Pinch: world landmarks when available.
  */
 export class HandTracker {
   private readonly landmarker: HandLandmarker;
   private readonly video: HTMLVideoElement;
-  private readonly map: Matrix4;
   private readonly holdMs: number;
   private readonly onPresence?: (presence: TrackingPresence) => void;
 
@@ -53,11 +62,12 @@ export class HandTracker {
   private readonly pinchState: [boolean, boolean] = [false, false];
   private readonly held: (HandSample | null)[] = [null, null];
   private readonly lastSeenAt: [number, number] = [0, 0];
+  private readonly palmNormEma: [number | null, number | null] = [null, null];
+  private readonly originDepth: [number | null, number | null] = [null, null];
 
   constructor(opts: HandTrackerOptions) {
     this.landmarker = opts.landmarker;
     this.video = opts.video;
-    this.map = buildMapMatrix(opts.axisMap);
     this.holdMs = opts.holdMs ?? HAND_HOLD_MS;
     this.onPresence = opts.onPresence;
   }
@@ -84,6 +94,18 @@ export class HandTracker {
     this.held[1] = null;
     this.pinchState[0] = false;
     this.pinchState[1] = false;
+    this.palmNormEma[0] = null;
+    this.palmNormEma[1] = null;
+    this.originDepth[0] = null;
+    this.originDepth[1] = null;
+  }
+
+  /** Call when UI requests Recalibrate — resets depth origin on next sample. */
+  resetDepthCalibration(): void {
+    this.originDepth[0] = null;
+    this.originDepth[1] = null;
+    this.palmNormEma[0] = null;
+    this.palmNormEma[1] = null;
   }
 
   private tick(): void {
@@ -97,7 +119,6 @@ export class HandTracker {
     }
     this.lastVideoTime = video.currentTime;
 
-    // Monotonic timestamps required by MediaPipe VIDEO mode
     let ts = now;
     if (ts <= this.lastTs) ts = this.lastTs + 1;
     this.lastTs = ts;
@@ -113,6 +134,7 @@ export class HandTracker {
 
     const seen: [boolean, boolean] = [false, false];
     const count = result.landmarks?.length ?? 0;
+    const baseZ = SCREEN_WORKSPACE.center[2];
 
     for (let i = 0; i < count; i++) {
       const image = result.landmarks[i];
@@ -121,9 +143,27 @@ export class HandTracker {
       const handId = handednessToId(result.handedness?.[i]?.[0]?.categoryName);
       if (handId === null) continue;
 
-      // Image landmarks carry translation; world landmarks do not.
-      const capture = imageLandmarksToCaptureMeters(image);
-      const mapped: Vec3[] = capture.map((p) => mapPointTuple(p, this.map));
+      const rawPalm = palmWidthNorm(image);
+      this.palmNormEma[handId] = ema(this.palmNormEma[handId], rawPalm);
+      const palm = this.palmNormEma[handId] ?? rawPalm;
+      let depth = estimateDepthFromPalmNorm(palm);
+      if (this.originDepth[handId] === null) {
+        this.originDepth[handId] = depth;
+      }
+      depth = applyDepthDeadzone(depth, this.originDepth[handId]!);
+      // Closer than calibrate depth → smaller scene Z (toward the hood), clamped
+      // so the glove stays on the front work plane instead of sinking into solids.
+      const reachZ = clampHandZ(
+        baseZ + (depth - this.originDepth[handId]!) * DEPTH_REACH_GAIN,
+        HAND_Z_MIN,
+        HAND_Z_MAX,
+      );
+
+      const mapped = imageLandmarksToSceneMeters(image, {
+        depthZ: reachZ,
+        fingerZSpan: IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,
+        mirrorX: true,
+      });
       const wrist = mapped[0];
       const rotation = estimatePalmRotation(mapped);
 
@@ -172,7 +212,6 @@ export class HandTracker {
       return;
     }
     if (now - this.lastSeenAt[handId] <= this.holdMs) {
-      // Keep last frame in hub (timestamp unchanged so drivers know it's held)
       handHub.publish(held);
       return;
     }
@@ -198,21 +237,37 @@ function handednessToId(label: string | undefined): HandId | null {
   return null;
 }
 
-/**
- * Normalized image landmarks → capture meters (origin ≈ frame center).
- * x,y ∈ [0,1]; z ≈ x-scale with wrist origin (MediaPipe image landmark semantics).
- */
+/** @deprecated use imageLandmarksToSceneMeters — kept for older imports/tests */
 export function imageLandmarksToCaptureMeters(
   image: { x: number; y: number; z: number }[],
-  xySpan = IMAGE_LANDMARK_XY_SPAN_METERS,
-  zSpan = IMAGE_LANDMARK_Z_SPAN_METERS,
+  opts: { depthZ: number; xySpan?: number; fingerZSpan?: number } | number = 1,
+  legacyZSpan?: number,
 ): Vec3[] {
-  const out: Vec3[] = [];
-  for (let i = 0; i < JOINT_COUNT; i++) {
-    const p = image[i];
-    out.push([(p.x - 0.5) * xySpan, (p.y - 0.5) * xySpan, p.z * zSpan]);
+  if (typeof opts === 'number') {
+    return imageLandmarksToSceneMeters(image, {
+      depthZ: 0,
+      fingerZSpan: legacyZSpan ?? IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,
+      mirrorX: false,
+      clampZ: false,
+      workspace: {
+        center: [0, 0, 0],
+        width: opts,
+        height: opts,
+      },
+    });
   }
-  return out;
+  const span = opts.xySpan ?? SCREEN_WORKSPACE.width;
+  return imageLandmarksToSceneMeters(image, {
+    depthZ: opts.depthZ,
+    fingerZSpan: opts.fingerZSpan,
+    mirrorX: false,
+    clampZ: false,
+    workspace: {
+      center: [0, 0, 0],
+      width: span,
+      height: span,
+    },
+  });
 }
 
 function worldLandmarksToVec3(
@@ -227,7 +282,6 @@ function worldLandmarksToVec3(
   return out;
 }
 
-/** Prefer metric world tips; fall back to mapped image tips. */
 function pinchDistanceMeters(
   world: { x: number; y: number; z: number }[] | undefined,
   mappedImage: readonly Vec3[],

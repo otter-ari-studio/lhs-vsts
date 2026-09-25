@@ -83,13 +83,71 @@ test('MediaPipe WASM URLs are pinned (not @latest)', () => {
   expect(MEDIAPIPE_WASM_CDN).not.toContain('@latest');
 });
 
-test('imageLandmarksToCaptureMeters maps frame center to origin and scales edges', async () => {
+test('imageLandmarksToCaptureMeters maps frame center XY; Z from depth + finger', async () => {
   const { imageLandmarksToCaptureMeters } = await import('../src/hand/HandTracker');
   const pts = Array.from({ length: 21 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
   pts[1] = { x: 1, y: 0, z: -0.1 };
-  const out = imageLandmarksToCaptureMeters(pts, 0.8, 0.8);
-  expect(out[0]).toEqual([0, 0, 0]);
+  const out = imageLandmarksToCaptureMeters(pts, {
+    depthZ: 1,
+    xySpan: 0.8,
+    fingerZSpan: 0.8,
+  });
+  expect(out[0][0]).toBeCloseTo(0);
+  expect(out[0][1]).toBeCloseTo(0);
+  expect(out[0][2]).toBeCloseTo(1);
+  // Unmirrored legacy: x=1 → +half span; y=0 (top) → +half span (scene Y-up)
   expect(out[1][0]).toBeCloseTo(0.4);
-  expect(out[1][1]).toBeCloseTo(-0.4);
-  expect(out[1][2]).toBeCloseTo(-0.08);
+  expect(out[1][1]).toBeCloseTo(0.4);
+  // Finger zRel=-0.1 → closer to cam → larger scene Z (depthZ - zRel*span)
+  expect(out[1][2]).toBeCloseTo(1 - (-0.1) * 0.8);
+});
+
+test('screen map: mirrored preview center → workspace center; right of preview → +X', async () => {
+  const { imageLandmarkToScene, SCREEN_WORKSPACE, clampHandZ } = await import(
+    '../src/hand/screenMap'
+  );
+  const { HAND_Z_MIN } = await import('../src/hand/defaults');
+  const mid = imageLandmarkToScene(0.5, 0.5, 0, { depthZ: SCREEN_WORKSPACE.center[2] });
+  expect(mid[0]).toBeCloseTo(SCREEN_WORKSPACE.center[0]);
+  expect(mid[1]).toBeCloseTo(SCREEN_WORKSPACE.center[1]);
+  expect(mid[2]).toBeCloseTo(SCREEN_WORKSPACE.center[2]);
+
+  // Raw x=0 is left of camera = right of mirrored preview → positive scene X
+  const rightOfPreview = imageLandmarkToScene(0, 0.5, 0, {
+    depthZ: SCREEN_WORKSPACE.center[2],
+  });
+  expect(rightOfPreview[0]).toBeGreaterThan(SCREEN_WORKSPACE.center[0]);
+
+  // Raw x=1 is right of camera = left of mirrored preview → negative scene X
+  const leftOfPreview = imageLandmarkToScene(1, 0.5, 0, {
+    depthZ: SCREEN_WORKSPACE.center[2],
+  });
+  expect(leftOfPreview[0]).toBeLessThan(SCREEN_WORKSPACE.center[0]);
+
+  // Closer fingertip (negative MediaPipe z) must not sink past work slab
+  const tip = imageLandmarkToScene(0.5, 0.5, -0.5, { depthZ: 0.35 });
+  expect(tip[2]).toBeGreaterThanOrEqual(HAND_Z_MIN);
+  expect(clampHandZ(0.1)).toBe(HAND_Z_MIN);
+});
+
+test('desk depth: larger palm → closer; browsers assume 1 m desk', async () => {
+  const {
+    DESK_TO_SCREEN_METERS,
+    estimateDepthFromPalmNorm,
+    applyDepthDeadzone,
+    palmWidthNorm,
+  } = await import('../src/hand/deskDepth');
+  expect(DESK_TO_SCREEN_METERS).toBe(1);
+
+  const near = estimateDepthFromPalmNorm(0.2);
+  const far = estimateDepthFromPalmNorm(0.08);
+  expect(near).toBeLessThan(far);
+
+  expect(applyDepthDeadzone(1.01, 1.0)).toBeCloseTo(1.0);
+  expect(applyDepthDeadzone(1.1, 1.0)).toBeGreaterThan(1.0);
+
+  const pts = Array.from({ length: 21 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
+  pts[5] = { x: 0.4, y: 0.5, z: 0 };
+  pts[17] = { x: 0.55, y: 0.5, z: 0 };
+  expect(palmWidthNorm(pts)).toBeCloseTo(0.15);
 });
