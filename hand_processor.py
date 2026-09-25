@@ -1,8 +1,8 @@
-"""Hand tracking processor: MediaPipe Hands → Unity hand frame dicts.
+"""Hand tracking processor: MediaPipe Hands → hand frame dicts for WebSocket.
 
 Wrist world position is obtained through :class:`WristPositionProvider` so a
 future binocular retro-reflective marker module can replace only ``pos`` while
-reusing pinch detection and the UDP payload shape.
+reusing pinch detection and the JSON payload shape.
 """
 
 from __future__ import annotations

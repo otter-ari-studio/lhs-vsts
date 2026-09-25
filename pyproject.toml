@@ -1,7 +1,7 @@
 [project]
 name = "lha-virtual-simulation-training-system-python"
 version = "0.1.0"
-description = "UDP hand tracking sender for Unity range-hood training simulator"
+description = "WebSocket hand tracking sender for lhs-vsts Three.js web client"
 readme = "README.md"
 authors = [
     { name = "heyongqi10", email = "heyongqi10@jd.com" }
@@ -11,6 +11,7 @@ dependencies = [
     "opencv-python>=4.8,<5",
     "mediapipe>=0.10.9,<0.10.15",
     "numpy>=1.24,<2",
+    "websockets>=12,<15",
 ]
 
 [build-system]

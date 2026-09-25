@@ -1,14 +1,14 @@
-"""Central configuration for hand-tracking UDP sender.
+"""Central configuration for hand-tracking WebSocket sender.
 
-All calibration knobs live here so Unity world mapping can be tuned without
-touching processing or protocol code.
+All calibration knobs live here so the Three.js client can tune axis mapping
+and relative drive without Python applying world transforms by default.
 """
 
 # ---------------------------------------------------------------------------
-# UDP
+# WebSocket (browser client connects here)
 # ---------------------------------------------------------------------------
-UDP_HOST = "127.0.0.1"
-UDP_PORT = 9999
+WS_HOST = "127.0.0.1"
+WS_PORT = 8765
 
 # ---------------------------------------------------------------------------
 # Capture / loop
@@ -36,27 +36,20 @@ FLIP_HORIZONTAL = True
 PINCH_DISTANCE_THRESHOLD = 0.05
 
 # ---------------------------------------------------------------------------
-# Coordinate transform: MediaPipe normalized → Unity world (meters)
+# Coordinate transform: MediaPipe normalized → world (meters)
 #
 # ONLY used when LMS_RAW_CAPTURE_SPACE=False (Python applies POS_* itself).
 # Default desk + top-webcam path keeps LMS_RAW_CAPTURE_SPACE=True so pos/lms/rot
-# stay in MediaPipe capture space; Unity UdpHandDataReceiver MapPoint/MapRotation
-# remaps axes. VirtualHandDriver then does relative drive from default rest pose.
+# stay in MediaPipe capture space; the web client maps axes then relative-drives
+# from default rest poses (same contract as the former Unity receiver).
 #
 # pipeline (non-raw only):
-#   1) optional axis remap (MediaPipe → Unity)
+#   1) optional axis remap (MediaPipe → Three.js-like Y-up)
 #   2) scale
 #   3) translation offset
-#
-# MediaPipe image landmarks: x right, y down, z toward camera (approx).
-# Unity typical: x right, y up, z forward. Default remap flips Y and Z.
 # ---------------------------------------------------------------------------
-# Multiply each MediaPipe axis before remap: [sx, sy, sz]
 POS_SCALE = [1.2, 1.2, 1.2]
-# Axis remap: index into MediaPipe [x, y, z]; negative index = negate that axis.
-# Example [0, -1, -2] → Unity(x, -y, -z)
 POS_AXIS_REMAP = [0, -1, -2]
-# Translation in Unity meters after scale/remap
 POS_OFFSET = [0.0, 1.2, 0.5]
 
 # ---------------------------------------------------------------------------
@@ -67,11 +60,9 @@ LPF_POS_ALPHA = 0.35
 LPF_ROT_ALPHA = 0.30
 LPF_LMS_ALPHA = 0.35  # 21 landmarks
 
-# Include full 21 MediaPipe landmarks per hand in UDP JSON as "lms".
+# Include full 21 MediaPipe landmarks per hand in JSON as "lms".
 # Protocol: pos MUST equal lms[0] in the same coordinate space.
 SEND_LANDMARKS = True
-# True (default, Unity delivery): pos/lms/rot in MediaPipe capture space;
-#   do NOT apply POS_*; Unity maps axes then relative-drives from defaultPose.
-# False: Python applies mediapipe_to_unity to pos/lms/rot; Unity axis map
-#   should be identity to avoid double remap.
+# True (default): pos/lms/rot in MediaPipe capture space; web maps axes.
+# False: Python applies mediapipe_to_unity-style POS_*; web axis map should be identity.
 LMS_RAW_CAPTURE_SPACE = True

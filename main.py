@@ -1,4 +1,4 @@
-"""Main loop: camera → hand process → UDP JSON → Unity (127.0.0.1:9999)."""
+"""Main loop: camera → hand process → WebSocket JSON → lhs-vsts/web."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import warnings
 
 import config as cfg
 from hand_processor import HandProcessor
-from udp_sender import UdpSender
+from ws_sender import WsSender
 
 try:
     import cv2
@@ -17,7 +17,7 @@ except ImportError as exc:  # pragma: no cover
     ) from exc
 
 
-WINDOW_NAME = "Hand Tracking → Unity UDP"
+WINDOW_NAME = "Hand Tracking → Web WS"
 
 
 def _log_hands(hands: list) -> None:
@@ -38,7 +38,8 @@ def _log_hands(hands: list) -> None:
 
 def main() -> None:
     processor = HandProcessor()
-    sender = UdpSender(cfg.UDP_HOST, cfg.UDP_PORT)
+    sender = WsSender(cfg.WS_HOST, cfg.WS_PORT)
+    sender.start()
     paused = False
     min_dt = 1.0 / max(cfg.TARGET_FPS, 1)
     last_send = 0.0
@@ -50,7 +51,7 @@ def main() -> None:
         )
 
     print(
-        f"UDP → {cfg.UDP_HOST}:{cfg.UDP_PORT} @ ≤{cfg.TARGET_FPS} fps | "
+        f"WS → ws://{cfg.WS_HOST}:{cfg.WS_PORT} @ ≤{cfg.TARGET_FPS} fps | "
         "SPACE=pause  q=quit"
     )
 
@@ -66,7 +67,6 @@ def main() -> None:
                 print("[ctrl] paused" if paused else "[ctrl] resumed")
 
             if paused:
-                # Still pump window events; skip capture/send
                 time.sleep(min_dt)
                 continue
 

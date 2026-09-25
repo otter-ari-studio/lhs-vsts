@@ -3,25 +3,25 @@
 ## Order
 
 1. **Python WS 硬切**
-   - [ ] `config.py`：`WS_HOST`/`WS_PORT`（默认 `127.0.0.1:8765`），移除 UDP 配置
-   - [ ] 新增 `ws_sender.py`：listen + broadcast JSON；无客户端不崩
-   - [ ] `main.py` 改用 WS；窗口标题/日志改为 Web
-   - [ ] 删除或停用 `udp_sender.py`
-   - [ ] `requirements.txt` / `pyproject.toml` 增加 `websockets`；更新 README 联调步骤
+   - [x] `config.py`：`WS_HOST`/`WS_PORT`（默认 `127.0.0.1:8765`），移除 UDP 配置
+   - [x] 新增 `ws_sender.py`：listen + broadcast JSON；无客户端不崩
+   - [x] `main.py` 改用 WS；窗口标题/日志改为 Web
+   - [x] 删除或停用 `udp_sender.py`
+   - [x] `requirements.txt` / `pyproject.toml` 增加 `websockets`；更新 README 联调步骤
 
 2. **Web 依赖与骨架场景**
-   - [ ] `web/package.json` 增加 `three`、`@react-three/fiber`、`@react-three/drei`、`@types/three`
-   - [ ] 搭建 Canvas + 灯光 + 地面/墙 + `RangeHoodShell`
-   - [ ] 连接状态条 + Recalibrate
+   - [x] `web/package.json` 增加 `three`、`@react-three/fiber`、`@react-three/drei`、`@types/three`
+   - [x] 搭建 Canvas + 灯光 + 地面/墙 + `RangeHoodShell`
+   - [x] 连接状态条 + Recalibrate
 
 3. **手部管线**
-   - [ ] `handSocket` 订阅 → `HandDataHub`
-   - [ ] `axisMap`（默认翻 Y/Z）
-   - [ ] `RelativeHandDriver` + `LandmarkRig`（左青右橙、pinch 高亮）
-   - [ ] 停滞隐藏骨架；无数据保持默认休息位
+   - [x] `handSocket` 订阅 → `HandDataHub`
+   - [x] `axisMap`（默认翻 Y/Z）
+   - [x] `RelativeHandDriver` + `LandmarkRig`（左青右橙、pinch 高亮）
+   - [x] 停滞隐藏骨架；无数据保持默认休息位
 
 4. **联调验证**
-   - [ ] Python + `pnpm run dev` 端到端
+   - [ ] Python + `pnpm run dev` 端到端（需本机安装依赖后验证）
    - [ ] 对照 OpenCV：同向跟随、相对驱动、捏合反馈
    - [ ] 断线重连 / 空手行为符合 AC2
 
