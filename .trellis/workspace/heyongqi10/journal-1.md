@@ -74,3 +74,38 @@ Nest ServeStatic hosts frontend dist from apps/backend/public; build:docker/star
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Kitbash 3D visual polish
+
+**Date**: 2026-09-26
+**Task**: Kitbash 3D visual polish
+**Branch**: `main`
+
+### Summary
+
+Teaching-aid Kitbash polish: materials, silhouette, warehouse Environment with Suspense/e2e skip; documented Environment CDN suspend gotcha.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d3ab19e` | (see git log) |
+| `dd38b2f` | (see git log) |
+| `b115cbb` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
