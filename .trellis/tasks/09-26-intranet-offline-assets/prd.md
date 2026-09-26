@@ -23,11 +23,11 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1. `apps/frontend/src` 中无 `googleapis` / `jsdelivr` / `githack` / `fonts.googleapis` 运行时 URL。
-- [ ] AC2. `createHandLandmarker` 仅尝试本地 WASM；模型路径为同源静态文件。
-- [ ] AC3. `TrainingScene` Environment 不使用外网 `preset`；本地 HDR（或明确关闭 IBL）在断网下可用。
-- [ ] AC4. 相关单元测试更新并通过；`vp check` 通过。
-- [ ] AC5. `pnpm run build:docker` 后 `public` 内含模型/HDR（或经 frontend dist 拷贝可见）。
+- [x] AC1. `apps/frontend/src` 中无 `googleapis` / `jsdelivr` / `githack` / `fonts.googleapis` 运行时 URL。
+- [x] AC2. `createHandLandmarker` 仅尝试本地 WASM；模型路径为同源静态文件。
+- [x] AC3. `TrainingScene` Environment 不使用外网 `preset`；本地 HDR（或明确关闭 IBL）在断网下可用。
+- [x] AC4. 相关单元测试更新并通过；`vp check` 通过。
+- [x] AC5. `pnpm run build:docker` 后 `public` 内含模型/HDR（或经 frontend dist 拷贝可见）。
 
 ## Out of Scope
 
