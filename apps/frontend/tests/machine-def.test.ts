@@ -1,5 +1,6 @@
-import { expect, test } from "@rstest/core";
 import { findPart, listPartIds, parseMachineDef } from "@lhs-vsts/machine";
+import { expect, test } from "@rstest/core";
+
 import { listKitbashKeys } from "../src/visual/kitbash/KitbashAdapter";
 
 const FIXTURE = {

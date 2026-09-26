@@ -1,6 +1,7 @@
-import { Vector3 } from "three";
 import { getTrainingSession } from "@lhs-vsts/machine";
 import type { PartDef } from "@lhs-vsts/machine";
+import { Vector3 } from "three";
+
 import {
   COLLIDER_RADIUS,
   INSTALLED_PICK_PRIORITY,
@@ -8,9 +9,9 @@ import {
   SOP_PICK_PRIORITY,
 } from "./defaults";
 import { setGrabHolding } from "./grabHoldHub";
+import { surfaceDistance } from "./operationSurface";
 import { INVENTORY_PARK, partInventory } from "./partInventory";
 import { isInstallOfferPart, PROP_OFFER_POS } from "./partOffer";
-import { surfaceDistance } from "./operationSurface";
 import type { HandInteractable } from "./registry";
 import { detectLateralThrow, pushThrowSample, type ThrowSample } from "./throwDetect";
 

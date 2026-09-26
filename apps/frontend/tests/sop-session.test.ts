@@ -1,8 +1,9 @@
-import { expect, test } from "@rstest/core";
 import { createScoreBook } from "@lhs-vsts/machine";
 import { buildRequiredSteps, buildStepPrereqs, isPassed, prereqsMet } from "@lhs-vsts/machine";
 import { TrainingSession } from "@lhs-vsts/machine";
 import type { MachineDef } from "@lhs-vsts/machine";
+import { expect, test } from "@rstest/core";
+
 import { accumulateDwell, createDwellTracker } from "../src/interaction/dwell";
 
 const miniDef: MachineDef = {

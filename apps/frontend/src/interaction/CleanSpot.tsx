@@ -1,8 +1,9 @@
+import { getTrainingSession } from "@lhs-vsts/machine";
+import type { CleanSpotDef, Vec3 } from "@lhs-vsts/machine";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Group, Vector3 } from "three";
-import { getTrainingSession } from "@lhs-vsts/machine";
-import type { CleanSpotDef, Vec3 } from "@lhs-vsts/machine";
+
 import { SOP_PICK_PRIORITY } from "./defaults";
 import { createDwellTracker } from "./dwell";
 import { getPartPose } from "./partPoseHub";

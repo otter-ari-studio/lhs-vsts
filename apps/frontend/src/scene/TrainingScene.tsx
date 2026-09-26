@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import { PointerInteraction } from "../interaction/PointerInteraction";
-import { isOrbitLocked, subscribeOrbitLock } from "../interaction/orbitLockHub";
-import { clearInteractables } from "../interaction/registry";
-import { clearPartPoses } from "../interaction/partPoseHub";
 import { setTrainingSession, TrainingSession, type MachineDef } from "@lhs-vsts/machine";
+import { OrbitControls } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useState } from "react";
+
 import { loadMachineDef } from "../api/loadMachineDef";
+import { isOrbitLocked, subscribeOrbitLock } from "../interaction/orbitLockHub";
+import { clearPartPoses } from "../interaction/partPoseHub";
+import { PointerInteraction } from "../interaction/PointerInteraction";
+import { clearInteractables } from "../interaction/registry";
 import { MachineView } from "../visual/MachineView";
 
 interface TrainingSceneProps {

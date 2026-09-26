@@ -1,4 +1,5 @@
 import { createScoreBook, type FaultEntry, type ScoreBook } from "./ScoreBook.js";
+import { emitSessionChange, emitTip } from "./sessionEvents.js";
 import {
   buildRequiredSteps,
   buildStepPrereqs,
@@ -9,7 +10,6 @@ import {
   stepLabel,
   type PartRuntimeState,
 } from "./StepGraph.js";
-import { emitSessionChange, emitTip } from "./sessionEvents.js";
 import {
   closeStep,
   installStep,
@@ -341,7 +341,9 @@ export class TrainingSession {
       else teardown.push(row);
     }
 
-    const display: { stepId: string; label: string; kind: "normal" | "wash" }[] = teardown.map((r) => ({ ...r, kind: "normal" as const }));
+    const display: { stepId: string; label: string; kind: "normal" | "wash" }[] = teardown.map(
+      (r) => ({ ...r, kind: "normal" as const }),
+    );
     if (this.def.cleanSpots.length > 0) {
       display.push({
         stepId: APPLIANCE_WASH_STEP_ID,

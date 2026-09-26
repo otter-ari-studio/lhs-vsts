@@ -1,4 +1,5 @@
 import { getTrainingSession } from "@lhs-vsts/machine";
+
 import { isInstallOfferPart } from "./partOffer";
 import type { HandInteractable } from "./registry";
 import type { SelectionInfo } from "./selectionHub";

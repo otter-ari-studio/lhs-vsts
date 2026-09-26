@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { HandLandmarker } from "@mediapipe/tasks-vision";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+
 import { requestUserCamera, stopMediaStream, type CameraError } from "./camera";
 import {
   downloadHandCaptureLog,

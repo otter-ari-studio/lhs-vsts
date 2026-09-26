@@ -1,14 +1,15 @@
-import { useEffect, useSyncExternalStore } from "react";
 import type { MachineDef } from "@lhs-vsts/machine";
 import { getTrainingSession, subscribeSession } from "@lhs-vsts/machine";
 import { closeStep, installStep, openStep, removeStep } from "@lhs-vsts/machine";
+import { useEffect, useSyncExternalStore } from "react";
+
 import { ClipPart } from "../interaction/ClipPart";
+import { resetGrabHold } from "../interaction/grabHoldHub";
 import { GrabInstallGhost, GrabPart } from "../interaction/GrabPart";
 import { NutPart } from "../interaction/NutPart";
-import { operationSurfaceHub } from "../interaction/operationSurfaceHub";
 import { surfaceZFromPartAnchors } from "../interaction/operationSurface";
+import { operationSurfaceHub } from "../interaction/operationSurfaceHub";
 import { partInventory } from "../interaction/partInventory";
-import { resetGrabHold } from "../interaction/grabHoldHub";
 import { KitbashPart } from "./kitbash/KitbashAdapter";
 
 interface MachineViewProps {

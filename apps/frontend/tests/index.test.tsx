@@ -1,7 +1,8 @@
 import { expect, test } from "@rstest/core";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { GuidePage } from "../src/ui/GuidePage";
+
 import { MEDIAPIPE_WASM_CDN, MEDIAPIPE_VERSION } from "../src/hand/mediapipeLoader";
+import { GuidePage } from "../src/ui/GuidePage";
 
 test("guide page shows mouse demo copy and brand", () => {
   render(<GuidePage onStart={() => undefined} onAdmin={() => undefined} />);

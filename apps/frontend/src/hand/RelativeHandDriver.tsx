@@ -1,6 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { Euler, Group, MeshStandardMaterial, Quaternion, Vector3 } from "three";
+
+import { projectToSurface } from "../interaction/operationSurface";
+import { operationSurfaceHub } from "../interaction/operationSurfaceHub";
 import {
   GRASP_CONFIRM_FRAMES,
   GRASP_OFF_RATIO,
@@ -21,8 +24,6 @@ import { handHub } from "./HandHub";
 import { handWorldHub } from "./handWorldHub";
 import { LandmarkRig, type LandmarkRigHandle } from "./LandmarkRig";
 import { JOINT_COUNT, type HandId, type Vec3 } from "./types";
-import { projectToSurface } from "../interaction/operationSurface";
-import { operationSurfaceHub } from "../interaction/operationSurfaceHub";
 
 interface RelativeHandDriverProps {
   handId: HandId;

@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@rstest/core";
-import { Vector3 } from "three";
+
 import {
   parseMachineDef,
   setTrainingSession,
@@ -10,6 +9,9 @@ import {
   type MachineDef,
   type PartDef,
 } from "@lhs-vsts/machine";
+import { expect, test } from "@rstest/core";
+import { Vector3 } from "three";
+
 import { aimTargetHub } from "../src/interaction/aimTargetHub";
 import { createGrabbableDragApi } from "../src/interaction/grabbableDragApi";
 import { setOrbitLocked } from "../src/interaction/orbitLockHub";

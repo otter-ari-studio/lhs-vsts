@@ -1,8 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { Color, Group, Mesh, MeshBasicMaterial, Vector3 } from "three";
-import type { HandId } from "../hand/types";
+
 import { handWorldHub } from "../hand/handWorldHub";
+import type { HandId } from "../hand/types";
 import { aimTargetHub } from "./aimTargetHub";
 
 const _aim = new Vector3();

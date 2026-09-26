@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
 import {
   parseMachineDef,
   type CleanSpotDef,
   type MachineDef,
   type PartDef,
 } from "@lhs-vsts/machine";
-import { listKitbashKeys } from "../visual/kitbash/KitbashAdapter";
+import { useCallback, useEffect, useState } from "react";
+
 import {
   fetchCurrentMachine,
   fetchScores,
   saveCurrentMachine,
   type ScoreRecord,
 } from "../api/client";
+import { listKitbashKeys } from "../visual/kitbash/KitbashAdapter";
 
 interface AdminPageProps {
   onBack: () => void;

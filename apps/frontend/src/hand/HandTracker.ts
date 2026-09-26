@@ -1,13 +1,6 @@
 import type { HandLandmarker, HandLandmarkerResult } from "@mediapipe/tasks-vision";
+
 import { handCaptureRecorder, landmarkListToVec3, type HandCaptureHandFrame } from "./captureLog";
-import {
-  ema,
-  median,
-  palmRatioToSceneZ,
-  palmWidthNorm,
-  PALM_ORIGIN_MIN_SAMPLES,
-  PALM_ORIGIN_SAMPLE_MS,
-} from "./deskDepth";
 import {
   HAND_HOLD_MS,
   HAND_Z_FAR,
@@ -18,9 +11,17 @@ import {
   GRASP_RATIO_EMA,
   IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,
 } from "./defaults";
+import {
+  ema,
+  median,
+  palmRatioToSceneZ,
+  palmWidthNorm,
+  PALM_ORIGIN_MIN_SAMPLES,
+  PALM_ORIGIN_SAMPLE_MS,
+} from "./deskDepth";
+import { fingerOpenRatio, updateGraspStateConfirmed } from "./grasp";
 import { handHub } from "./HandHub";
 import { estimatePalmRotation } from "./palmRotation";
-import { fingerOpenRatio, updateGraspStateConfirmed } from "./grasp";
 import { clampHandZ, imageLandmarksToSceneMeters, SCREEN_WORKSPACE } from "./screenMap";
 import { JOINT_COUNT, type HandId, type HandSample, type Vec3 } from "./types";
 

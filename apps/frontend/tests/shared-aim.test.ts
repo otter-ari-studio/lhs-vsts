@@ -1,4 +1,5 @@
 import { expect, test } from "@rstest/core";
+
 import { aimTargetHub } from "../src/interaction/aimTargetHub";
 import {
   AIM_IN_RANGE_EXIT_SCALE,

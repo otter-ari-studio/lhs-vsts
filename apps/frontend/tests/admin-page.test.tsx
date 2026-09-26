@@ -1,5 +1,6 @@
 import { expect, rs, test } from "@rstest/core";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+
 import { AdminPage } from "../src/ui/AdminPage";
 
 const machineFixture = {

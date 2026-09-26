@@ -1,5 +1,6 @@
 import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
 import { Color, Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
+
 import { JOINT_COUNT } from "./types";
 
 export interface LandmarkRigHandle {

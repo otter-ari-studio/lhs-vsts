@@ -1,8 +1,9 @@
+import { getTrainingSession, subscribeSession } from "@lhs-vsts/machine";
+import type { PartDef, Vec3 } from "@lhs-vsts/machine";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Group, Vector3 } from "three";
-import { getTrainingSession, subscribeSession } from "@lhs-vsts/machine";
-import type { PartDef, Vec3 } from "@lhs-vsts/machine";
+
 import { KitbashPart } from "../visual/kitbash/KitbashAdapter";
 import {
   COLLIDER_RADIUS,
@@ -10,8 +11,8 @@ import {
   REMOVED_PICK_PRIORITY,
   SOP_PICK_PRIORITY,
 } from "./defaults";
-import { isInstallOfferPart, PROP_OFFER_POS } from "./partOffer";
 import { surfaceDistance } from "./operationSurface";
+import { isInstallOfferPart, PROP_OFFER_POS } from "./partOffer";
 import { registerInteractable, unregisterInteractable, type HandInteractable } from "./registry";
 import { SopTargetHighlight } from "./SopTargetHighlight";
 

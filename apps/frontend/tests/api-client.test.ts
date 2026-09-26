@@ -1,4 +1,5 @@
 import { afterEach, expect, rs, test } from "@rstest/core";
+
 import {
   fetchCurrentMachine,
   fetchScores,

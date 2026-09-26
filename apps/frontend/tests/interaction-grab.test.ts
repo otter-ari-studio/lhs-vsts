@@ -1,12 +1,6 @@
 import { expect, test } from "@rstest/core";
 import { Vector3 } from "three";
-import {
-  clearInteractables,
-  findHoverTargetSticky,
-  findNearestInteractable,
-  registerInteractable,
-  type HandInteractable,
-} from "../src/interaction/registry";
+
 import {
   COLLIDER_RADIUS,
   INSTALLED_PICK_PRIORITY,
@@ -15,6 +9,13 @@ import {
 } from "../src/interaction/defaults";
 import { partInventory } from "../src/interaction/partInventory";
 import { PROP_OFFER_POS } from "../src/interaction/partOffer";
+import {
+  clearInteractables,
+  findHoverTargetSticky,
+  findNearestInteractable,
+  registerInteractable,
+  type HandInteractable,
+} from "../src/interaction/registry";
 import {
   detectLateralThrow,
   pushThrowSample,

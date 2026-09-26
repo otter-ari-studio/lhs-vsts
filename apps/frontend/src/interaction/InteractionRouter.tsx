@@ -1,8 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { Vector3 } from "three";
-import type { HandId } from "../hand/types";
+
 import { handWorldHub } from "../hand/handWorldHub";
+import type { HandId } from "../hand/types";
 import { aimTargetHub } from "./aimTargetHub";
 import { PENDING_EXIT_SCALE, REACH_COMMIT_MS, REACH_COMMIT_RADIUS_SCALE } from "./defaults";
 import {
@@ -11,14 +12,14 @@ import {
   listLiveSopTargets,
   type HandInteractable,
 } from "./registry";
+import { selectionHub } from "./selectionHub";
+import { selectionFromInteractable, selectionFromSopFallback } from "./selectionInfo";
 import {
   candidateDist,
   pickSharedHover,
   resolveAimInRange,
   type SharedHoverCandidate,
 } from "./sharedAim";
-import { selectionFromInteractable, selectionFromSopFallback } from "./selectionInfo";
-import { selectionHub } from "./selectionHub";
 
 const _pos = new Vector3();
 const _hoverPos = new Vector3();

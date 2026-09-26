@@ -1,8 +1,8 @@
+import { HAND_Z_FAR, HAND_Z_NEAR } from "./defaults";
+import { handHub } from "./HandHub";
+import { SCREEN_WORKSPACE } from "./screenMap";
 import type { HandId, HandSample, Quat, Vec3 } from "./types";
 import { JOINT_COUNT } from "./types";
-import { HAND_Z_FAR, HAND_Z_NEAR } from "./defaults";
-import { SCREEN_WORKSPACE } from "./screenMap";
-import { handHub } from "./HandHub";
 
 export const HAND_CAPTURE_LOG_VERSION = 1 as const;
 

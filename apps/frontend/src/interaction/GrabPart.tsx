@@ -1,8 +1,9 @@
+import { getTrainingSession } from "@lhs-vsts/machine";
+import type { PartDef, Vec3 } from "@lhs-vsts/machine";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Group, Vector3 } from "three";
-import { getTrainingSession } from "@lhs-vsts/machine";
-import type { PartDef, Vec3 } from "@lhs-vsts/machine";
+
 import { KitbashPart } from "../visual/kitbash/KitbashAdapter";
 import {
   COLLIDER_RADIUS,
@@ -11,10 +12,10 @@ import {
   SOP_PICK_PRIORITY,
 } from "./defaults";
 import { setGrabHolding } from "./grabHoldHub";
+import { surfaceDistance } from "./operationSurface";
 import { INVENTORY_PARK, partInventory } from "./partInventory";
 import { isInstallOfferPart, PROP_OFFER_POS } from "./partOffer";
 import { setPartPose } from "./partPoseHub";
-import { surfaceDistance } from "./operationSurface";
 import { registerInteractable, unregisterInteractable, type HandInteractable } from "./registry";
 import { SopTargetHighlight } from "./SopTargetHighlight";
 import { detectLateralThrow, pushThrowSample, type ThrowSample } from "./throwDetect";

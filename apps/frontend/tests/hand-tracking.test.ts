@@ -1,6 +1,8 @@
 import { expect, test } from "@rstest/core";
 import { Matrix4 } from "three";
+
 import { DEFAULT_AXIS_MAP, buildMapMatrix, mapPointTuple } from "../src/hand/axisMap";
+import { fingerOpenRatio, updateGraspStateConfirmed } from "../src/hand/grasp";
 import { handHub } from "../src/hand/HandHub";
 import {
   MEDIAPIPE_VERSION,
@@ -8,7 +10,6 @@ import {
   MEDIAPIPE_WASM_CDN,
 } from "../src/hand/mediapipeLoader";
 import { distance3, updatePinchState, updatePinchStateConfirmed } from "../src/hand/pinch";
-import { fingerOpenRatio, updateGraspStateConfirmed } from "../src/hand/grasp";
 import type { HandSample, Vec3 } from "../src/hand/types";
 
 test("DEFAULT_AXIS_MAP mirrors X and flips Y for selfie → Three", () => {

@@ -1,5 +1,5 @@
-import type { HandInteractable } from "./registry";
 import { AIM_IN_RANGE_EXIT_SCALE, SHARED_HOVER_STICK_SLACK_M, SOP_PICK_PRIORITY } from "./defaults";
+import type { HandInteractable } from "./registry";
 
 export interface SharedHoverCandidate {
   it: HandInteractable;

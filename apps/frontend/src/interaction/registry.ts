@@ -1,4 +1,5 @@
 import type { Vector3 } from "three";
+
 import { AIM_IN_RANGE_EXIT_SCALE, SOP_PICK_PRIORITY } from "./defaults";
 
 export type InteractableKind = "grabbable" | "clip" | "rotate_nut" | "clean";

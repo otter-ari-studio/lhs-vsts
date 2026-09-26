@@ -1,5 +1,5 @@
-import type { HandId, Vec3 } from "./types";
 import { DESK_TO_SCREEN_METERS, deskXySpanMeters } from "./deskDepth";
+import type { HandId, Vec3 } from "./types";
 
 export interface HandRestPose {
   position: Vec3;

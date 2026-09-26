@@ -1,7 +1,3 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { partInventory } from "../interaction/partInventory";
-import { currentInstallOfferPartId } from "../interaction/partOffer";
-import { selectionHub } from "../interaction/selectionHub";
 import {
   APPLIANCE_WASH_DURATION_MS,
   getTrainingSession,
@@ -9,7 +5,12 @@ import {
   subscribeTips,
   type SessionSnapshot,
 } from "@lhs-vsts/machine";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+
 import { submitSessionScoreOnce } from "../api/submitSessionScore";
+import { partInventory } from "../interaction/partInventory";
+import { currentInstallOfferPartId } from "../interaction/partOffer";
+import { selectionHub } from "../interaction/selectionHub";
 import { TrainingScene } from "../scene/TrainingScene";
 
 interface TrainPageProps {

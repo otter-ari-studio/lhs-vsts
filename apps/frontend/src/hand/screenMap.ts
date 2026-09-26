@@ -1,5 +1,5 @@
-import type { Vec3 } from "./types";
 import { HAND_Z_FAR, HAND_Z_NEAR, IMAGE_LANDMARK_FINGER_Z_SPAN_METERS } from "./defaults";
+import type { Vec3 } from "./types";
 
 /**
  * Map the full webcam frame onto the 3D training workspace.

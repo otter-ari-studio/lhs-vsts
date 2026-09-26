@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Group, Vector3 } from "three";
 import { getTrainingSession } from "@lhs-vsts/machine";
 import type { PartDef, Vec3 } from "@lhs-vsts/machine";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Group, Vector3 } from "three";
+
 import { KitbashPart } from "../visual/kitbash/KitbashAdapter";
 import { COLLIDER_RADIUS, SOP_PICK_PRIORITY } from "./defaults";
 import { surfaceDistance } from "./operationSurface";

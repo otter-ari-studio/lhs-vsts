@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post } from "@nestjs/common";
+
 import { ScoresService } from "./scores.service.js";
 
 @Controller("api/scores")

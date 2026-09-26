@@ -1,9 +1,10 @@
 import { Vector3 } from "three";
-import { findNearestInteractable, listLiveSopTargets, type HandInteractable } from "./registry";
-import { selectionFromInteractable, selectionFromSopFallback } from "./selectionInfo";
-import { selectionHub } from "./selectionHub";
+
 import { aimTargetHub } from "./aimTargetHub";
 import { setOrbitLocked } from "./orbitLockHub";
+import { findNearestInteractable, listLiveSopTargets, type HandInteractable } from "./registry";
+import { selectionHub } from "./selectionHub";
+import { selectionFromInteractable, selectionFromSopFallback } from "./selectionInfo";
 
 export interface PointerDragSession {
   /** Current pointer position on the operation surface (world). */
