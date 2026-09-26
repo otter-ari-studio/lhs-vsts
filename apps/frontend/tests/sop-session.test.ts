@@ -211,16 +211,16 @@ test("visual adapter swap does not change StepGraph / TrainingSession", () => {
 });
 
 test("public range_hood requiredSteps include cleans and pass after SOP", async () => {
-  const { readFileSync } = await import("node:fs");
-  const { dirname, join } = await import("node:path");
-  const { fileURLToPath } = await import("node:url");
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const url = await import("node:url");
   const { parseMachineDef } = await import("@lhs-vsts/machine");
 
-  const jsonPath = join(
-    dirname(fileURLToPath(import.meta.url)),
+  const jsonPath = path.join(
+    path.dirname(url.fileURLToPath(import.meta.url)),
     "../../backend/data/seed/range_hood_generic.json",
   );
-  const def = parseMachineDef(JSON.parse(readFileSync(jsonPath, "utf8")));
+  const def = parseMachineDef(JSON.parse(fs.readFileSync(jsonPath, "utf8")));
   const required = buildRequiredSteps(def);
   for (const id of [
     "clean_oil_box",

@@ -3,7 +3,7 @@ import { findPart, listPartIds, parseMachineDef } from "../src/parseMachineDef.j
 import { cleanStep, closeStep, installStep, openStep, removeStep } from "../src/types.js";
 import { miniDef } from "./fixtures.js";
 
-const baseRaw = structuredClone(miniDef) as Record<string, unknown>;
+const baseRaw = structuredClone(miniDef) as unknown as Record<string, unknown>;
 
 describe("parseMachineDef", () => {
   it("accepts a valid MachineDef", () => {

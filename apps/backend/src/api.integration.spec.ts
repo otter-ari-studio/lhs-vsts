@@ -167,7 +167,9 @@ describe("Machines and Scores API", () => {
     ];
 
     for (const { body, match } of cases) {
-      const res = await request(app.getHttpServer()).post("/api/scores").send(body);
+      const res = await request(app.getHttpServer())
+        .post("/api/scores")
+        .send(body as object);
       expect(res.status).toBe(400);
       expect(String(res.body.message)).toMatch(match);
     }

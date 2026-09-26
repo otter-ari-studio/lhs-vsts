@@ -250,9 +250,7 @@ test("pointer session: miss, leave, clip click, and lockout", () => {
 
 test("grabbable drag: lateral throw tip and tolerance fail", () => {
   resetHubs();
-  const def = miniMachine();
-  // Block install so a failed drop from installed path isn't used; force
-  // remove then release far while install is not current... use oil_box seed.
+  // oil_box cannot reinstall yet after remove, so release parks in inventory.
   const seed = loadSeed();
   const session = new TrainingSession(seed);
   setTrainingSession(session);

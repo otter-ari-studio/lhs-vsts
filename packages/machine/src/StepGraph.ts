@@ -53,7 +53,7 @@ export function topoSortSteps(stepIds: string[], prereqs: Map<string, string[]>)
   // Steps may reference prereqs not in the set (treat as already satisfied for ordering).
   while (remaining.size > 0) {
     let progressed = false;
-    for (const id of [...remaining]) {
+    for (const id of remaining) {
       const req = prereqs.get(id) ?? [];
       if (req.every((r) => done.has(r) || !remaining.has(r))) {
         ordered.push(id);
@@ -64,7 +64,7 @@ export function topoSortSteps(stepIds: string[], prereqs: Map<string, string[]>)
     }
     if (!progressed) {
       // Cycle or missing — append rest in stable order.
-      ordered.push(...[...remaining].sort());
+      ordered.push(...Array.from(remaining).sort());
       break;
     }
   }

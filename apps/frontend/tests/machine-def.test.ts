@@ -137,14 +137,14 @@ test("kitbash registry covers range_hood part keys", () => {
 });
 
 test("public range_hood_generic.json has no prefabPath and anchors match kitbash", async () => {
-  const { readFileSync } = await import("node:fs");
-  const { dirname, join } = await import("node:path");
-  const { fileURLToPath } = await import("node:url");
-  const jsonPath = join(
-    dirname(fileURLToPath(import.meta.url)),
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const url = await import("node:url");
+  const jsonPath = path.join(
+    path.dirname(url.fileURLToPath(import.meta.url)),
     "../../backend/data/seed/range_hood_generic.json",
   );
-  const raw = JSON.parse(readFileSync(jsonPath, "utf8")) as unknown;
+  const raw = JSON.parse(fs.readFileSync(jsonPath, "utf8")) as unknown;
   expect(JSON.stringify(raw)).not.toContain("prefabPath");
 
   const def = parseMachineDef(raw);

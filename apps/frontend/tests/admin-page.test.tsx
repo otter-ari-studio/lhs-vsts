@@ -73,11 +73,27 @@ const scoreFixture = [
   },
 ];
 
+function requestUrl(input: RequestInfo | URL): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.href;
+  return input.url;
+}
+
+function requestBodyText(body: BodyInit | null | undefined): string {
+  if (body == null) return "";
+  if (typeof body === "string") return body;
+  if (body instanceof URLSearchParams) return body.toString();
+  if (body instanceof Blob) {
+    throw new Error("Blob body is not supported in this test mock");
+  }
+  return JSON.stringify(body);
+}
+
 function mockAdminApis(options?: { putError?: boolean; emptyScores?: boolean }) {
   return rs
     .spyOn(globalThis, "fetch")
     .mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
+      const url = requestUrl(input);
       const method = (init?.method ?? "GET").toUpperCase();
       if (url.includes("/api/machines/current") && method === "GET") {
         return Promise.resolve(new Response(JSON.stringify(machineFixture), { status: 200 }));
@@ -90,7 +106,7 @@ function mockAdminApis(options?: { putError?: boolean; emptyScores?: boolean }) 
         if (options?.putError) {
           return Promise.resolve(new Response("bad", { status: 400 }));
         }
-        const body = JSON.parse(String(init?.body));
+        const body = JSON.parse(requestBodyText(init?.body ?? null));
         return Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
       }
       return Promise.resolve(new Response("unexpected", { status: 500 }));
@@ -181,12 +197,12 @@ test("AdminPage lists scores and saves machine edits", async () => {
   });
 
   const putCall = fetchMock.mock.calls.find((c) => {
-    const url = String(c[0]);
+    const url = requestUrl(c[0] as RequestInfo | URL);
     const method = (c[1]?.method ?? "GET").toUpperCase();
     return url.includes("/api/machines/current") && method === "PUT";
   });
   expect(putCall).toBeTruthy();
-  const saved = JSON.parse(String(putCall?.[1]?.body));
+  const saved = JSON.parse(requestBodyText(putCall?.[1]?.body ?? null));
   expect(saved.displayName).toBe("改名机型");
   expect(saved.scoring.deductIllegalOrder).toBe(7);
   expect(saved.parts[0].tips.installLocked).toBe("新提示");
