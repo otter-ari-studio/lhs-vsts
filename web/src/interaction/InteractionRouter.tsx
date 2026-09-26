@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { Vector3 } from 'three';
 import type { HandId } from '../hand/types';
 import { handWorldHub } from '../hand/handWorldHub';
+import { aimTargetHub } from './aimTargetHub';
 import {
   GRAB_COMMIT_MS,
   HIGHLIGHT_GRAB_COMMIT_MS,
@@ -13,6 +14,7 @@ import {
 import {
   findHoverTargetSticky,
   findNearestInteractable,
+  listLiveSopTargets,
   type HandInteractable,
 } from './registry';
 import {
@@ -23,6 +25,7 @@ import { selectionHub } from './selectionHub';
 
 const _pos = new Vector3();
 const _hoverPos = new Vector3();
+const _aimWorld = new Vector3();
 
 function commitMsFor(
   it: HandInteractable | null,
@@ -73,6 +76,7 @@ interface HandInteractionState {
 /**
  * Routes grasp + hover to interactables.
  * Sustained grasp in range commits (top-cam often never sees a clean open→close edge).
+ * Publishes one shared aim target so the guide stem matches the right-side HUD.
  */
 export function InteractionRouter() {
   const hands = useRef<HandInteractionState[]>([
@@ -133,8 +137,6 @@ export function InteractionRouter() {
       }
 
       if (pinch && !state.engaged) {
-        // Rising edge OR sustained grasp in range — top-cam hands are often
-        // already "closed" before they reach the part, so edge-only never fires.
         if (!state.pending) {
           state.pending = pickPendingTarget(
             _pos,
@@ -200,6 +202,7 @@ export function InteractionRouter() {
     let best: HandInteractable | null = null;
     let bestPri = Number.NEGATIVE_INFINITY;
     let bestDist = Number.POSITIVE_INFINITY;
+    let bestHandPos: Vector3 | null = null;
     for (const handId of [0, 1] as HandId[]) {
       const cand = hands.current[handId]!.hoverCand;
       if (!cand) continue;
@@ -216,6 +219,7 @@ export function InteractionRouter() {
         bestPri = pri;
         bestDist = dist;
         best = cand;
+        bestHandPos = _hoverPos.clone();
       }
     }
 
@@ -229,6 +233,49 @@ export function InteractionRouter() {
       ? selectionFromInteractable(best)
       : selectionFromSopFallback();
     selectionHub.set(sel);
+
+    // Shared aim target: hovered part, else nearest live SOP part to any hand.
+    let aimIt: HandInteractable | null = best;
+    let aimInRange = !!best;
+    if (!aimIt) {
+      const sops = listLiveSopTargets();
+      let nearest: HandInteractable | null = null;
+      let nearestD = Number.POSITIVE_INFINITY;
+      for (const handId of [0, 1] as HandId[]) {
+        const pose = handWorldHub.tryGet(handId);
+        if (!pose) continue;
+        _hoverPos.set(
+          pose.interactionPoint[0],
+          pose.interactionPoint[1],
+          pose.interactionPoint[2],
+        );
+        for (const it of sops) {
+          const d = it.distanceTo(_hoverPos);
+          if (d < nearestD) {
+            nearestD = d;
+            nearest = it;
+            aimInRange = d <= it.interactionRadius;
+          }
+        }
+      }
+      if (!nearest && sops[0]) {
+        nearest = sops[0];
+        aimInRange = false;
+      }
+      aimIt = nearest;
+    } else if (bestHandPos) {
+      aimInRange = best.distanceTo(bestHandPos) <= best.interactionRadius;
+    }
+
+    if (aimIt?.copyWorldPosition?.(_aimWorld)) {
+      aimTargetHub.set({
+        id: aimIt.id,
+        position: [_aimWorld.x, _aimWorld.y, _aimWorld.z],
+        inRange: aimInRange,
+      });
+    } else {
+      aimTargetHub.clear();
+    }
   });
 
   return null;
