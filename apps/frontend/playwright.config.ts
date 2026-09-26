@@ -18,7 +18,8 @@ export default defineConfig({
   expect: { timeout: 20_000 },
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    // Rsbuild binds `localhost` (often ::1 only); 127.0.0.1 would hang the ready check.
+    baseURL: "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
@@ -29,7 +30,7 @@ export default defineConfig({
       // Bypass `vp` — it fails to spawn under Playwright's webServer (EINVAL).
       command: "pnpm --filter @lhs-vsts/machine build && pnpm --filter backend exec nest start",
       cwd: root,
-      url: "http://127.0.0.1:3001/api/machines/current",
+      url: "http://localhost:3001/api/machines/current",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       stdout: "pipe",
@@ -38,7 +39,7 @@ export default defineConfig({
     {
       command: "pnpm --filter frontend exec rsbuild",
       cwd: root,
-      url: "http://127.0.0.1:3000",
+      url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
       stdout: "pipe",
