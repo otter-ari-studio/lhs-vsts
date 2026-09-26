@@ -71,7 +71,10 @@ test.describe("full training demo session", () => {
       const finishedStep = await completeCurrentStep(page, 60_000);
 
       // --- D6 spot checks ---
-      if (finishedStep === "remove_oil_box" || (await completedSteps(page)).includes("remove_oil_box")) {
+      if (
+        finishedStep === "remove_oil_box" ||
+        (await completedSteps(page)).includes("remove_oil_box")
+      ) {
         if (!spottedOil) {
           await expect.poll(async () => inventory(page)).toContain("oil_box");
           await expect.poll(async () => completedSteps(page)).toContain("remove_oil_box");
@@ -99,11 +102,14 @@ test.describe("full training demo session", () => {
       // --- Gate: teardown complete → wash ---
       if (!sawWashGate && TEARDOWN_DONE_MARKERS.every((s) => done.includes(s))) {
         await expect
-          .poll(async () => {
-            const pending = await applianceWashPending(page);
-            const step = await currentStepId(page);
-            return pending || step === "appliance_wash" || step?.startsWith("install_");
-          }, { timeout: 20_000 })
+          .poll(
+            async () => {
+              const pending = await applianceWashPending(page);
+              const step = await currentStepId(page);
+              return pending || step === "appliance_wash" || step?.startsWith("install_");
+            },
+            { timeout: 20_000 },
+          )
           .toBeTruthy();
         sawWashGate = true;
       }
@@ -124,11 +130,14 @@ test.describe("full training demo session", () => {
       sawWashGate = true;
     }
     await expect
-      .poll(async () => {
-        const step = await currentStepId(page);
-        const passed = await e2ePassed(page);
-        return sawReinstallStart || !!step?.startsWith("install_") || passed === true;
-      }, { timeout: 30_000 })
+      .poll(
+        async () => {
+          const step = await currentStepId(page);
+          const passed = await e2ePassed(page);
+          return sawReinstallStart || !!step?.startsWith("install_") || passed === true;
+        },
+        { timeout: 30_000 },
+      )
       .toBeTruthy();
 
     // Spot-check requirements must have fired during the run.

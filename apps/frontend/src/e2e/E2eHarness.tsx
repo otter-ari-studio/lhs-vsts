@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import type { Camera } from "three";
 import { Vector3 } from "three";
 
+import { operationSurfaceHub } from "../interaction/operationSurfaceHub";
 import { INVENTORY_PARK, partInventory } from "../interaction/partInventory";
 import { currentInstallOfferPartId, PROP_OFFER_POS } from "../interaction/partOffer";
 import { getPartPose } from "../interaction/partPoseHub";
-import { operationSurfaceHub } from "../interaction/operationSurfaceHub";
 
 export interface LhsE2eApi {
   ready: boolean;

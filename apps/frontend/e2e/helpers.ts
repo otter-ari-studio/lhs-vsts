@@ -54,7 +54,11 @@ export function partIdFromStep(stepId: string): string | null {
   return null;
 }
 
-async function waitForProjectable(page: Page, partId: string, mode: "part" | "offer"): Promise<void> {
+async function waitForProjectable(
+  page: Page,
+  partId: string,
+  mode: "part" | "offer",
+): Promise<void> {
   await page.waitForFunction(
     ({ id, m }) => {
       const p =
@@ -187,15 +191,18 @@ export async function actCurrentChromeStep(page: Page): Promise<string | null> {
   if (stepId.startsWith("install_")) {
     // Wait for offer tray / pop-out before aiming (nuts park nearby; grabbables pop).
     await expect
-      .poll(async () => {
-        const completed = await completedSteps(page);
-        if (completed.includes(stepId)) return true;
-        const offered = await page.evaluate(
-          (id) => window.__lhsE2e?.isInstallOffer(id) ?? false,
-          partId,
-        );
-        return offered;
-      }, { timeout: 20_000 })
+      .poll(
+        async () => {
+          const completed = await completedSteps(page);
+          if (completed.includes(stepId)) return true;
+          const offered = await page.evaluate(
+            (id) => window.__lhsE2e?.isInstallOffer(id) ?? false,
+            partId,
+          );
+          return offered;
+        },
+        { timeout: 20_000 },
+      )
       .toBeTruthy();
 
     const already = await completedSteps(page);

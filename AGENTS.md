@@ -52,10 +52,10 @@ release. Add a tool name to select part of the graph. For example, run
 
 ## App packages
 
-| Package | Role |
-| --- | --- |
-| `apps/frontend` | Training client (Rsbuild / React / R3F). Docs: Rsbuild, Rspack, Rslint, Rstest llms.txt |
-| `apps/backend` | Nest API for machines + scores |
-| `packages/machine` | Shared MachineDef / StepGraph / TrainingSession |
+| Package            | Role                                                                                    |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| `apps/frontend`    | Training client (Rsbuild / React / R3F). Docs: Rsbuild, Rspack, Rslint, Rstest llms.txt |
+| `apps/backend`     | Nest API for machines + scores                                                          |
+| `packages/machine` | Shared MachineDef / StepGraph / TrainingSession                                         |
 
 From root: `vp run dev:backend`, `vp run dev:frontend`, `vp run test:e2e`. Format with `vp fmt` (not per-app Prettier).

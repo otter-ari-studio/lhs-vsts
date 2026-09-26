@@ -62,9 +62,9 @@ vp run test:e2e
 
 Suites under `apps/frontend/e2e/`:
 
-| Spec | What it covers |
-| ---- | -------------- |
-| `drag-oil-box.spec.ts` | Single-step: drag `oil_box` into inventory |
+| Spec                        | What it covers                                                                          |
+| --------------------------- | --------------------------------------------------------------------------------------- |
+| `drag-oil-box.spec.ts`      | Single-step: drag `oil_box` into inventory                                              |
 | `full-demo-session.spec.ts` | Full合格 path: teardown → wash overlay → reinstall → end screen 100 + `GET /api/scores` |
 
 Requires Playwright browsers (`playwright install` once). Full-session timeout is ≥ 8 minutes; workers stay at 1.
