@@ -168,6 +168,7 @@ test('hover sticky keeps target past enter radius until exit scale', () => {
 });
 
 test('PROP_OFFER_POS sits in reachable front workspace', () => {
-  expect(PROP_OFFER_POS[2]).toBeGreaterThan(0.3);
+  expect(PROP_OFFER_POS[2]).toBeGreaterThan(0.15);
+  expect(PROP_OFFER_POS[2]).toBeLessThan(0.35);
   expect(PROP_OFFER_POS[0]).toBeGreaterThan(0.2);
 });

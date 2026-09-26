@@ -127,7 +127,8 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         const g = groupRef.current;
         if (g) {
           g.getWorldPosition(_tmp);
-          grabOffset.current.copy(_tmp).sub(handPos);
+          // Keep XY only — offer tray Z must not poison install snap distance.
+          grabOffset.current.set(_tmp.x - handPos.x, _tmp.y - handPos.y, 0);
         }
         if (mgr && !tipShown.current) {
           tipShown.current = true;
@@ -138,6 +139,8 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       onPinchHold(handPos) {
         if (!grabbed.current) return;
         followPos.current.copy(handPos).add(grabOffset.current);
+        // Ride the pointer plane / install depth so mouse can reach the slot.
+        followPos.current.z = installedPos.z;
         pushThrowSample(throwBuf.current, performance.now(), handPos.x);
       },
       onPinchEnd(handPos) {
@@ -147,14 +150,23 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         const mgr = getTrainingSession();
         const g = groupRef.current;
         if (!mgr || !g) return;
-        const range = Math.max(part.snapRangeMeters ?? snapRange, 0.12);
+        const range = Math.max(part.snapRangeMeters ?? snapRange, 0.18);
         g.getWorldPosition(_tmp);
         pushThrowSample(throwBuf.current, performance.now(), handPos.x);
         const throwDir = detectLateralThrow(throwBuf.current);
         throwBuf.current = [];
 
+        const slot: [number, number, number] = [
+          installedPos.x,
+          installedPos.y,
+          installedPos.z,
+        ];
+        const partNear =
+          surfaceDistance([_tmp.x, _tmp.y, _tmp.z], slot) <= range;
+        const pointerNear =
+          surfaceDistance([handPos.x, handPos.y, handPos.z], slot) <= range;
         // Place into slot → auto install (拧上)
-        if (_tmp.distanceTo(installedPos) <= range && mgr.canInstall(part.partId)) {
+        if ((partNear || pointerNear) && mgr.canInstall(part.partId)) {
           if (mgr.tryInstall(part.partId)) {
             partInventory.dequeue(part.partId);
             g.position.copy(installedPos);

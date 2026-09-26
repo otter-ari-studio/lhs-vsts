@@ -101,7 +101,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
           const g = groupRef.current;
           if (g) {
             g.getWorldPosition(_tmp);
-            grabOffset.current.copy(_tmp).sub(handPos);
+            grabOffset.current.set(_tmp.x - handPos.x, _tmp.y - handPos.y, 0);
           }
           return true;
         }
@@ -109,7 +109,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
         if (st === 'installed') {
           if (!mgr?.tryNutAction(part.partId)) return false;
           setRemoved(true);
-          const follow = '螺母已拧下 · 再轻握风轮叶轮取下';
+          const follow = '螺母已拧下 · 再点击风轮叶轮取下';
           if (part.thread === 'reverse' && part.tips.wrongDirection) {
             mgr.tip(`${part.tips.wrongDirection} · ${follow}`);
           } else {
@@ -123,15 +123,21 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
       onPinchHold(handPos) {
         if (!carrying.current) return;
         followPos.current.copy(handPos).add(grabOffset.current);
+        followPos.current.z = homePos.z;
       },
-      onPinchEnd() {
+      onPinchEnd(handPos) {
         const mgr = getTrainingSession();
         const g = groupRef.current;
         if (carrying.current && mgr && g) {
           carrying.current = false;
           g.getWorldPosition(_tmp);
-          const range = Math.max(part.snapRangeMeters ?? 0.08, 0.12);
-          if (_tmp.distanceTo(homePos) <= range && mgr.canInstall(part.partId)) {
+          const range = Math.max(part.snapRangeMeters ?? 0.08, 0.18);
+          const slot: [number, number, number] = [homePos.x, homePos.y, homePos.z];
+          const partNear =
+            surfaceDistance([_tmp.x, _tmp.y, _tmp.z], slot) <= range;
+          const pointerNear =
+            surfaceDistance([handPos.x, handPos.y, handPos.z], slot) <= range;
+          if ((partNear || pointerNear) && mgr.canInstall(part.partId)) {
             if (mgr.tryInstall(part.partId)) {
               setRemoved(false);
               g.position.copy(homePos);

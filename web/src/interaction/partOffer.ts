@@ -6,7 +6,7 @@ import type { Vec3 } from '../machine/types';
  * World position where the current reinstall prop "pops out" for grab.
  * Right-front of the hood so hands can reach without fighting the chassis.
  */
-export const PROP_OFFER_POS: Vec3 = [0.34, 0.16, 0.38];
+export const PROP_OFFER_POS: Vec3 = [0.34, 0.22, 0.22];
 
 /** Current chrome install_* part id, or null. */
 export function currentInstallOfferPartId(): string | null {
