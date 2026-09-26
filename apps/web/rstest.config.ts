@@ -14,12 +14,16 @@ export default defineConfig({
   coverage: {
     enabled: false,
     provider: 'istanbul',
-    include: ['src/api/**/*.{ts,tsx}', 'src/ui/AdminPage.tsx'],
+    include: [
+      'src/api/**/*.{ts,tsx}',
+      'src/ui/AdminPage.tsx',
+      'src/interaction/pointerDragSession.ts',
+      'src/interaction/grabbableDragApi.ts',
+    ],
     exclude: [
       'src/visual/**',
       'src/scene/**',
       'src/hand/**',
-      'src/interaction/**',
       'src/App.tsx',
       'src/index.tsx',
       'src/ui/TrainPage.tsx',
