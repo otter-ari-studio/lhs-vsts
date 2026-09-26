@@ -32,7 +32,7 @@ Training client and API: from the repo root run `vp run dev:backend` (port 3001)
 
 ## Coverage (AC9)
 
-Line coverage must be ≥ 90% for machine, backend, and web (web gate covers API client, AdminPage, score submit, and related pure helpers — see `apps/web/rstest.config.ts` excludes).
+Line coverage must be ≥ 90% for machine, backend, and web (web gate covers API client, AdminPage, score submit, and the shared 3D pointer-drag modules — see `apps/web/rstest.config.ts`).
 
 ```bash
 vp run --filter @lhs-vsts/machine test:cov
@@ -42,13 +42,12 @@ vp run web#test:cov
 vp run -w test:cov
 ```
 
-## E2E (AC8)
+## E2E and automated 3D drag (AC8 / AC10)
 
-Automated flow without 3D mouse: temp `DATA_DIR` Nest app → PUT machine → drive `TrainingSession` → POST score → GET list.
+- **AC8** — API + session write-score flow (no browser):
 
 ```bash
 vp run -w test:e2e
-# equivalent: vp run lhs-vsts#test:e2e
 ```
 
-This builds `@lhs-vsts/machine` then runs `apps/backend` Vitest e2e (`test/*.e2e-spec.ts`), including `training-flow.e2e-spec.ts`.
+- **AC10** — automated 3D drag (press → drag → release) via the same `createPointerDragSession` used by `PointerInteraction`. Covered in `apps/web/tests/pointer-drag-3d.test.ts` (runs with `vp run web#test`).

@@ -186,3 +186,111 @@ test('automated 3D drag: remove then drag-install back onto slot', () => {
   expect(session.getPassed()).toBe(true);
   resetHubs();
 });
+
+test('pointer session: miss, leave, clip click, and lockout', () => {
+  resetHubs();
+  const ptr = createPointerDragSession();
+  ptr.moveTo([10, 10, 0.22]);
+  expect(ptr.pointerDown()).toBe(false);
+  ptr.pointerUp();
+
+  let clipFired = 0;
+  const clipPos = new Vector3(0.1, 0.1, 0.22);
+  registerInteractable({
+    id: 'clip_a',
+    kind: 'clip',
+    interactionRadius: 0.2,
+    isInteractableNow: () => true,
+    pickPriority: () => 10,
+    distanceTo: (h) => clipPos.distanceTo(h),
+    copyWorldPosition: (out) => {
+      out.copy(clipPos);
+      return true;
+    },
+    onPinchStart: () => {
+      clipFired += 1;
+      return true;
+    },
+    onPinchHold: () => {},
+    onPinchEnd: () => {},
+  });
+  ptr.moveTo([0.1, 0.1, 0.22]);
+  expect(ptr.pointerDown()).toBe(true);
+  expect(clipFired).toBe(1);
+  expect(ptr.getEngaged()).toBeNull();
+  ptr.pointerUp();
+
+  let starts = 0;
+  const lockPos = new Vector3(0.5, 0.1, 0.22);
+  registerInteractable({
+    id: 'locked_part',
+    kind: 'grabbable',
+    interactionRadius: 0.2,
+    isInteractableNow: () => true,
+    pickPriority: () => 20,
+    distanceTo: (h) => lockPos.distanceTo(h),
+    copyWorldPosition: (out) => {
+      out.copy(lockPos);
+      return true;
+    },
+    onPinchStart: () => {
+      starts += 1;
+      return false;
+    },
+    onPinchHold: () => {},
+    onPinchEnd: () => {},
+  });
+  ptr.moveTo([0.5, 0.1, 0.22]);
+  expect(ptr.pointerDown()).toBe(true);
+  expect(starts).toBe(1);
+  // Lockout blocks immediate re-commit at same spot
+  ptr.pointerUp();
+  ptr.moveTo([0.5, 0.1, 0.22]);
+  ptr.pointerDown();
+  expect(starts).toBe(1);
+
+  // Fresh registry for leave/release path
+  clearInteractables();
+  const def = miniMachine();
+  const session = new TrainingSession(def);
+  setTrainingSession(session);
+  const widget = def.parts.find((p) => p.partId === 'widget')!;
+  mountGrabbable(widget, 0.08, () => true);
+  const ptr2 = createPointerDragSession();
+  ptr2.moveTo([0, 0.05, 0.22]);
+  ptr2.pointerDown();
+  expect(ptr2.getEngaged()?.id).toBe('widget');
+  ptr2.pointerLeave();
+  expect(ptr2.getEngaged()).toBeNull();
+  expect(ptr2.isPointerDown()).toBe(false);
+  resetHubs();
+});
+
+test('grabbable drag: lateral throw tip and tolerance fail', () => {
+  resetHubs();
+  const def = miniMachine();
+  // Block install so a failed drop from installed path isn't used; force
+  // remove then release far while install is not current... use oil_box seed.
+  const seed = loadSeed();
+  const session = new TrainingSession(seed);
+  setTrainingSession(session);
+  const oil = seed.parts.find((p) => p.partId === 'oil_box')!;
+  const { worldPos } = mountGrabbable(oil, 0.08, () => true);
+  const ptr = createPointerDragSession();
+  const start: [number, number, number] = [worldPos.x, worldPos.y, worldPos.z];
+  ptr.moveTo(start);
+  ptr.pointerDown();
+  // Fast leftward samples for throw detect
+  const t0 = performance.now();
+  for (let i = 0; i < 6; i++) {
+    Object.defineProperty(performance, 'now', {
+      value: () => t0 + i * 40,
+      configurable: true,
+    });
+    ptr.moveTo([start[0] - 0.08 * (i + 1), start[1], start[2]]);
+    ptr.holdTick(0.04);
+  }
+  ptr.pointerUp();
+  expect(partInventory.has('oil_box')).toBe(true);
+  resetHubs();
+});
