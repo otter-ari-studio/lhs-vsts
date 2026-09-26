@@ -1,1 +1,5 @@
-{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/guides/index.md", "reason": "Thinking-guide index; pick reuse/cross-layer when extending harness + e2e helpers"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Extract shared Playwright helpers from oil_box spec without duplicating drag recipes"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Session → UI end screen → POST scores → GET assert spans frontend and backend"}
+{"file": ".trellis/tasks/09-26-full-demo-e2e/design.md", "reason": "Harness contracts, pointer recipes, D6 assertion plan"}
+{"file": ".trellis/tasks/09-26-full-demo-e2e/prd.md", "reason": "Acceptance criteria AC1–AC5 and D1–D6"}

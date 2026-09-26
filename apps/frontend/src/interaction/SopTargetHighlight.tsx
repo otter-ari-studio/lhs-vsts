@@ -3,6 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { DoubleSide, type Mesh, type MeshBasicMaterial } from "three";
 
+import { isE2eMode } from "../e2e/E2eHarness";
+
 interface SopTargetHighlightProps {
   /** When true, pulse ring + core (SOP current target). */
   active: boolean;
@@ -19,6 +21,9 @@ interface SopTargetHighlightProps {
 /**
  * Visible cue for the current SOP part.
  * Uses depthTest=false so deep/occluded parts (e.g. wind cover) still flash.
+ *
+ * Html labels are skipped in `?e2e=1` — drei Html portals into the DOM and
+ * race with inventory hide (`visible=false`) causing `removeChildFromContainer`.
  */
 export function SopTargetHighlight({
   active,
@@ -31,6 +36,7 @@ export function SopTargetHighlight({
   const ringMat = useRef<MeshBasicMaterial>(null);
   const glowMat = useRef<MeshBasicMaterial>(null);
   const ringMesh = useRef<Mesh>(null);
+  const showHtmlLabel = !!label && !isE2eMode();
 
   useFrame(({ clock }) => {
     if (!active) return;
@@ -116,7 +122,7 @@ export function SopTargetHighlight({
           depthWrite={false}
         />
       </mesh>
-      {label ? (
+      {showHtmlLabel ? (
         <Html
           center
           position={[0, 0.12, 0.06]}

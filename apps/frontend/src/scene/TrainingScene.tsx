@@ -100,19 +100,23 @@ export function TrainingScene({ restartToken, onSessionReady }: TrainingScenePro
         {def ? <MachineView key={restartToken} def={def} /> : null}
         <PointerInteraction />
         {isE2eMode() ? <E2eHarness /> : null}
-        <OrbitGate />
-
-        <OrbitControls
-          makeDefault
-          target={[0, 0.15, 0.1]}
-          enablePan={false}
-          minDistance={0.7}
-          maxDistance={3.2}
-          minPolarAngle={Math.PI * 0.12}
-          maxPolarAngle={Math.PI * 0.55}
-          minAzimuthAngle={-Math.PI * 0.55}
-          maxAzimuthAngle={Math.PI * 0.55}
-        />
+        {/* E2E disables orbit so Playwright drags never rotate the camera. */}
+        {isE2eMode() ? null : (
+          <>
+            <OrbitGate />
+            <OrbitControls
+              makeDefault
+              target={[0, 0.15, 0.1]}
+              enablePan={false}
+              minDistance={0.7}
+              maxDistance={3.2}
+              minPolarAngle={Math.PI * 0.12}
+              maxPolarAngle={Math.PI * 0.55}
+              minAzimuthAngle={-Math.PI * 0.55}
+              maxAzimuthAngle={Math.PI * 0.55}
+            />
+          </>
+        )}
       </Canvas>
     </div>
   );

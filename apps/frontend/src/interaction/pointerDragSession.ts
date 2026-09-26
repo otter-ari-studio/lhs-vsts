@@ -2,6 +2,7 @@ import { Vector3 } from "three";
 
 import { aimTargetHub } from "./aimTargetHub";
 import { setOrbitLocked } from "./orbitLockHub";
+import { isInstallOfferPart } from "./partOffer";
 import { findNearestInteractable, listLiveSopTargets, type HandInteractable } from "./registry";
 import { selectionHub } from "./selectionHub";
 import { selectionFromInteractable, selectionFromSopFallback } from "./selectionInfo";
@@ -43,6 +44,11 @@ export function createPointerDragSession(): PointerDragSession {
   };
 
   const updateHud = () => {
+    // Remove-click lockout must not block the later install offer for the same nut.
+    if (lockoutId.current && isInstallOfferPart(lockoutId.current)) {
+      lockoutId.current = null;
+    }
+
     if (engaged.current) {
       selectionHub.set(selectionFromInteractable(engaged.current));
       if (engaged.current.copyWorldPosition?.(aim)) {
@@ -114,14 +120,20 @@ export function createPointerDragSession(): PointerDragSession {
       return true;
     }
 
-    if (target.kind === "rotate_nut" && !target.isInteractableNow()) {
-      lockoutId.current = target.id;
-      engaged.current = null;
-      setOrbitLocked(false);
+    if (target.kind === "rotate_nut") {
+      // Remove path: tryNutAction already finished inside onPinchStart — click only.
+      // Do not lock out: the same part must be grabable again as the install offer.
+      if (!isInstallOfferPart(target.id)) {
+        engaged.current = null;
+        setOrbitLocked(false);
+        return true;
+      }
+      engaged.current = target;
+      setOrbitLocked(true);
       return true;
     }
 
-    if (target.kind === "grabbable" || target.kind === "rotate_nut") {
+    if (target.kind === "grabbable") {
       engaged.current = target;
       setOrbitLocked(true);
       return true;

@@ -302,19 +302,22 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
           </mesh>
         )}
       </group>
-      <SopTargetHighlight
-        active={(isSopTarget || offered) && !grabbed.current}
-        hover={hover}
-        radius={0.05}
-        ringRadius={0.1}
-        label={
-          offered
-            ? `拖回 · ${part.displayName}`
-            : isSopTarget && !inInventory
-              ? part.displayName
-              : undefined
-        }
-      />
+      {/* Skip highlight while parked in inventory — avoids drei Html vs visible=false races. */}
+      {!inInventory || offered ? (
+        <SopTargetHighlight
+          active={(isSopTarget || offered) && !grabbed.current}
+          hover={hover}
+          radius={0.05}
+          ringRadius={0.1}
+          label={
+            offered
+              ? `拖回 · ${part.displayName}`
+              : isSopTarget && !inInventory
+                ? part.displayName
+                : undefined
+          }
+        />
+      ) : null}
     </group>
   );
 }

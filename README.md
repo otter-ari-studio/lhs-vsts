@@ -50,11 +50,18 @@ vp run -w test:cov
 vp run test:e2e:api
 ```
 
-- **AC10** — **real browser drag** (Playwright): canvas `pointerdown` → move → `pointerup` removes `oil_box` into inventory.
+- **AC10** — **real browser** (Playwright): `/?e2e=1` + `window.__lhsE2e` aim, then OS mouse on the WebGL canvas.
 
 ```bash
 vp run test:e2e
 # or: vp run frontend#test:e2e
 ```
 
-Opens `/?e2e=1`, starts training, aims via `window.__lhsE2e.projectPart`, then drives the OS mouse on the WebGL canvas. Requires Playwright browsers (`playwright install` once).
+Suites under `apps/frontend/e2e/`:
+
+| Spec | What it covers |
+| ---- | -------------- |
+| `drag-oil-box.spec.ts` | Single-step: drag `oil_box` into inventory |
+| `full-demo-session.spec.ts` | Full合格 path: teardown → wash overlay → reinstall → end screen 100 + `GET /api/scores` |
+
+Requires Playwright browsers (`playwright install` once). Full-session timeout is ≥ 8 minutes; workers stay at 1.

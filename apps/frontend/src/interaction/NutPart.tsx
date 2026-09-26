@@ -13,6 +13,7 @@ import {
 } from "./defaults";
 import { surfaceDistance } from "./operationSurface";
 import { isInstallOfferPart, PROP_OFFER_POS } from "./partOffer";
+import { setPartPose } from "./partPoseHub";
 import { registerInteractable, unregisterInteractable, type HandInteractable } from "./registry";
 import { SopTargetHighlight } from "./SopTargetHighlight";
 
@@ -211,6 +212,8 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
       const pulse = offering || isSopTarget || hover ? 1.08 : 1;
       mesh.scale.setScalar(pulse);
     }
+
+    setPartPose(part.partId, [g.position.x, g.position.y, g.position.z]);
   });
 
   return (

@@ -9,7 +9,8 @@ const frontendDir = path.join(root, "apps/frontend");
 
 /**
  * Real-browser E2E for the training client.
- * Starts backend (:3001) + frontend (:3000); drag suite opens `/?e2e=1#train`.
+ * Starts backend (:3001) + frontend (:3000); suites open `/?e2e=1#train`.
+ * Full-session demo needs a long budget (many real pointer drags).
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -17,7 +18,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: 1,
-  timeout: 90_000,
+  timeout: 8 * 60_000,
   expect: { timeout: 20_000 },
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {

@@ -1,11 +1,13 @@
 import { getTrainingSession } from "@lhs-vsts/machine";
 import type { PartDef, Vec3 } from "@lhs-vsts/machine";
+import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Group, Vector3 } from "three";
 
 import { KitbashPart } from "../visual/kitbash/KitbashAdapter";
 import { COLLIDER_RADIUS, SOP_PICK_PRIORITY } from "./defaults";
 import { surfaceDistance } from "./operationSurface";
+import { setPartPose } from "./partPoseHub";
 import { registerInteractable, unregisterInteractable, type HandInteractable } from "./registry";
 import { SopTargetHighlight } from "./SopTargetHighlight";
 
@@ -73,6 +75,13 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
     const mgr = getTrainingSession();
     if (mgr) setOpen(mgr.getState(part.partId) === "clip_open");
   }, [part.partId, setOpen]);
+
+  useFrame(() => {
+    const g = groupRef.current;
+    if (!g) return;
+    g.getWorldPosition(_tmp);
+    setPartPose(part.partId, [_tmp.x, _tmp.y, _tmp.z]);
+  });
 
   return (
     <group

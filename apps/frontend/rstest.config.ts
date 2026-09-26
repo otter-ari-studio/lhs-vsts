@@ -11,6 +11,8 @@ import { defineConfig } from "@rstest/core";
 export default defineConfig({
   extends: withRsbuildConfig(),
   setupFiles: ["./tests/rstest.setup.ts"],
+  // Unit/component tests only — Playwright lives under e2e/ (separate runner).
+  include: ["**/tests/**/*.{test,spec}.{ts,tsx}"],
   coverage: {
     enabled: false,
     provider: "istanbul",
