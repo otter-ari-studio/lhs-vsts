@@ -7,6 +7,8 @@
     "ready": "vp check && vp run -r test && vp run -r build",
     "dev:frontend": "vp run --filter @lhs-vsts/machine build && vp run frontend#dev",
     "dev:backend": "vp run --filter @lhs-vsts/machine build && vp run backend#start:dev",
+    "build:docker": "pnpm --filter @lhs-vsts/machine build && pnpm --filter frontend build && mkdir -p apps/backend/public && rm -rf apps/backend/public/* && cp -a apps/frontend/dist/. apps/backend/public/ && pnpm --filter backend build",
+    "start:docker": "node apps/backend/dist/main.js",
     "test:e2e": "playwright test -c apps/frontend/playwright.config.ts",
     "test:e2e:api": "vp run --filter @lhs-vsts/machine build && vp run backend#test:e2e",
     "test:cov": "vp run --filter @lhs-vsts/machine test:cov && vp run backend#test:cov && vp run frontend#test:cov"
@@ -25,5 +27,6 @@
   },
   "engines": {
     "node": ">=22.18.0"
-  }
+  },
+  "packageManager": "pnpm@12.6.0"
 }

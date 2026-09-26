@@ -3,3 +3,7 @@
 
 # Local machine runtime (scores + edited MachineDef)
 /data/runtime/
+
+# SPA build artifacts synced by build:docker (keep .gitkeep)
+/public/**
+!/public/.gitkeep

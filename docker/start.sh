@@ -1,3 +1,3 @@
 #! /bin/bash
 
-cd /home/ && npm run start
+cd /home/ && pnpm run start:docker
