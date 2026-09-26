@@ -1,6 +1,7 @@
-import { defineConfig, devices } from "@playwright/test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { defineConfig, devices } from "@playwright/test";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const backendDir = path.join(root, "apps/backend");

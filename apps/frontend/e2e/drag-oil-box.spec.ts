@@ -51,9 +51,7 @@ async function dragPartToCanvasLeft(page: Page, partId: string): Promise<void> {
 }
 
 test.describe("training canvas real drag", () => {
-  test("drag oil_box off the hood into inventory via pointer events", async ({
-    page,
-  }) => {
+  test("drag oil_box off the hood into inventory via pointer events", async ({ page }) => {
     await page.goto("/?e2e=1");
     await page.getByRole("button", { name: "进入训练" }).click();
     await expect(page).toHaveURL(/#train/);
@@ -72,9 +70,7 @@ test.describe("training canvas real drag", () => {
 
     await dragPartToCanvasLeft(page, "oil_box");
 
-    await expect
-      .poll(async () => inventory(page), { timeout: 15_000 })
-      .toContain("oil_box");
+    await expect.poll(async () => inventory(page), { timeout: 15_000 }).toContain("oil_box");
 
     await expect
       .poll(async () => completedSteps(page), { timeout: 10_000 })
