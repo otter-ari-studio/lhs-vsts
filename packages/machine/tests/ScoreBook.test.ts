@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { createScoreBook } from "../src/ScoreBook.js";
 import { miniDef } from "./fixtures.js";
 

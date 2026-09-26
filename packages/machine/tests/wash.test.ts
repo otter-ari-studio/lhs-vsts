@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { APPLIANCE_WASH_DURATION_MS, APPLIANCE_WASH_STEP_ID, isCleanStepId } from "../src/wash.js";
 import { miniDef } from "./fixtures.js";
 

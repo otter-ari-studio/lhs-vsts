@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { getTrainingSession, setTrainingSession, TrainingSession } from "../src/TrainingSession.js";
 import { clipNutDef, miniDef } from "./fixtures.js";
 
