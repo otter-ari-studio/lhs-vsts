@@ -38,7 +38,7 @@ export default defineConfig({
       timeout: 120_000,
       stdout: "pipe",
       stderr: "pipe",
-      gracefulShutdown: { signal: "SIGKILL", timeout: 2_000 },
+      // Omit gracefulShutdown → Playwright SIGKILLs the process group (SIGKILL is not a typed option).
     },
     {
       command: "exec ./node_modules/.bin/rsbuild",
@@ -48,7 +48,6 @@ export default defineConfig({
       timeout: 180_000,
       stdout: "pipe",
       stderr: "pipe",
-      gracefulShutdown: { signal: "SIGKILL", timeout: 2_000 },
     },
   ],
 });
