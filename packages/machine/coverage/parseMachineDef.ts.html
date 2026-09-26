@@ -1,61 +1,68 @@
+
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <title>Code coverage report for parseMachineDef.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="prettify.css" />
     <link rel="stylesheet" href="base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type="text/css">
-      .coverage-summary .sorter {
-        background-image: url(sort-arrow-sprite.png);
-      }
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(sort-arrow-sprite.png);
+        }
     </style>
-  </head>
-
-  <body>
-    <div class="wrapper">
-      <div class="pad1">
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
         <h1><a href="index.html">All files</a> parseMachineDef.ts</h1>
-        <div class="clearfix">
-          <div class="fl pad1y space-right2">
-            <span class="strong">92.74% </span>
-            <span class="quiet">Statements</span>
-            <span class="fraction">115/124</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">86.23% </span>
-            <span class="quiet">Branches</span>
-            <span class="fraction">94/109</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">100% </span>
-            <span class="quiet">Functions</span>
-            <span class="fraction">21/21</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">93.39% </span>
-            <span class="quiet">Lines</span>
-            <span class="fraction">99/106</span>
-          </div>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">92.74% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>115/124</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">86.23% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>94/109</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>21/21</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">93.39% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>99/106</span>
+            </div>
+        
+            
         </div>
         <p class="quiet">
-          Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>,
-          <em>p</em> or <em>k</em> for the previous block.
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-          <div class="quiet">
-            Filter:
-            <input type="search" id="fileSearch" />
-          </div>
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
         </template>
-      </div>
-      <div class="status-line high"></div>
-      <pre><table class="coverage">
+    </div>
+    <div class='status-line high'></div>
+    <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -321,12 +328,7 @@
 <a name='L263'></a><a href='#L263'>263</a>
 <a name='L264'></a><a href='#L264'>264</a>
 <a name='L265'></a><a href='#L265'>265</a>
-<a name='L266'></a><a href='#L266'>266</a>
-<a name='L267'></a><a href='#L267'>267</a>
-<a name='L268'></a><a href='#L268'>268</a>
-<a name='L269'></a><a href='#L269'>269</a>
-<a name='L270'></a><a href='#L270'>270</a>
-<a name='L271'></a><a href='#L271'>271</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L266'></a><a href='#L266'>266</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -342,11 +344,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -609,40 +606,35 @@
   ScoringConfig,
   Vec3,
   VisualAdapter,
-} from './types.js';
+} from "./types.js";
 &nbsp;
-const PART_KINDS = new Set&lt;PartKind&gt;([
-  'fixed_shell',
-  'grabbable',
-  'clip',
-  'rotate_nut',
-]);
+const PART_KINDS = new Set&lt;PartKind&gt;(["fixed_shell", "grabbable", "clip", "rotate_nut"]);
 &nbsp;
-const VISUAL_ADAPTERS = new Set&lt;VisualAdapter&gt;(['kitbash', 'gltf']);
-const THREADS = new Set&lt;NutThread&gt;(['normal', 'reverse']);
-const SPACES = new Set&lt;CleanSpace&gt;(['world', 'part_local']);
+const VISUAL_ADAPTERS = new Set&lt;VisualAdapter&gt;(["kitbash", "gltf"]);
+const THREADS = new Set&lt;NutThread&gt;(["normal", "reverse"]);
+const SPACES = new Set&lt;CleanSpace&gt;(["world", "part_local"]);
 &nbsp;
 function isRecord(v: unknown): v is Record&lt;string, unknown&gt; {
-  return typeof v === 'object' &amp;&amp; v !== null &amp;&amp; !Array.isArray(v);
+  return typeof v === "object" &amp;&amp; v !== null &amp;&amp; !Array.isArray(v);
 }
 &nbsp;
 function asString(v: unknown, field: string): string {
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof v !== 'string' || v.length === 0) {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof v !== "string" || v.length === 0) {
 <span class="cstat-no" title="statement not covered" >    throw new Error(`MachineDef: ${field} must be a non-empty string`);</span>
   }
   return v;
 }
 &nbsp;
 function asOptionalString(v: unknown): string | undefined {
-  if (v === undefined || v === null || v === '') return undefined;
-  if (typeof v !== 'string') {
-    throw new Error('MachineDef: optional string field has wrong type');
+  if (v === undefined || v === null || v === "") return undefined;
+  if (typeof v !== "string") {
+    throw new Error("MachineDef: optional string field has wrong type");
   }
   return v;
 }
 &nbsp;
 function asNumber(v: unknown, field: string): number {
-  if (typeof v !== 'number' || !Number.isFinite(v)) {
+  if (typeof v !== "number" || !Number.isFinite(v)) {
     throw new Error(`MachineDef: ${field} must be a finite number`);
   }
   return v;
@@ -667,33 +659,33 @@ function asVec3(v: unknown, field: string): Vec3 {
 }
 &nbsp;
 function parseScoring(raw: unknown): ScoringConfig {
-  if (!isRecord(raw)) throw new Error('MachineDef: scoring must be an object');
+  if (!isRecord(raw)) throw new Error("MachineDef: scoring must be an object");
   return {
-    baseScore: asNumber(raw.baseScore, 'scoring.baseScore'),
-    deductIllegalOrder: asNumber(raw.deductIllegalOrder, 'scoring.deductIllegalOrder'),
-    deductClipPry: asNumber(raw.deductClipPry, 'scoring.deductClipPry'),
+    baseScore: asNumber(raw.baseScore, "scoring.baseScore"),
+    deductIllegalOrder: asNumber(raw.deductIllegalOrder, "scoring.deductIllegalOrder"),
+    deductClipPry: asNumber(raw.deductClipPry, "scoring.deductClipPry"),
     deductNutWrongDirection: asNumber(
       raw.deductNutWrongDirection,
-      'scoring.deductNutWrongDirection',
+      "scoring.deductNutWrongDirection",
     ),
-    deductToleranceFail: asNumber(raw.deductToleranceFail, 'scoring.deductToleranceFail'),
+    deductToleranceFail: asNumber(raw.deductToleranceFail, "scoring.deductToleranceFail"),
   };
 }
 &nbsp;
 function parseAssemblyDefaults(raw: unknown): AssemblyDefaults {
   if (!isRecord(raw)) {
-    throw new Error('MachineDef: assemblyDefaults must be an object');
+    throw new Error("MachineDef: assemblyDefaults must be an object");
   }
   return {
     positionToleranceMeters: asNumber(
       raw.positionToleranceMeters,
-      'assemblyDefaults.positionToleranceMeters',
+      "assemblyDefaults.positionToleranceMeters",
     ),
     angleToleranceDegrees: asNumber(
       raw.angleToleranceDegrees,
-      'assemblyDefaults.angleToleranceDegrees',
+      "assemblyDefaults.angleToleranceDegrees",
     ),
-    snapRangeMeters: asNumber(raw.snapRangeMeters, 'assemblyDefaults.snapRangeMeters'),
+    snapRangeMeters: asNumber(raw.snapRangeMeters, "assemblyDefaults.snapRangeMeters"),
   };
 }
 &nbsp;
@@ -720,7 +712,7 @@ function parseVisual(raw: unknown, partId: string): PartVisual {
   if (kitbashKey) visual.kitbashKey = kitbashKey;
   if (gltfUrl) visual.gltfUrl = gltfUrl;
   if (nodeName) visual.nodeName = nodeName;
-  if (visual.adapter === 'kitbash' &amp;&amp; !visual.kitbashKey) {
+  if (visual.adapter === "kitbash" &amp;&amp; !visual.kitbashKey) {
     throw new Error(`MachineDef: parts[${partId}] kitbash visual needs kitbashKey`);
   }
   return visual;
@@ -728,7 +720,7 @@ function parseVisual(raw: unknown, partId: string): PartVisual {
 &nbsp;
 function parseTips(raw: unknown): PartTips {
   <span class="missing-if-branch" title="if path not taken" >I</span>if (raw === undefined || raw === null) <span class="cstat-no" title="statement not covered" >return {};</span>
-  if (!isRecord(raw)) throw new Error('MachineDef: tips must be an object');
+  if (!isRecord(raw)) throw new Error("MachineDef: tips must be an object");
   const tips: PartTips = {};
   const removeLocked = asOptionalString(raw.removeLocked);
   const installLocked = asOptionalString(raw.installLocked);
@@ -742,7 +734,7 @@ function parseTips(raw: unknown): PartTips {
 }
 &nbsp;
 function parseThread(raw: unknown, field: string): NutThread | undefined {
-  if (raw === undefined || raw === null || raw === '') return undefined;
+  if (raw === undefined || raw === null || raw === "") return undefined;
   const s = asString(raw, field);
   <span class="missing-if-branch" title="else path not taken" >E</span>if (!THREADS.has(s as NutThread)) {
     throw new Error(`MachineDef: unknown thread "${s}"`);
@@ -755,7 +747,7 @@ function parsePart(raw: unknown, index: number): PartDef {
 <span class="cstat-no" title="statement not covered" >    throw new Error(`MachineDef: parts[${index}] must be an object`);</span>
   }
   const partId = asString(raw.partId, `parts[${index}].partId`);
-  if ('prefabPath' in raw &amp;&amp; raw.prefabPath) {
+  if ("prefabPath" in raw &amp;&amp; raw.prefabPath) {
     throw new Error(
       `MachineDef: parts[${partId}] must not include Unity prefabPath (use visual.adapter)`,
     );
@@ -763,7 +755,7 @@ function parsePart(raw: unknown, index: number): PartDef {
   <span class="missing-if-branch" title="if path not taken" >I</span>if (!isRecord(raw.anchor)) {
 <span class="cstat-no" title="statement not covered" >    throw new Error(`MachineDef: parts[${partId}].anchor must be an object`);</span>
   }
-  const anchor: PartDef['anchor'] = {
+  const anchor: PartDef["anchor"] = {
     position: asVec3(raw.anchor.position, `parts[${partId}].anchor.position`),
   };
   if (raw.anchor.rotation !== undefined) {
@@ -795,7 +787,7 @@ function parseCleanSpot(raw: unknown, index: number): CleanSpotDef {
 <span class="cstat-no" title="statement not covered" >    throw new Error(`MachineDef: cleanSpots[${index}] must be an object`);</span>
   }
   const cleanId = asString(raw.cleanId, `cleanSpots[${index}].cleanId`);
-  const spaceRaw = asString(raw.space ?? <span class="branch-1 cbranch-no" title="branch not covered" >'world', `</span>cleanSpots[${cleanId}].space`);
+  const spaceRaw = asString(raw.space ?? <span class="branch-1 cbranch-no" title="branch not covered" >"world", `</span>cleanSpots[${cleanId}].space`);
   if (!SPACES.has(spaceRaw as CleanSpace)) {
     throw new Error(`MachineDef: unknown clean space "${spaceRaw}"`);
   }
@@ -816,27 +808,27 @@ function parseCleanSpot(raw: unknown, index: number): CleanSpotDef {
  * Rejects Unity `prefabPath` and unknown kinds/adapters.
  */
 export function parseMachineDef(raw: unknown): MachineDef {
-  if (!isRecord(raw)) throw new Error('MachineDef: root must be an object');
+  if (!isRecord(raw)) throw new Error("MachineDef: root must be an object");
 &nbsp;
-  const unit = asString(raw.unit ?? <span class="branch-1 cbranch-no" title="branch not covered" >'meter', '</span>unit');
-  if (unit !== 'meter') {
+  const unit = asString(raw.unit ?? <span class="branch-1 cbranch-no" title="branch not covered" >"meter", "</span>unit");
+  if (unit !== "meter") {
     throw new Error(`MachineDef: unit must be "meter", got "${unit}"`);
   }
 &nbsp;
   const partsRaw = raw.parts;
   if (!Array.isArray(partsRaw) || partsRaw.length === 0) {
-    throw new Error('MachineDef: parts must be a non-empty array');
+    throw new Error("MachineDef: parts must be a non-empty array");
   }
   const parts = partsRaw.map(parsePart);
 &nbsp;
   const partIds = new Set(parts.map((p) =&gt; p.partId));
   if (partIds.size !== parts.length) {
-    throw new Error('MachineDef: duplicate partId');
+    throw new Error("MachineDef: duplicate partId");
   }
 &nbsp;
   const cleanRaw = raw.cleanSpots ?? <span class="branch-1 cbranch-no" title="branch not covered" >[];</span>
   if (!Array.isArray(cleanRaw)) {
-    throw new Error('MachineDef: cleanSpots must be an array');
+    throw new Error("MachineDef: cleanSpots must be an array");
   }
   const cleanSpots = cleanRaw.map(parseCleanSpot);
   for (const spot of cleanSpots) {
@@ -848,9 +840,9 @@ export function parseMachineDef(raw: unknown): MachineDef {
   }
 &nbsp;
   return {
-    machineId: asString(raw.machineId, 'machineId'),
-    displayName: asString(raw.displayName, 'displayName'),
-    unit: 'meter',
+    machineId: asString(raw.machineId, "machineId"),
+    displayName: asString(raw.displayName, "displayName"),
+    unit: "meter",
     scoring: parseScoring(raw.scoring),
     assemblyDefaults: parseAssemblyDefaults(raw.assemblyDefaults),
     parts,
@@ -868,22 +860,21 @@ export function findPart(def: MachineDef, partId: string): PartDef | undefined {
 }
 &nbsp;</pre></td></tr></table></pre>
 
-      <div class="push"></div>
-      <!-- for sticky footer -->
-    </div>
-    <!-- /wrapper -->
-    <div class="footer quiet pad2 space-top1 center small">
-      Code coverage generated by
-      <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-      at 2026-09-26T09:37:44.604Z
-    </div>
-    <script src="prettify.js"></script>
-    <script>
-      window.onload = function () {
-        prettyPrint();
-      };
-    </script>
-    <script src="sorter.js"></script>
-    <script src="block-navigation.js"></script>
-  </body>
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-09-26T09:58:06.186Z
+            </div>
+        <script src="prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="sorter.js"></script>
+        <script src="block-navigation.js"></script>
+    </body>
 </html>
+    
