@@ -1,4 +1,13 @@
-export { COLLIDER_RADIUS, DEFAULT_CLEAN_DWELL_MS, GRAB_COMMIT_MS, HIGHLIGHT_GRAB_COMMIT_MS, NUT_DWELL_MS, TOGGLE_COMMIT_MS } from './defaults';
+export {
+  AIM_IN_RANGE_EXIT_SCALE,
+  COLLIDER_RADIUS,
+  DEFAULT_CLEAN_DWELL_MS,
+  GRAB_COMMIT_MS,
+  HIGHLIGHT_GRAB_COMMIT_MS,
+  NUT_DWELL_MS,
+  SHARED_HOVER_STICK_SLACK_M,
+  TOGGLE_COMMIT_MS,
+} from './defaults';
 export { accumulateDwell, createDwellTracker } from './dwell';
 export { InteractionRouter } from './InteractionRouter';
 export { GrabInstallGhost, GrabPart } from './GrabPart';
@@ -24,3 +33,8 @@ export {
   type HandInteractable,
   type InteractableKind,
 } from './registry';
+export {
+  pickSharedHover,
+  resolveAimInRange,
+  type SharedHoverCandidate,
+} from './sharedAim';

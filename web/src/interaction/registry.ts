@@ -1,5 +1,5 @@
 import type { Vector3 } from 'three';
-import { SOP_PICK_PRIORITY } from './defaults';
+import { AIM_IN_RANGE_EXIT_SCALE, SOP_PICK_PRIORITY } from './defaults';
 
 export type InteractableKind = 'grabbable' | 'clip' | 'rotate_nut' | 'clean';
 
@@ -93,7 +93,7 @@ export function findNearestInteractable(handPos: Vector3): HandInteractable | nu
 export function findHoverTargetSticky(
   handPos: Vector3,
   prev: HandInteractable | null,
-  exitScale = 1.45,
+  exitScale = AIM_IN_RANGE_EXIT_SCALE,
 ): HandInteractable | null {
   if (prev?.isInteractableNow()) {
     const d = prev.distanceTo(handPos);

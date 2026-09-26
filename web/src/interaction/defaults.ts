@@ -29,6 +29,18 @@ export const TOGGLE_COMMIT_MS = 80;
 /** Keep pending grab if hand stays within radius * this (avoids neighbor flicker). */
 export const PENDING_EXIT_SCALE = 1.5;
 
+/**
+ * Shared aim/hover sticky: challenger must be this many meters closer than the
+ * current winner before stealing (same priority band). Stops two-hand flicker.
+ */
+export const SHARED_HOVER_STICK_SLACK_M = 0.05;
+
+/**
+ * Exit hysteresis for hover sticky (`findHoverTargetSticky`) and aim `inRange`.
+ * Stay until distance > radius * this (enter remains ≤ radius).
+ */
+export const AIM_IN_RANGE_EXIT_SCALE = 1.45;
+
 /** pickPriority() for current SOP target — beats non-target removed parts. */
 export const SOP_PICK_PRIORITY = 2;
 /** Installed non-SOP parts. */

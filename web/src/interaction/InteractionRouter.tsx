@@ -18,6 +18,12 @@ import {
   type HandInteractable,
 } from './registry';
 import {
+  candidateDist,
+  pickSharedHover,
+  resolveAimInRange,
+  type SharedHoverCandidate,
+} from './sharedAim';
+import {
   selectionFromInteractable,
   selectionFromSopFallback,
 } from './selectionInfo';
@@ -98,6 +104,8 @@ export function InteractionRouter() {
     },
   ]);
   const globalHover = useRef<HandInteractable | null>(null);
+  const aimInRangeRef = useRef(false);
+  const aimIdRef = useRef<string | null>(null);
 
   useFrame((_, delta) => {
     const dt = Math.min(Math.max(delta, 0.0001), 0.05);
@@ -199,10 +207,7 @@ export function InteractionRouter() {
       state.lastPinch = pinch;
     }
 
-    let best: HandInteractable | null = null;
-    let bestPri = Number.NEGATIVE_INFINITY;
-    let bestDist = Number.POSITIVE_INFINITY;
-    let bestHandPos: Vector3 | null = null;
+    const sharedCands: SharedHoverCandidate[] = [];
     for (const handId of [0, 1] as HandId[]) {
       const cand = hands.current[handId]!.hoverCand;
       if (!cand) continue;
@@ -213,15 +218,10 @@ export function InteractionRouter() {
         pose.interactionPoint[1],
         pose.interactionPoint[2],
       );
-      const pri = cand.pickPriority?.() ?? 0;
-      const dist = cand.distanceTo(_hoverPos);
-      if (pri > bestPri || (pri === bestPri && dist < bestDist)) {
-        bestPri = pri;
-        bestDist = dist;
-        best = cand;
-        bestHandPos = _hoverPos.clone();
-      }
+      sharedCands.push({ it: cand, dist: cand.distanceTo(_hoverPos) });
     }
+
+    const best = pickSharedHover(sharedCands, globalHover.current);
 
     if (best !== globalHover.current) {
       globalHover.current?.onHover?.(false);
@@ -236,7 +236,9 @@ export function InteractionRouter() {
 
     // Shared aim target: hovered part, else nearest live SOP part to any hand.
     let aimIt: HandInteractable | null = best;
-    let aimInRange = !!best;
+    let aimDist = best
+      ? candidateDist(sharedCands, best.id)
+      : Number.POSITIVE_INFINITY;
     if (!aimIt) {
       const sops = listLiveSopTargets();
       let nearest: HandInteractable | null = null;
@@ -254,26 +256,33 @@ export function InteractionRouter() {
           if (d < nearestD) {
             nearestD = d;
             nearest = it;
-            aimInRange = d <= it.interactionRadius;
           }
         }
       }
       if (!nearest && sops[0]) {
         nearest = sops[0];
-        aimInRange = false;
+        nearestD = Number.POSITIVE_INFINITY;
       }
       aimIt = nearest;
-    } else if (bestHandPos && best) {
-      aimInRange = best.distanceTo(bestHandPos) <= best.interactionRadius;
+      aimDist = nearestD;
     }
 
     if (aimIt?.copyWorldPosition?.(_aimWorld)) {
+      const sameTarget = aimIdRef.current === aimIt.id;
+      aimInRangeRef.current = resolveAimInRange(
+        aimDist,
+        aimIt.interactionRadius,
+        sameTarget ? aimInRangeRef.current : false,
+      );
+      aimIdRef.current = aimIt.id;
       aimTargetHub.set({
         id: aimIt.id,
         position: [_aimWorld.x, _aimWorld.y, _aimWorld.z],
-        inRange: aimInRange,
+        inRange: aimInRangeRef.current,
       });
     } else {
+      aimIdRef.current = null;
+      aimInRangeRef.current = false;
       aimTargetHub.clear();
     }
   });
