@@ -22,8 +22,10 @@ vp run -r test
 vp run -r build
 ```
 
-- Run the development server:
+- Run the development server (website template):
 
 ```bash
 vp run dev
 ```
+
+Training client and API: from the repo root run `vp run dev:backend` (port 3001) and `vp run dev:web` (port 3000). Both scripts build `@lhs-vsts/machine` first. The web app proxies `/api` to the backend.

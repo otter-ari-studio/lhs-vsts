@@ -1,0 +1,1 @@
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Verify app imports only the machine barrel and backend stays decoupled"}
