@@ -1,0 +1,138 @@
+import type { MachineDef } from '../src/types.js';
+
+/** Minimal two-part + cleans def for unit tests. */
+export const miniDef: MachineDef = {
+  machineId: 'test',
+  displayName: 'test',
+  unit: 'meter',
+  scoring: {
+    baseScore: 100,
+    deductIllegalOrder: 5,
+    deductClipPry: 10,
+    deductNutWrongDirection: 5,
+    deductToleranceFail: 5,
+  },
+  assemblyDefaults: {
+    positionToleranceMeters: 0.015,
+    angleToleranceDegrees: 5,
+    snapRangeMeters: 0.08,
+  },
+  parts: [
+    {
+      partId: 'oil_box',
+      displayName: '集油盒',
+      kind: 'grabbable',
+      anchor: { position: [0, 0, 0] },
+      visual: { adapter: 'kitbash', kitbashKey: 'oil_box' },
+      removePrereqs: [],
+      installPrereqs: ['install_filter_top', 'clean_oil_box'],
+      tips: { installLocked: '需先回装滤网并清洁' },
+    },
+    {
+      partId: 'filter_top',
+      displayName: '上层滤网',
+      kind: 'grabbable',
+      anchor: { position: [0, 0.1, 0] },
+      visual: { adapter: 'kitbash', kitbashKey: 'filter_top' },
+      removePrereqs: ['remove_oil_box'],
+      installPrereqs: ['clean_filter_top'],
+      tips: { removeLocked: '需先拆集油盒' },
+    },
+  ],
+  cleanSpots: [
+    {
+      cleanId: 'oil_box',
+      displayName: '清洁集油盒',
+      partId: 'oil_box',
+      position: [0, 0, 0],
+      space: 'part_local',
+      radiusMeters: 0.1,
+      dwellMs: 1500,
+      stepId: 'clean_oil_box',
+    },
+    {
+      cleanId: 'filter_top',
+      displayName: '清洁上层滤网',
+      partId: 'filter_top',
+      position: [0, 0, 0],
+      space: 'part_local',
+      radiusMeters: 0.1,
+      dwellMs: 1500,
+      stepId: 'clean_filter_top',
+    },
+  ],
+};
+
+/** Clip + nut parts for TrainingSession edge paths. */
+export const clipNutDef: MachineDef = {
+  machineId: 'clip_nut',
+  displayName: 'clip nut',
+  unit: 'meter',
+  scoring: {
+    baseScore: 100,
+    deductIllegalOrder: 5,
+    deductClipPry: 10,
+    deductNutWrongDirection: 5,
+    deductToleranceFail: 5,
+  },
+  assemblyDefaults: {
+    positionToleranceMeters: 0.015,
+    angleToleranceDegrees: 5,
+    snapRangeMeters: 0.08,
+  },
+  parts: [
+    {
+      partId: 'shell',
+      displayName: '壳',
+      kind: 'fixed_shell',
+      anchor: { position: [0, 0, 0] },
+      visual: { adapter: 'kitbash', kitbashKey: 'shell' },
+      removePrereqs: [],
+      installPrereqs: [],
+      tips: {},
+    },
+    {
+      partId: 'clip_a',
+      displayName: '卡扣A',
+      kind: 'clip',
+      anchor: { position: [0, 0, 0] },
+      visual: { adapter: 'kitbash', kitbashKey: 'clip_a' },
+      removePrereqs: [],
+      installPrereqs: ['clean_panel'],
+      tips: { pry: '勿撬', installLocked: '先清洁' },
+    },
+    {
+      partId: 'panel',
+      displayName: '面板',
+      kind: 'grabbable',
+      anchor: { position: [0, 0.1, 0] },
+      visual: { adapter: 'gltf', gltfUrl: '/x.glb', nodeName: 'panel' },
+      removePrereqs: ['open_clip_a'],
+      installPrereqs: ['close_clip_a', 'clean_panel'],
+      tips: {},
+    },
+    {
+      partId: 'nut_a',
+      displayName: '螺母',
+      kind: 'rotate_nut',
+      anchor: { position: [0, 0.2, 0], rotation: [0, 0, 0] },
+      visual: { adapter: 'kitbash', kitbashKey: 'nut_a' },
+      removePrereqs: ['remove_panel'],
+      installPrereqs: ['install_panel'],
+      tips: { wrongDirection: '反转提示' },
+      thread: 'reverse',
+    },
+  ],
+  cleanSpots: [
+    {
+      cleanId: 'panel',
+      displayName: '清洁面板',
+      partId: 'panel',
+      position: [0, 0, 0],
+      space: 'world',
+      radiusMeters: 0.1,
+      dwellMs: 1000,
+      stepId: 'clean_panel',
+    },
+  ],
+};

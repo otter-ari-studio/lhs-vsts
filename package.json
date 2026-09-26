@@ -7,7 +7,9 @@
     "ready": "vp check && vp run -r test && vp run -r build",
     "dev": "vp run website#dev",
     "dev:web": "vp run --filter @lhs-vsts/machine build && vp run web#dev",
-    "dev:backend": "vp run --filter @lhs-vsts/machine build && vp run backend#start:dev"
+    "dev:backend": "vp run --filter @lhs-vsts/machine build && vp run backend#start:dev",
+    "test:e2e": "vp run --filter @lhs-vsts/machine build && vp run backend#test:e2e",
+    "test:cov": "vp run --filter @lhs-vsts/machine test:cov && vp run backend#test:cov && vp run web#test:cov"
   },
   "devDependencies": {
     "vite-plus": "catalog:"

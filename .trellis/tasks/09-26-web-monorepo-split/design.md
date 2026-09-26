@@ -59,6 +59,11 @@ apps/backend :3001
 
 根 `dev` 仍启动 website。另加 `dev:web` 与 `dev:backend`。
 
+## Coverage and E2E (AC8–AC9)
+
+- Line coverage ≥ 90% for `@lhs-vsts/machine`, `apps/backend`, and `apps/web` (web may exclude pure R3F mesh files; must include API client, AdminPage, and score submit).
+- E2E = Nest + TrainingSession + scores API, not Playwright 3D drag.
+
 ## Trade-offs
 
 - 规则进共享包、文档进后端文件：改 SOP 不用复制 StepGraph，拖拽也不跟着网络走。

@@ -10,7 +10,8 @@
     "lint": "rslint",
     "preview": "rsbuild preview",
     "test": "rstest",
-    "test:watch": "rstest --watch"
+    "test:watch": "rstest --watch",
+    "test:cov": "rstest --coverage"
   },
   "dependencies": {
     "@lhs-vsts/machine": "workspace:*",
@@ -28,6 +29,7 @@
     "@rslint/core": "0.9.3",
     "@rstest/adapter-rsbuild": "0.12.1",
     "@rstest/core": "0.12.1",
+    "@rstest/coverage-istanbul": "catalog:",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",

@@ -9,7 +9,7 @@ import {
   subscribeTips,
   type SessionSnapshot,
 } from '@lhs-vsts/machine';
-import { submitScore } from '../api/client';
+import { submitSessionScoreOnce } from '../api/submitSessionScore';
 import { TrainingScene } from '../scene/TrainingScene';
 
 interface TrainPageProps {
@@ -103,10 +103,9 @@ export function TrainPage({ onBack }: TrainPageProps) {
     if (!showEnd) return;
     const session = getTrainingSession();
     if (!session) return;
-    const sessionId = session.getSessionId();
-    if (submittedSessionRef.current === sessionId) return;
-    submittedSessionRef.current = sessionId;
-    void submitScore({
+    void submitSessionScoreOnce({
+      sessionId: session.getSessionId(),
+      submittedRef: submittedSessionRef,
       machineId: session.def.machineId,
       score: snap.score,
       passed: snap.passed,
@@ -117,10 +116,6 @@ export function TrainPage({ onBack }: TrainPageProps) {
       })),
     }).catch((err: unknown) => {
       console.error('Failed to submit score', err);
-      // Allow retry on next render if POST failed.
-      if (submittedSessionRef.current === sessionId) {
-        submittedSessionRef.current = null;
-      }
     });
   }, [showEnd, snap.score, snap.passed, snap.faultLog]);
 

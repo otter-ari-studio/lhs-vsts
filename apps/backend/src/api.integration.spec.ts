@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AppModule } from './app.module.js';
+import { defaultDataRoot } from './machines/machines.service.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SEED_SRC = path.resolve(
@@ -55,6 +56,13 @@ describe('Machines and Scores API', () => {
       .expect(200);
     expect(res.body.machineId).toBe('range_hood_generic');
     expect(res.body.displayName).toContain('油烟机');
+  });
+
+  it('GET copies seed into runtime when missing', async () => {
+    await request(app.getHttpServer()).get('/api/machines/current').expect(200);
+    const runtime = path.join(dataDir, 'runtime', 'machine.json');
+    const raw = await fs.readFile(runtime, 'utf8');
+    expect(JSON.parse(raw).machineId).toBe('range_hood_generic');
   });
 
   it(
@@ -122,5 +130,92 @@ describe('Machines and Scores API', () => {
     expect(list.body[0].id).toBe(created.body.id);
     expect(list.body[0]).not.toHaveProperty('student');
     expect(list.body[0]).not.toHaveProperty('name');
+  });
+
+  it('GET /api/scores returns [] for missing, corrupt, or non-array files', async () => {
+    const empty = await request(app.getHttpServer()).get('/api/scores').expect(200);
+    expect(empty.body).toEqual([]);
+
+    const scoresPath = path.join(dataDir, 'runtime', 'scores.json');
+    await fs.writeFile(scoresPath, '{not-json', 'utf8');
+    const corrupt = await request(app.getHttpServer()).get('/api/scores').expect(200);
+    expect(corrupt.body).toEqual([]);
+
+    await fs.writeFile(scoresPath, '{"not":"array"}\n', 'utf8');
+    const nonArray = await request(app.getHttpServer()).get('/api/scores').expect(200);
+    expect(nonArray.body).toEqual([]);
+  });
+
+  it('rejects invalid score bodies', async () => {
+    const cases: { body: unknown; match: RegExp }[] = [
+      { body: {}, match: /machineId/i },
+      { body: { machineId: '' }, match: /machineId/i },
+      { body: { machineId: 'm', score: '1' }, match: /score/i },
+      { body: { machineId: 'm', score: Number.NaN }, match: /score/i },
+      { body: { machineId: 'm', score: 1, passed: 'yes' }, match: /passed/i },
+      { body: { machineId: 'm', score: 1, passed: true }, match: /faults/i },
+      {
+        body: { machineId: 'm', score: 1, passed: true, faults: [null] },
+        match: /faults\[0\] must be an object/i,
+      },
+      {
+        body: {
+          machineId: 'm',
+          score: 1,
+          passed: true,
+          faults: [{ reason: 'r', amount: 1 }],
+        },
+        match: /faults\[0\]\.key/i,
+      },
+      {
+        body: {
+          machineId: 'm',
+          score: 1,
+          passed: true,
+          faults: [{ key: 'k', amount: 1 }],
+        },
+        match: /faults\[0\]\.reason/i,
+      },
+      {
+        body: {
+          machineId: 'm',
+          score: 1,
+          passed: true,
+          faults: [{ key: 'k', reason: 'r', amount: 'x' }],
+        },
+        match: /faults\[0\]\.amount/i,
+      },
+    ];
+
+    for (const { body, match } of cases) {
+      const res = await request(app.getHttpServer()).post('/api/scores').send(body);
+      expect(res.status).toBe(400);
+      expect(String(res.body.message)).toMatch(match);
+    }
+  });
+});
+
+describe('defaultDataRoot', () => {
+  it('resolves under apps/backend/data', () => {
+    const root = defaultDataRoot();
+    expect(root.replace(/\\/g, '/')).toMatch(/\/data$/);
+  });
+});
+
+describe('ScoresService.parseBody edge', () => {
+  it('rejects non-object body via service', async () => {
+    const { ScoresService } = await import('./scores/scores.service.js');
+    const prev = process.env.DATA_DIR;
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'lhs-score-'));
+    process.env.DATA_DIR = dir;
+    try {
+      const svc = new ScoresService();
+      await expect(svc.append(null)).rejects.toThrow(/object/i);
+      await expect(svc.append('x')).rejects.toThrow(/object/i);
+    } finally {
+      if (prev === undefined) delete process.env.DATA_DIR;
+      else process.env.DATA_DIR = prev;
+      await fs.rm(dir, { recursive: true, force: true });
+    }
   });
 });
