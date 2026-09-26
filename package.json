@@ -15,6 +15,7 @@
     "format": "vp fmt"
   },
   "devDependencies": {
+    "playwright": "catalog:",
     "vite-plus": "catalog:"
   },
   "devEngines": {
