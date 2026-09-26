@@ -1,23 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
 
-type E2eApi = {
-  ready: boolean;
-  projectPart(partId: string): { x: number; y: number } | null;
-  inventory(): string[];
-  completedSteps(): string[];
-  canvasRect(): { left: number; top: number; width: number; height: number };
-};
-
 async function waitForE2e(page: Page): Promise<void> {
   await page.waitForFunction(() => window.__lhsE2e?.ready === true, null, {
     timeout: 60_000,
   });
 }
 
-async function e2e(page: Page): Promise<E2eApi> {
-  const api = await page.evaluate(() => window.__lhsE2e);
-  if (!api) throw new Error("__lhsE2e missing — open with ?e2e=1");
-  return api as E2eApi;
+async function currentStepLabel(page: Page): Promise<string | null> {
+  return page.evaluate(() => window.__lhsE2e?.currentStepLabel() ?? null);
+}
+
+async function inventory(page: Page): Promise<string[]> {
+  return page.evaluate(() => window.__lhsE2e?.inventory() ?? []);
+}
+
+async function completedSteps(page: Page): Promise<string[]> {
+  return page.evaluate(() => window.__lhsE2e?.completedSteps() ?? []);
 }
 
 /** Real user-style drag on the WebGL canvas. */
@@ -38,13 +36,16 @@ async function dragPartToCanvasLeft(page: Page, partId: string): Promise<void> {
   const endX = rect.left + Math.min(48, rect.width * 0.08);
   const endY = start.y;
 
+  // Aim slightly above the projected center so the ray hits the part mesh.
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
-  // Intermediate points so PointerInteraction receives move frames
-  const steps = 12;
+  // Intermediate points so PointerInteraction receives move frames / throw samples
+  const steps = 16;
   for (let i = 1; i <= steps; i++) {
     const t = i / steps;
-    await page.mouse.move(start.x + (endX - start.x) * t, start.y + (endY - start.y) * t);
+    await page.mouse.move(start.x + (endX - start.x) * t, start.y + (endY - start.y) * t, {
+      steps: 2,
+    });
   }
   await page.mouse.up();
 }
@@ -66,17 +67,17 @@ test.describe("training canvas real drag", () => {
 
     // First SOP target on the seeded range hood is 集油盒 (oil_box).
     await expect
-      .poll(async () => (await e2e(page)).currentStepLabel(), { timeout: 30_000 })
+      .poll(async () => currentStepLabel(page), { timeout: 30_000 })
       .toMatch(/集油盒|oil_box|拆下/);
 
     await dragPartToCanvasLeft(page, "oil_box");
 
     await expect
-      .poll(async () => (await e2e(page)).inventory(), { timeout: 15_000 })
+      .poll(async () => inventory(page), { timeout: 15_000 })
       .toContain("oil_box");
 
     await expect
-      .poll(async () => (await e2e(page)).completedSteps(), { timeout: 10_000 })
+      .poll(async () => completedSteps(page), { timeout: 10_000 })
       .toContain("remove_oil_box");
 
     await expect(page.getByTestId("train-inventory")).toContainText("集油盒");

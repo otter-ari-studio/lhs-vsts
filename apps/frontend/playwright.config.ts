@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const backendDir = path.join(root, "apps/backend");
+const frontendDir = path.join(root, "apps/frontend");
 
 /**
  * Real-browser E2E for the training client.
@@ -27,23 +29,26 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: [
     {
-      // Bypass `vp` — it fails to spawn under Playwright's webServer (EINVAL).
-      command: "pnpm --filter @lhs-vsts/machine build && pnpm --filter backend exec nest start",
-      cwd: root,
+      // Bypass `vp` (EINVAL under Playwright) and `pnpm` wrappers (hang on teardown).
+      // Build shared package once, then exec nest so SIGKILL reaches the server.
+      command: "pnpm --filter @lhs-vsts/machine build && exec ./node_modules/.bin/nest start",
+      cwd: backendDir,
       url: "http://localhost:3001/api/machines/current",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       stdout: "pipe",
       stderr: "pipe",
+      gracefulShutdown: { signal: "SIGKILL", timeout: 2_000 },
     },
     {
-      command: "pnpm --filter frontend exec rsbuild",
-      cwd: root,
+      command: "exec ./node_modules/.bin/rsbuild",
+      cwd: frontendDir,
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
       stdout: "pipe",
       stderr: "pipe",
+      gracefulShutdown: { signal: "SIGKILL", timeout: 2_000 },
     },
   ],
 });

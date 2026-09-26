@@ -62,7 +62,7 @@
 - 不合并 hand 与 machine 的 `Vec3`。
 - 不做多机型目录、登录、权限和学员档案。
 - 不在管理页里改零件网格或新增 kitbash 几何。
-- 不要求 Playwright 驱动完整整局 3D 动画作为唯一 E2E；AC10 的拖拽自动化跑在 Rstest 指针会话上，与 `PointerInteraction` 共用控制器。
+- 不要求 Playwright 驱动完整整局 3D 动画；AC10 仅覆盖首步 `oil_box` 真实浏览器拖拽入栏。Rstest 指针会话仍用于单测/覆盖率。
 
 ## Open Questions
 

@@ -64,10 +64,11 @@ apps/backend :3001
 
 根 `dev` 仍启动 website。另加 `dev:web` 与 `dev:backend`。
 
-## Coverage and E2E (AC8–AC9)
+## Coverage and E2E (AC8–AC10)
 
-- Line coverage ≥ 90% for `@lhs-vsts/machine`, `apps/backend`, and `apps/web` (web may exclude pure R3F mesh files; must include API client, AdminPage, and score submit).
-- E2E = Nest + TrainingSession + scores API, not Playwright 3D drag.
+- Line coverage ≥ 90% for `@lhs-vsts/machine`, `apps/backend`, and `apps/frontend` (frontend may exclude pure R3F mesh files; must include API client, AdminPage, and score submit).
+- AC8 E2E = Nest + TrainingSession + scores API (Vitest).
+- AC10 E2E = Playwright real-browser canvas drag (`/?e2e=1`, `window.__lhsE2e`).
 
 ## Trade-offs
 
