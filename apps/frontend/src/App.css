@@ -1,7 +1,7 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
 
-/* —— Swiss Minimalism tokens —— */
+/* —— Swiss Minimalism tokens ——
+   Fonts: self-hosted via @fontsource (see App.tsx) — no Google CDN. */
 :root {
   --color-bg: #ffffff;
   --color-bg-muted: #f4f4f5;

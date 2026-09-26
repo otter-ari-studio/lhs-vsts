@@ -7,7 +7,7 @@
 - [ ] Colors come from `:root` tokens in `apps/frontend/src/App.css` — do not reintroduce ad-hoc hex in page components for chrome UI
 - [ ] Keep `border-radius: 0` for chrome controls; no soft card shadows
 - [ ] Primary CTA = black fill / white text; status green/amber/red only for semantic state
-- [ ] Display font: Space Grotesk; body: IBM Plex Sans (+ CJK fallbacks). Do not default to Inter
+- [ ] Display font: Space Grotesk; body: IBM Plex Sans (+ CJK fallbacks), loaded via `@fontsource/*` (bundled). Do not use `fonts.googleapis.com` / `fonts.gstatic.com`. Do not default to Inter
 - [ ] Guide landing: brand is hero-level; one headline, one lead, one CTA group before instruction grid
 - [ ] 3D viewport may stay dark; surrounding chrome stays light Swiss
 - [ ] Interactive controls need `cursor: pointer`, hover ≤ 250ms, and visible `:focus-visible`

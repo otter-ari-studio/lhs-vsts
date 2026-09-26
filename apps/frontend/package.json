@@ -12,6 +12,8 @@
     "test:cov": "rstest --coverage"
   },
   "dependencies": {
+    "@fontsource/ibm-plex-sans": "catalog:",
+    "@fontsource/space-grotesk": "catalog:",
     "@lhs-vsts/machine": "workspace:*",
     "@mediapipe/tasks-vision": "1.0.1",
     "@react-three/drei": "10.7.8",

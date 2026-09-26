@@ -164,6 +164,12 @@ settings:
 
 catalogs:
   default:
+    '@fontsource/ibm-plex-sans':
+      specifier: ^5.3.0
+      version: 5.3.0
+    '@fontsource/space-grotesk':
+      specifier: ^5.3.0
+      version: 5.3.0
     '@nestjs/serve-static':
       specifier: ^12.0.0
       version: 12.0.0
@@ -272,6 +278,12 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@fontsource/ibm-plex-sans':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource/space-grotesk':
+        specifier: 'catalog:'
+        version: 5.3.0
       '@lhs-vsts/machine':
         specifier: workspace:*
         version: link:../../packages/machine
@@ -523,6 +535,12 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@fontsource/ibm-plex-sans@5.3.0':
+    resolution: {integrity: sha512-CbE4CbbEEZJX860XyUiRpsksXIQR8Rp2XDva2VO53NJox9tVNtusrysd2x5YkUEY3ErQ66W1IiiQL8/wihhw5w==}
+
+  '@fontsource/space-grotesk@5.3.0':
+    resolution: {integrity: sha512-ksnGizDPXIDuvqcTYTSrmZ+evx9sDlS8rp7+42BQ7wU+spt3twEoXfbJz672C+5CLg6VeUQwRy5RXshWb67LcQ==}
 
   '@inquirer/ansi@2.0.8':
     resolution: {integrity: sha512-WpQM+Ti6Z40EFwwt+uL2p4UabT+W179zHp6HhLVOzfbwnVn05IPO/eXIZXGNqcT1jbQ15SujNLzQ39k4QPPxBQ==}
@@ -4034,6 +4052,10 @@ snapshots:
     optionalDependencies:
       '@noble/hashes': 1.8.0
     optional: true
+
+  '@fontsource/ibm-plex-sans@5.3.0': {}
+
+  '@fontsource/space-grotesk@5.3.0': {}
 
   '@inquirer/ansi@2.0.8': {}
 
