@@ -23,6 +23,7 @@ These guides help you **ask the right questions before coding**.
 | ------------------------------------------------------------- | ---------------------------------------- | --------------------------------- |
 | [Code Reuse Thinking Guide](./code-reuse-thinking-guide.md)   | Identify patterns and reduce duplication | When you notice repeated patterns |
 | [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md) | Think through data flow across layers    | Features spanning multiple layers |
+| [Playwright Frontend E2E](./playwright-frontend-e2e.md)       | `/?e2e=1` harness, webServer, score assert | Adding/changing training Playwright E2E |
 
 ---
 
@@ -36,8 +37,18 @@ These guides help you **ask the right questions before coding**.
 - [ ] You're not sure where to put some logic
 - [ ] You are adding an event kind, JSONL record, RPC payload, or config field
 - [ ] UI / command code starts casting raw payload fields directly
+- [ ] Playwright asserts `POST /api/scores` — snapshot score ids before the run
 
 → Read [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md)
+
+### When to Think About Frontend Playwright E2E
+
+- [ ] Adding a canvas / SOP / scores browser test
+- [ ] Extending `window.__lhsE2e`
+- [ ] Playwright `webServer` ready-check hangs or EINVAL
+- [ ] React `removeChildFromContainer` during R3F E2E
+
+→ Read [Playwright Frontend E2E](./playwright-frontend-e2e.md)
 
 ### When to Think About Code Reuse
 
