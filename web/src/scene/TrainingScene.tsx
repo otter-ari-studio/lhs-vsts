@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { RelativeHandDriver } from '../hand/RelativeHandDriver';
+import { HandAimCursor } from '../interaction/HandAimCursor';
 import { InteractionRouter } from '../interaction/InteractionRouter';
 import { clearInteractables } from '../interaction/registry';
 import { clearPartPoses } from '../interaction/partPoseHub';
@@ -92,6 +93,7 @@ export function TrainingScene({
 
         {def ? <MachineView key={restartToken} def={def} /> : null}
         <InteractionRouter />
+        <HandAimCursor />
 
         <RelativeHandDriver handId={0} calibrateToken={calibrateToken} />
         <RelativeHandDriver handId={1} calibrateToken={calibrateToken} />

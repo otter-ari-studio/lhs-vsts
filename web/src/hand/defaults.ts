@@ -39,10 +39,10 @@ export const LANDMARK_MAX_STEP = 0.035;
 /**
  * Grasp = finger openness ratio (not thumb–index pinch).
  * Enter when openRatio ≤ ON; exit when ≥ OFF.
- * Tuned so light curl near parts counts; fully open hand does not.
+ * Tuned from top-cam captures: resting reach ~1.5–1.7, intentional fist ≤1.4.
  */
-export const GRASP_ON_RATIO = 1.75;
-export const GRASP_OFF_RATIO = 2.1;
+export const GRASP_ON_RATIO = 1.4;
+export const GRASP_OFF_RATIO = 1.65;
 /** EMA for open-ratio. */
 export const GRASP_RATIO_EMA = 0.35;
 /** Frames that must agree before grasp flips. */

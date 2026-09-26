@@ -102,6 +102,12 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         if (!g) return Number.POSITIVE_INFINITY;
         return g.getWorldPosition(_tmp).distanceTo(handPos);
       },
+      copyWorldPosition(out) {
+        const g = groupRef.current;
+        if (!g) return false;
+        g.getWorldPosition(out);
+        return true;
+      },
       onPinchStart(handPos) {
         if (grabbed.current) return true;
         const mgr = getTrainingSession();

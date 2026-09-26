@@ -38,6 +38,12 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
         if (!g) return Number.POSITIVE_INFINITY;
         return g.getWorldPosition(_tmp).distanceTo(handPos);
       },
+      copyWorldPosition(out) {
+        const g = groupRef.current;
+        if (!g) return false;
+        g.getWorldPosition(out);
+        return true;
+      },
       onPinchStart() {
         const mgr = getTrainingSession();
         if (!mgr) return;

@@ -99,16 +99,16 @@ test('fingerOpenRatio lower when tips curl toward wrist', () => {
   const closed = open.map((p) => [...p] as Vec3);
   for (const tip of [8, 12, 16, 20]) closed[tip] = [0, 0.05, 0];
   expect(fingerOpenRatio(open)).toBeGreaterThan(fingerOpenRatio(closed));
-  expect(fingerOpenRatio(closed)).toBeLessThan(1.75);
+  expect(fingerOpenRatio(closed)).toBeLessThan(1.4);
 });
 
 test('grasp hysteresis: enter when openRatio ≤ ON, leave when ≥ OFF', () => {
-  const on = 1.75;
-  const off = 2.1;
-  expect(updateGraspStateConfirmed(false, 1.9, on, off, 0, 1).grasping).toBe(false);
-  expect(updateGraspStateConfirmed(false, 1.5, on, off, 0, 1).grasping).toBe(true);
-  expect(updateGraspStateConfirmed(true, 1.9, on, off, 0, 1).grasping).toBe(true);
-  expect(updateGraspStateConfirmed(true, 2.1, on, off, 0, 1).grasping).toBe(false);
+  const on = 1.4;
+  const off = 1.65;
+  expect(updateGraspStateConfirmed(false, 1.5, on, off, 0, 1).grasping).toBe(false);
+  expect(updateGraspStateConfirmed(false, 1.3, on, off, 0, 1).grasping).toBe(true);
+  expect(updateGraspStateConfirmed(true, 1.5, on, off, 0, 1).grasping).toBe(true);
+  expect(updateGraspStateConfirmed(true, 1.65, on, off, 0, 1).grasping).toBe(false);
 });
 
 test('distance3 is Euclidean', () => {

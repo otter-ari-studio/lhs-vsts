@@ -17,16 +17,16 @@ function hintFor(it: HandInteractable, partId: string): string {
     if (isInstallOfferPart(partId) || st === 'removed') {
       return '抓住 · 放到绿色安装位松手拧上';
     }
-    return '已高亮 · 轻握即可拆下';
+    return '已高亮 · 瞄准球靠近后轻握拆下';
   }
   if (it.kind === 'clip') {
-    return st === 'clip_closed' ? '已高亮 · 轻握打开' : '已高亮 · 轻握锁止';
+    return st === 'clip_closed' ? '已高亮 · 瞄准后轻握打开' : '已高亮 · 瞄准后轻握锁止';
   }
   if (it.kind === 'rotate_nut') {
     if (isInstallOfferPart(partId) || st === 'removed') {
       return '抓住 · 放到安装位松手拧上';
     }
-    return '已高亮 · 轻握即可拧下';
+    return '已高亮 · 瞄准球靠近后轻握拧下';
   }
   return '已选中';
 }
@@ -53,7 +53,7 @@ export function selectionFromSopFallback(): SelectionInfo | null {
   let hint = '按 SOP 操作';
   if (current.stepId.startsWith('remove_')) {
     partId = current.stepId.slice('remove_'.length);
-    hint = '已高亮 · 轻握即可拆下';
+    hint = '已高亮 · 瞄准球靠近后轻握拆下';
   } else if (current.stepId.startsWith('install_')) {
     partId = current.stepId.slice('install_'.length);
     hint = isInstallOfferPart(partId)
@@ -61,10 +61,10 @@ export function selectionFromSopFallback(): SelectionInfo | null {
       : '等待道具弹出';
   } else if (current.stepId.startsWith('open_')) {
     partId = current.stepId.slice('open_'.length);
-    hint = '已高亮 · 轻握打开';
+    hint = '已高亮 · 瞄准后轻握打开';
   } else if (current.stepId.startsWith('close_')) {
     partId = current.stepId.slice('close_'.length);
-    hint = '已高亮 · 轻握锁止';
+    hint = '已高亮 · 瞄准后轻握锁止';
   } else if (current.stepId === 'appliance_wash') {
     return {
       id: 'appliance_wash',

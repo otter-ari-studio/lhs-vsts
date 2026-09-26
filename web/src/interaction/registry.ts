@@ -7,8 +7,10 @@ export interface HandInteractable {
   readonly kind: InteractableKind;
   readonly interactionRadius: number;
   isInteractableNow(): boolean;
-  /** Distance from interaction point (palm / pinch midpoint) to collider. */
+  /** Distance from interaction point (finger-tip centroid) to collider. */
   distanceTo(handPos: Vector3): number;
+  /** World-space collider center for aim guides (optional). */
+  copyWorldPosition?(out: Vector3): boolean;
   /**
    * Begin pinch engagement. Return `false` to cancel (e.g. order-locked remove)
    * so the router does not keep a dead engage.

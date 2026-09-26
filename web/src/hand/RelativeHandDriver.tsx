@@ -35,11 +35,15 @@ const _targetRot = new Quaternion();
 const _relRot = new Quaternion();
 const _lm = new Vector3();
 const _delta = new Vector3();
+const _aim = new Vector3();
 const _tmpVecs: Vec3[] = Array.from({ length: JOINT_COUNT }, () => [0, 0, 0]);
+
+/** Finger tips — contact / aim point for top-cam ↔ scene mapping. */
+const TIP_IDX = [8, 12, 16, 20] as const;
 
 /**
  * Absolute screen-mapped wrist + glove (HandHub already in scene meters).
- * Grasp = finger curl (recomputed here so capture replay also uses curl, not tip-pinch).
+ * Grasp = finger curl; pick point = fingertip centroid (matches visual aim).
  */
 export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDriverProps) {
   const palmRef = useRef<Group>(null);
@@ -225,11 +229,21 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       if (mesh) mesh.visible = true;
     }
 
-    // Palm = interaction point (power-grasp), not thumb–index midpoint.
+    // Tip centroid = pick/aim point (wrist sits ~20cm below tips under top-cam).
+    if (hasSmoothLm.current && lmVisible.current) {
+      _aim.set(0, 0, 0);
+      for (const i of TIP_IDX) {
+        _aim.add(smoothLm.current[i]!);
+      }
+      _aim.multiplyScalar(1 / TIP_IDX.length);
+    } else {
+      _aim.copy(palm.position);
+    }
+
     handWorldHub.publish({
       handId,
       palm: [palm.position.x, palm.position.y, palm.position.z],
-      interactionPoint: [palm.position.x, palm.position.y, palm.position.z],
+      interactionPoint: [_aim.x, _aim.y, _aim.z],
       pinching: grasping,
       clockSec: state.clock.elapsedTime,
     });

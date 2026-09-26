@@ -81,6 +81,12 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
         if (!g) return Number.POSITIVE_INFINITY;
         return g.getWorldPosition(_tmp).distanceTo(handPos);
       },
+      copyWorldPosition(out) {
+        const g = groupRef.current;
+        if (!g) return false;
+        g.getWorldPosition(out);
+        return true;
+      },
       onPinchStart(handPos) {
         const mgr = getTrainingSession();
         const st = mgr?.getState(part.partId);

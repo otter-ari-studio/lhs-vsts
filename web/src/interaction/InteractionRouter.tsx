@@ -46,11 +46,18 @@ function stillPendingTarget(it: HandInteractable, handPos: Vector3): boolean {
 function pickPendingTarget(
   handPos: Vector3,
   highlighted: HandInteractable | null,
+  lockoutId: string | null,
 ): HandInteractable | null {
-  if (highlighted && stillPendingTarget(highlighted, handPos)) {
+  if (
+    highlighted &&
+    highlighted.id !== lockoutId &&
+    stillPendingTarget(highlighted, handPos)
+  ) {
     return highlighted;
   }
-  return findNearestInteractable(handPos);
+  const nearest = findNearestInteractable(handPos);
+  if (nearest && nearest.id === lockoutId) return null;
+  return nearest;
 }
 
 interface HandInteractionState {
@@ -59,16 +66,32 @@ interface HandInteractionState {
   hoverCand: HandInteractable | null;
   pending: HandInteractable | null;
   pendingMs: number;
+  /** After reject / release, ignore this id until hand opens (avoids tip spam). */
+  lockoutId: string | null;
 }
 
 /**
- * Routes HandWorldHub pinch edges + hover to registered interactables.
- * Highlighted targets commit on a short squeeze; hover feeds the right-side HUD.
+ * Routes grasp + hover to interactables.
+ * Sustained grasp in range commits (top-cam often never sees a clean open→close edge).
  */
 export function InteractionRouter() {
   const hands = useRef<HandInteractionState[]>([
-    { lastPinch: false, engaged: null, hoverCand: null, pending: null, pendingMs: 0 },
-    { lastPinch: false, engaged: null, hoverCand: null, pending: null, pendingMs: 0 },
+    {
+      lastPinch: false,
+      engaged: null,
+      hoverCand: null,
+      pending: null,
+      pendingMs: 0,
+      lockoutId: null,
+    },
+    {
+      lastPinch: false,
+      engaged: null,
+      hoverCand: null,
+      pending: null,
+      pendingMs: 0,
+      lockoutId: null,
+    },
   ]);
   const globalHover = useRef<HandInteractable | null>(null);
 
@@ -87,6 +110,7 @@ export function InteractionRouter() {
         state.pending = null;
         state.pendingMs = 0;
         state.lastPinch = false;
+        state.lockoutId = null;
         continue;
       }
 
@@ -98,18 +122,32 @@ export function InteractionRouter() {
 
       const pinch = pose.pinching;
 
+      if (!pinch) {
+        state.lockoutId = null;
+      }
+
       if (!state.engaged && !state.pending) {
         state.hoverCand = findHoverTargetSticky(_pos, state.hoverCand);
       } else if (state.engaged) {
         state.hoverCand = null;
       }
 
-      if (pinch && !state.lastPinch) {
-        state.pending = pickPendingTarget(_pos, globalHover.current);
-        state.pendingMs = 0;
-      } else if (pinch && state.pending && !state.engaged) {
-        if (!stillPendingTarget(state.pending, _pos)) {
-          state.pending = pickPendingTarget(_pos, globalHover.current);
+      if (pinch && !state.engaged) {
+        // Rising edge OR sustained grasp in range — top-cam hands are often
+        // already "closed" before they reach the part, so edge-only never fires.
+        if (!state.pending) {
+          state.pending = pickPendingTarget(
+            _pos,
+            globalHover.current,
+            state.lockoutId,
+          );
+          state.pendingMs = 0;
+        } else if (!stillPendingTarget(state.pending, _pos)) {
+          state.pending = pickPendingTarget(
+            _pos,
+            globalHover.current,
+            state.lockoutId,
+          );
           state.pendingMs = 0;
         } else {
           const alreadyHi =
@@ -124,23 +162,26 @@ export function InteractionRouter() {
             state.hoverCand = null;
             const ok = target.onPinchStart(_pos);
             if (ok === false) {
-              // Order-locked / rejected — do not keep a dead engage
               state.engaged = null;
+              state.lockoutId = target.id;
             } else {
               state.engaged = target;
+              state.lockoutId = null;
             }
           }
         }
       } else if (pinch && state.engaged) {
-        // Only auto-drop rotate_nut when it becomes non-interactable (just removed).
-        // Grabbables set isInteractableNow=false while carrying — must NOT drop them.
         if (
           state.engaged.kind === 'rotate_nut' &&
           !state.engaged.isInteractableNow()
         ) {
           state.engaged.onPinchEnd(_pos);
           state.engaged = null;
-          state.pending = pickPendingTarget(_pos, globalHover.current);
+          state.pending = pickPendingTarget(
+            _pos,
+            globalHover.current,
+            state.lockoutId,
+          );
           state.pendingMs = 0;
         } else {
           state.engaged.onPinchHold(_pos, dt);

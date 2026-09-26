@@ -331,7 +331,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              拆下：靠近高亮后轻握即可取下，再甩手入物品栏。回装：道具弹出后抓住放回绿色安装位。
+              拆下：瞄准球靠近高亮零件并握紧即可取下（不必先完全张开）；张开手/甩手入栏。球变绿=可拆。
             </div>
           ) : null}
 
