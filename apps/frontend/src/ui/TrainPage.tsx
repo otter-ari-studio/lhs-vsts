@@ -214,14 +214,9 @@ export function TrainPage({ onBack }: TrainPageProps) {
           {showWash && !showEnd ? (
             <div className="wash-overlay" role="status" aria-live="polite">
               <div className="wash-drum" aria-hidden>
-                <div className="wash-drum-inner">
-                  <span className="wash-bubble b1" />
-                  <span className="wash-bubble b2" />
-                  <span className="wash-bubble b3" />
-                  <span className="wash-bubble b4" />
-                </div>
+                <div className="wash-drum-inner" />
               </div>
-              <p className="wash-title">家电清洗中…</p>
+              <p className="wash-title">家电清洗中</p>
               <p className="wash-sub">清洗完成后将进入回装步骤</p>
             </div>
           ) : null}
