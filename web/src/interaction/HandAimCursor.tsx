@@ -3,11 +3,7 @@ import { useMemo, useRef } from 'react';
 import { Color, Group, Mesh, MeshBasicMaterial, Vector3 } from 'three';
 import type { HandId } from '../hand/types';
 import { handWorldHub } from '../hand/handWorldHub';
-import {
-  findNearestInteractable,
-  listInteractables,
-  type HandInteractable,
-} from './registry';
+import { aimTargetHub } from './aimTargetHub';
 
 const _aim = new Vector3();
 const _target = new Vector3();
@@ -20,29 +16,11 @@ const GRASP = new Color('#ffee58');
 const IN_RANGE = new Color('#3ddc97');
 const NEAR = new Color('#ffb74d');
 
-/** Draw guide while farther than pick radius, up to this distance. */
-const GUIDE_MAX_M = 0.5;
-
-function nearestAny(handPos: Vector3): { it: HandInteractable; dist: number } | null {
-  let best: HandInteractable | null = null;
-  let bestDist = Number.POSITIVE_INFINITY;
-  let bestPri = Number.NEGATIVE_INFINITY;
-  for (const it of listInteractables()) {
-    if (!it.isInteractableNow()) continue;
-    const d = it.distanceTo(handPos);
-    const pri = it.pickPriority?.() ?? 0;
-    if (pri > bestPri || (pri === bestPri && d < bestDist)) {
-      bestPri = pri;
-      bestDist = d;
-      best = it;
-    }
-  }
-  return best ? { it: best, dist: bestDist } : null;
-}
+const GUIDE_MAX_M = 0.65;
 
 /**
- * Aim orb at the grasp contact point + guide stem to the nearest part.
- * Depth is hard to read from the glove alone — this is the system's pick point.
+ * Aim orb at the grasp contact point + guide stem to the shared aim target
+ * (same part as the right-side HUD — not an independent nearest-part guess).
  */
 export function HandAimCursor() {
   const groups = useRef<(Group | null)[]>([null, null]);
@@ -74,6 +52,29 @@ export function HandAimCursor() {
   );
 
   useFrame(() => {
+    const shared = aimTargetHub.get();
+    if (shared) {
+      _target.set(shared.position[0], shared.position[1], shared.position[2]);
+    }
+
+    // Draw stem only on the hand closest to the shared target (one line, not two fighting).
+    let stemHand: HandId | null = null;
+    let stemDist = Number.POSITIVE_INFINITY;
+    if (shared) {
+      for (const handId of [0, 1] as HandId[]) {
+        const pose = handWorldHub.tryGet(handId);
+        if (!pose) continue;
+        const dx = pose.interactionPoint[0] - shared.position[0];
+        const dy = pose.interactionPoint[1] - shared.position[1];
+        const dz = pose.interactionPoint[2] - shared.position[2];
+        const d = Math.hypot(dx, dy, dz);
+        if (d < stemDist) {
+          stemDist = d;
+          stemHand = handId;
+        }
+      }
+    }
+
     for (const handId of [0, 1] as HandId[]) {
       const group = groups.current[handId];
       const orb = orbs.current[handId];
@@ -94,28 +95,30 @@ export function HandAimCursor() {
       );
       orb.position.copy(_aim);
 
-      const inPick = findNearestInteractable(_aim);
-      const guide = nearestAny(_aim);
+      const distToTarget = shared
+        ? Math.hypot(
+            _aim.x - shared.position[0],
+            _aim.y - shared.position[1],
+            _aim.z - shared.position[2],
+          )
+        : Number.POSITIVE_INFINITY;
+
       let color = pose.pinching ? GRASP : IDLE;
       let scale = pose.pinching ? 1.3 : 1;
-      if (inPick) {
+      if (shared?.inRange && distToTarget < 0.35) {
         color = IN_RANGE;
         scale = 1.55;
-      } else if (guide && guide.dist < guide.it.interactionRadius * 1.85) {
+      } else if (shared && distToTarget < 0.45) {
         color = NEAR;
         scale = 1.2;
       }
       mat.color.copy(color);
       orb.scale.setScalar(scale);
 
-      const hasPos =
-        guide &&
-        guide.dist <= GUIDE_MAX_M &&
-        guide.it.copyWorldPosition?.(_target);
-      if (hasPos && guide) {
+      if (shared && handId === stemHand && distToTarget <= GUIDE_MAX_M) {
         placeStem(stem, _aim, _target);
-        stemMats[handId]!.opacity = inPick ? 0.9 : 0.4;
-        stemMats[handId]!.color.copy(inPick ? IN_RANGE : color);
+        stemMats[handId]!.opacity = shared.inRange ? 0.9 : 0.45;
+        stemMats[handId]!.color.copy(shared.inRange ? IN_RANGE : color);
       } else {
         stem.visible = false;
       }

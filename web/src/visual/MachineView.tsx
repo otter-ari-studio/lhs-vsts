@@ -1,6 +1,9 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import type { MachineDef } from '../machine/types';
-import { getTrainingSession, subscribeSession } from '../machine';
+import {
+  getTrainingSession,
+  subscribeSession,
+} from '../machine';
 import { closeStep, installStep, openStep, removeStep } from '../machine/types';
 import { ClipPart } from '../interaction/ClipPart';
 import { GrabInstallGhost, GrabPart } from '../interaction/GrabPart';
@@ -29,6 +32,10 @@ function FixedShell({ part }: { part: MachineDef['parts'][number] }) {
   );
 }
 
+/**
+ * Current SOP part(s). For clip open/close, include every clip that is ready
+ * for the same action so left/right both light up instead of only chrome's first row.
+ */
 function currentSopPartIds(def: MachineDef): Set<string> {
   const session = getTrainingSession();
   if (!session) return new Set();
@@ -37,6 +44,30 @@ function currentSopPartIds(def: MachineDef): Set<string> {
   if (!current) return new Set();
   const id = current.stepId;
   const ids = new Set<string>();
+  const completed = new Set(snap.completedSteps);
+
+  if (id.startsWith('open_')) {
+    for (const part of def.parts) {
+      if (part.kind !== 'clip') continue;
+      if (session.getState(part.partId) !== 'clip_closed') continue;
+      if (part.removePrereqs.every((p) => completed.has(p))) {
+        ids.add(part.partId);
+      }
+    }
+    if (ids.size > 0) return ids;
+  }
+
+  if (id.startsWith('close_')) {
+    for (const part of def.parts) {
+      if (part.kind !== 'clip') continue;
+      if (session.getState(part.partId) !== 'clip_open') continue;
+      if (part.installPrereqs.every((p) => completed.has(p))) {
+        ids.add(part.partId);
+      }
+    }
+    if (ids.size > 0) return ids;
+  }
+
   for (const part of def.parts) {
     if (
       id === removeStep(part.partId) ||

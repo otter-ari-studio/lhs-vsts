@@ -101,6 +101,26 @@ test('findNearest prefers SOP target over closer removed part', () => {
   clearInteractables();
 });
 
+test('when SOP is in range, closer non-SOP parts are ignored', () => {
+  clearInteractables();
+  registerInteractable(
+    stub('panel_glass', [0.02, 0, 0], {
+      priority: INSTALLED_PICK_PRIORITY,
+      radius: 0.3,
+    }),
+  );
+  registerInteractable(
+    stub('clip_left', [0.2, 0, 0], {
+      priority: SOP_PICK_PRIORITY,
+      radius: 0.3,
+    }),
+  );
+  // Both in range — must pick SOP clip, not closer glass
+  const hit = findNearestInteractable(new Vector3(0.05, 0, 0));
+  expect(hit?.id).toBe('clip_left');
+  clearInteractables();
+});
+
 test('findNearest among equal priority picks closer', () => {
   clearInteractables();
   registerInteractable(

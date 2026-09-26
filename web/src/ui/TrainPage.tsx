@@ -281,14 +281,16 @@ export function TrainPage({ onBack }: TrainPageProps) {
           <aside className="selection-card" aria-live="polite">
             {selection ? (
               <>
-                <div className="selection-kicker">当前选中</div>
+                <div className="selection-kicker">
+                  {selection.hint.startsWith('SOP') ? 'SOP 目标' : '手部选中'}
+                </div>
                 <div className="selection-name">{selection.displayName}</div>
                 <div className="selection-hint">{selection.hint}</div>
               </>
             ) : (
               <>
-                <div className="selection-kicker">当前选中</div>
-                <div className="selection-empty">靠近零件以高亮选中</div>
+                <div className="selection-kicker">当前目标</div>
+                <div className="selection-empty">靠近零件以选中</div>
               </>
             )}
           </aside>

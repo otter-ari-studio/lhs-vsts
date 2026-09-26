@@ -263,7 +263,7 @@ export function InteractionRouter() {
         aimInRange = false;
       }
       aimIt = nearest;
-    } else if (bestHandPos) {
+    } else if (bestHandPos && best) {
       aimInRange = best.distanceTo(bestHandPos) <= best.interactionRadius;
     }
 

@@ -54,17 +54,26 @@ export function hasLiveSopTarget(): boolean {
 
 /**
  * Nearest interactable within its radius.
- * When a SOP target is live, ignore lower-priority parts (glass won't steal the clip).
+ * When a SOP target is in range, ignore lower-priority parts (glass won't steal the clip).
  */
 export function findNearestInteractable(handPos: Vector3): HandInteractable | null {
-  const sopOnly = hasLiveSopTarget();
+  let sopInRange = false;
+  for (const it of list) {
+    if (!it.isInteractableNow()) continue;
+    if ((it.pickPriority?.() ?? 0) < SOP_PICK_PRIORITY) continue;
+    if (it.distanceTo(handPos) <= it.interactionRadius) {
+      sopInRange = true;
+      break;
+    }
+  }
+
   let best: HandInteractable | null = null;
   let bestPri = Number.NEGATIVE_INFINITY;
   let bestDist = Number.POSITIVE_INFINITY;
   for (const it of list) {
     if (!it.isInteractableNow()) continue;
     const pri = it.pickPriority?.() ?? 0;
-    if (sopOnly && pri < SOP_PICK_PRIORITY) continue;
+    if (sopInRange && pri < SOP_PICK_PRIORITY) continue;
     const d = it.distanceTo(handPos);
     if (d > it.interactionRadius) continue;
     if (pri > bestPri || (pri === bestPri && d < bestDist)) {
@@ -86,18 +95,23 @@ export function findHoverTargetSticky(
   prev: HandInteractable | null,
   exitScale = 1.45,
 ): HandInteractable | null {
-  const sopOnly = hasLiveSopTarget();
   if (prev?.isInteractableNow()) {
-    const pPri = prev.pickPriority?.() ?? 0;
-    if (!sopOnly || pPri >= SOP_PICK_PRIORITY) {
-      const d = prev.distanceTo(handPos);
-      if (d <= prev.interactionRadius * exitScale) {
-        const challenger = findNearestInteractable(handPos);
-        if (!challenger || challenger.id === prev.id) return prev;
-        const cPri = challenger.pickPriority?.() ?? 0;
-        if (cPri > pPri) return challenger;
-        return prev;
+    const d = prev.distanceTo(handPos);
+    if (d <= prev.interactionRadius * exitScale) {
+      const challenger = findNearestInteractable(handPos);
+      if (!challenger || challenger.id === prev.id) return prev;
+      const cPri = challenger.pickPriority?.() ?? 0;
+      const pPri = prev.pickPriority?.() ?? 0;
+      // Drop non-SOP sticky when a SOP target is in range
+      if (cPri > pPri) return challenger;
+      if (
+        cPri >= SOP_PICK_PRIORITY &&
+        pPri < SOP_PICK_PRIORITY &&
+        challenger.distanceTo(handPos) <= challenger.interactionRadius
+      ) {
+        return challenger;
       }
+      return prev;
     }
   }
   return findNearestInteractable(handPos);
