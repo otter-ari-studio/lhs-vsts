@@ -22,13 +22,14 @@ vp run -r test
 vp run -r build
 ```
 
-- Run the development server (website template, if present):
+Training client and API (separate terminals):
 
 ```bash
-vp run dev
+vp run dev:backend   # :3001
+vp run dev:frontend  # :3000
 ```
 
-Training client and API: from the repo root run `vp run dev:backend` (port 3001) and `vp run dev:frontend` (port 3000). Both scripts build `@lhs-vsts/machine` first. The frontend app proxies `/api` to the backend.
+Both scripts build `@lhs-vsts/machine` first. The frontend proxies `/api` to the backend.
 
 ## Coverage (AC9)
 

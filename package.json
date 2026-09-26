@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "ready": "vp check && vp run -r test && vp run -r build",
-    "dev": "vp run website#dev",
     "dev:frontend": "vp run --filter @lhs-vsts/machine build && vp run frontend#dev",
     "dev:backend": "vp run --filter @lhs-vsts/machine build && vp run backend#start:dev",
     "test:e2e": "playwright test -c apps/frontend/playwright.config.ts",
