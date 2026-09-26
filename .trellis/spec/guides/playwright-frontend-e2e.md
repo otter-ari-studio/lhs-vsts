@@ -38,6 +38,7 @@ Typical fields: `projectPart`, `projectOfferOrPart`, `projectAnchor`, `inventory
 | --- | --- |
 | `removeChildFromContainer` during E2E | Skip drei `Html` overlays in e2e; unmount SOP highlights for inventoried parts |
 | Orbit steals drag | Disable OrbitControls when `isE2eMode()` |
+| Canvas black / `__lhsE2e.ready` never true | drei `Environment` suspends on CDN HDR — wrap in `<Suspense fallback={null}>` and skip Environment when `isE2eMode()` so harness mounts without waiting on IBL |
 | Nut install click no-ops | Ensure pointer session engages install-offer nuts and clears lockout |
 | Clean steps flaky | Mouse demo uses wash overlay (~3s) then `completeAllCleans` — wait for overlay / chrome, do not hover each clean spot unless testing hand path |
 

@@ -48,6 +48,7 @@ These guides help you **ask the right questions before coding**.
 - [ ] Extending `window.__lhsE2e`
 - [ ] Playwright `webServer` ready-check hangs or EINVAL
 - [ ] React `removeChildFromContainer` during R3F E2E
+- [ ] Adding drei `Environment` / CDN HDR IBL to the training Canvas
 
 → Read [Playwright Frontend E2E](./playwright-frontend-e2e.md)
 
