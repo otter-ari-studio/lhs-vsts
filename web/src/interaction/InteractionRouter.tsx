@@ -5,15 +5,10 @@ import type { HandId } from '../hand/types';
 import { handWorldHub } from '../hand/handWorldHub';
 import { aimTargetHub } from './aimTargetHub';
 import {
-  GRAB_COMMIT_MS,
-  HIGHLIGHT_GRAB_COMMIT_MS,
   PENDING_EXIT_SCALE,
-  SOP_DWELL_COMMIT_MS,
-  SOP_PICK_PRIORITY,
-  TOGGLE_COMMIT_MS,
+  REACH_COMMIT_MS,
 } from './defaults';
 import {
-  findHoverTargetSticky,
   findNearestInteractable,
   listInteractables,
   listLiveSopTargets,
@@ -35,116 +30,66 @@ const _pos = new Vector3();
 const _hoverPos = new Vector3();
 const _aimWorld = new Vector3();
 
-function commitMsFor(
-  it: HandInteractable | null,
-  alreadyHighlighted: boolean,
-  viaDwell: boolean,
-): number {
-  if (!it) return GRAB_COMMIT_MS;
-  if (viaDwell) return SOP_DWELL_COMMIT_MS;
-  if (it.id.endsWith(':install-slot')) return TOGGLE_COMMIT_MS;
-  if (it.kind !== 'grabbable') return TOGGLE_COMMIT_MS;
-  if (alreadyHighlighted || (it.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY) {
-    return HIGHLIGHT_GRAB_COMMIT_MS;
-  }
-  return GRAB_COMMIT_MS;
+/**
+ * Reach-in interaction (laptop top-cam SOP training):
+ * - One rule: aim point stays on a live part → commit (no fist required).
+ * - Fist only matters while carrying (open hand = release).
+ * - SOP parts win over everything else when in range.
+ */
+interface HandInteractionState {
+  engaged: HandInteractable | null;
+  hoverCand: HandInteractable | null;
+  contact: HandInteractable | null;
+  contactMs: number;
+  lockoutId: string | null;
+  lastPinch: boolean;
 }
 
-function stillPendingTarget(it: HandInteractable, handPos: Vector3): boolean {
+function inReach(it: HandInteractable, handPos: Vector3): boolean {
+  if (!it.isInteractableNow()) return false;
+  return it.distanceTo(handPos) <= it.interactionRadius;
+}
+
+function stillNear(it: HandInteractable, handPos: Vector3): boolean {
   if (!it.isInteractableNow()) return false;
   return it.distanceTo(handPos) <= it.interactionRadius * PENDING_EXIT_SCALE;
 }
 
-/** Clips: can fire by hovering SOP without a fist (top-cam curl often never hits ON). */
-function isSopDwellToggle(it: HandInteractable | null): boolean {
-  if (!it) return false;
-  if ((it.pickPriority?.() ?? 0) < SOP_PICK_PRIORITY) return false;
-  return it.kind === 'clip';
-}
-
-/** Prefer the HUD-highlighted part so light squeeze grabs what you see. */
-function pickPendingTarget(
+function pickReachTarget(
   handPos: Vector3,
-  highlighted: HandInteractable | null,
+  preferred: HandInteractable | null,
   lockoutId: string | null,
 ): HandInteractable | null {
   if (
-    highlighted &&
-    highlighted.id !== lockoutId &&
-    stillPendingTarget(highlighted, handPos)
+    preferred &&
+    preferred.id !== lockoutId &&
+    preferred.isInteractableNow() &&
+    inReach(preferred, handPos)
   ) {
-    return highlighted;
+    return preferred;
   }
   const nearest = findNearestInteractable(handPos);
   if (nearest && nearest.id === lockoutId) return null;
   return nearest;
 }
 
-function commitTarget(
-  state: HandInteractionState,
-  target: HandInteractable,
-  handPos: Vector3,
-): void {
-  state.pending = null;
-  state.pendingMs = 0;
-  state.hoverCand = null;
-  const ok = target.onPinchStart(handPos);
-  if (ok === false) {
-    state.engaged = null;
-    state.lockoutId = target.id;
-    return;
-  }
-  // Instant toggles: don't keep a dead engage waiting for an open-hand edge.
-  if (target.kind === 'clip') {
-    state.engaged = null;
-    state.lockoutId = target.id;
-    return;
-  }
-  if (target.kind === 'rotate_nut' && !target.isInteractableNow()) {
-    state.engaged = null;
-    state.lockoutId = target.id;
-    return;
-  }
-  state.engaged = target;
-  state.lockoutId = null;
-}
-
-interface HandInteractionState {
-  lastPinch: boolean;
-  engaged: HandInteractable | null;
-  hoverCand: HandInteractable | null;
-  pending: HandInteractable | null;
-  pendingMs: number;
-  /** Pending started via SOP hover dwell (no fist). */
-  pendingViaDwell: boolean;
-  /** After reject / release, ignore this id until leave range (avoids tip spam). */
-  lockoutId: string | null;
-}
-
-/**
- * Routes grasp + hover to interactables.
- * Sustained grasp in range commits (top-cam often never sees a clean open→close edge).
- * Publishes one shared aim target so the guide stem matches the right-side HUD.
- */
 export function InteractionRouter() {
   const hands = useRef<HandInteractionState[]>([
     {
-      lastPinch: false,
       engaged: null,
       hoverCand: null,
-      pending: null,
-      pendingMs: 0,
-      pendingViaDwell: false,
+      contact: null,
+      contactMs: 0,
       lockoutId: null,
+      lastPinch: false,
     },
     {
-      lastPinch: false,
       engaged: null,
       hoverCand: null,
-      pending: null,
-      pendingMs: 0,
-      pendingViaDwell: false,
+      contact: null,
+      contactMs: 0,
       lockoutId: null,
+      lastPinch: false,
     },
   ]);
   const globalHover = useRef<HandInteractable | null>(null);
@@ -153,21 +98,21 @@ export function InteractionRouter() {
 
   useFrame((_, delta) => {
     const dt = Math.min(Math.max(delta, 0.0001), 0.05);
+    const dtMs = dt * 1000;
 
     for (const handId of [0, 1] as HandId[]) {
       const pose = handWorldHub.tryGet(handId);
       const state = hands.current[handId]!;
       if (!pose) {
-        state.hoverCand = null;
         if (state.engaged) {
           state.engaged.onPinchEnd(_pos);
           state.engaged = null;
         }
-        state.pending = null;
-        state.pendingMs = 0;
-        state.pendingViaDwell = false;
-        state.lastPinch = false;
+        state.hoverCand = null;
+        state.contact = null;
+        state.contactMs = 0;
         state.lockoutId = null;
+        state.lastPinch = false;
         continue;
       }
 
@@ -176,116 +121,89 @@ export function InteractionRouter() {
         pose.interactionPoint[1],
         pose.interactionPoint[2],
       );
-
       const pinch = pose.pinching;
 
-      // Drop lockout once the hand leaves that part's sticky radius.
       if (state.lockoutId) {
         const locked = listInteractables().find((it) => it.id === state.lockoutId);
-        if (
-          !locked ||
-          locked.distanceTo(_pos) > locked.interactionRadius * PENDING_EXIT_SCALE
-        ) {
+        if (!locked || !stillNear(locked, _pos)) {
           state.lockoutId = null;
         }
       }
 
-      if (!state.engaged) {
-        state.hoverCand = findHoverTargetSticky(_pos, state.hoverCand);
-      } else {
-        state.hoverCand = null;
-      }
-
-      const dwellHover =
-        !pinch &&
-        !state.engaged &&
-        isSopDwellToggle(state.hoverCand) &&
-        state.hoverCand &&
-        state.hoverCand.id !== state.lockoutId &&
-        stillPendingTarget(state.hoverCand, _pos)
-          ? state.hoverCand
-          : null;
-
-      if (pinch && !state.engaged) {
-        state.pendingViaDwell = false;
-        if (!state.pending) {
-          state.pending = pickPendingTarget(
-            _pos,
-            globalHover.current,
-            state.lockoutId,
-          );
-          state.pendingMs = 0;
-        } else if (!stillPendingTarget(state.pending, _pos)) {
-          state.pending = pickPendingTarget(
-            _pos,
-            globalHover.current,
-            state.lockoutId,
-          );
-          state.pendingMs = 0;
-        } else {
-          const alreadyHi =
-            globalHover.current?.id === state.pending.id ||
-            state.hoverCand?.id === state.pending.id ||
-            (state.pending.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY;
-          state.pendingMs += dt * 1000;
-          if (state.pendingMs >= commitMsFor(state.pending, alreadyHi, false)) {
-            commitTarget(state, state.pending, _pos);
-          }
-        }
-      } else if (dwellHover && !state.engaged) {
-        // SOP clip/nut: aim-ball dwell opens without requiring a deep fist.
-        if (!state.pending || state.pending.id !== dwellHover.id) {
-          state.pending = dwellHover;
-          state.pendingMs = 0;
-          state.pendingViaDwell = true;
-        } else if (!stillPendingTarget(state.pending, _pos)) {
-          state.pending = null;
-          state.pendingMs = 0;
-          state.pendingViaDwell = false;
-        } else {
-          state.pendingMs += dt * 1000;
-          if (
-            state.pendingMs >=
-            commitMsFor(state.pending, true, state.pendingViaDwell)
-          ) {
-            commitTarget(state, state.pending, _pos);
-          }
-        }
-      } else if (pinch && state.engaged) {
+      // --- carrying: follow hand; open fist or flick left to inventory releases ---
+      if (state.engaged) {
         if (
           state.engaged.kind === 'rotate_nut' &&
           !state.engaged.isInteractableNow()
         ) {
           state.engaged.onPinchEnd(_pos);
           state.engaged = null;
-          state.pending = pickPendingTarget(
-            _pos,
-            globalHover.current,
-            state.lockoutId,
-          );
-          state.pendingMs = 0;
-          state.pendingViaDwell = false;
-        } else {
+        } else if (
+          state.engaged.kind === 'grabbable' ||
+          state.engaged.kind === 'rotate_nut'
+        ) {
           state.engaged.onPinchHold(_pos, dt);
+          const releaseOpen = !pinch && state.lastPinch;
+          const releaseInventory = !pinch && _pos.x < -0.28;
+          if (releaseOpen || releaseInventory) {
+            state.engaged.onPinchEnd(_pos);
+            state.engaged = null;
+          }
         }
-      } else if (!pinch && state.lastPinch) {
-        if (state.engaged) {
-          state.engaged.onPinchEnd(_pos);
-          state.engaged = null;
-        }
-        if (!dwellHover) {
-          state.pending = null;
-          state.pendingMs = 0;
-          state.pendingViaDwell = false;
-        }
-      } else if (!pinch && !dwellHover && state.pendingViaDwell) {
-        state.pending = null;
-        state.pendingMs = 0;
-        state.pendingViaDwell = false;
+        state.hoverCand = null;
+        state.contact = null;
+        state.contactMs = 0;
+        state.lastPinch = pinch;
+        continue;
       }
+
+      // Prefer shared HUD/aim target when this hand can reach it.
+      const preferred =
+        globalHover.current && inReach(globalHover.current, _pos)
+          ? globalHover.current
+          : null;
+      const target = pickReachTarget(_pos, preferred, state.lockoutId);
+      state.hoverCand = target;
+
+      if (target) {
+        if (state.contact?.id === target.id) {
+          state.contactMs += dtMs;
+        } else {
+          state.contact = target;
+          state.contactMs = 0;
+        }
+
+        if (state.contactMs >= REACH_COMMIT_MS) {
+          const ok = target.onPinchStart(_pos);
+          state.contact = null;
+          state.contactMs = 0;
+          state.hoverCand = null;
+          if (ok === false) {
+            state.lockoutId = target.id;
+          } else if (target.kind === 'clip') {
+            state.lockoutId = target.id;
+            state.engaged = null;
+          } else if (
+            target.kind === 'rotate_nut' &&
+            !target.isInteractableNow()
+          ) {
+            // Instant unscrew — no carry.
+            state.lockoutId = target.id;
+            state.engaged = null;
+          } else {
+            state.engaged = target;
+            state.lockoutId = null;
+          }
+        }
+      } else {
+        state.contact = null;
+        state.contactMs = 0;
+      }
+
       state.lastPinch = pinch;
     }
 
+    // Shared hover / HUD / aim stem — one target for both hands.
     const sharedCands: SharedHoverCandidate[] = [];
     for (const handId of [0, 1] as HandId[]) {
       const cand = hands.current[handId]!.hoverCand;
@@ -299,21 +217,35 @@ export function InteractionRouter() {
       );
       sharedCands.push({ it: cand, dist: cand.distanceTo(_hoverPos) });
     }
+    // Also seed SOP targets near either hand so HUD/line stay on the glowing part
+    // even before enter-radius (guide the reach-in).
+    for (const handId of [0, 1] as HandId[]) {
+      const pose = handWorldHub.tryGet(handId);
+      if (!pose) continue;
+      _hoverPos.set(
+        pose.interactionPoint[0],
+        pose.interactionPoint[1],
+        pose.interactionPoint[2],
+      );
+      for (const it of listLiveSopTargets()) {
+        const d = it.distanceTo(_hoverPos);
+        if (d <= it.interactionRadius * 2.2) {
+          sharedCands.push({ it, dist: d });
+        }
+      }
+    }
 
     const best = pickSharedHover(sharedCands, globalHover.current);
-
     if (best !== globalHover.current) {
       globalHover.current?.onHover?.(false);
       best?.onHover?.(true);
       globalHover.current = best;
     }
 
-    const sel = best
-      ? selectionFromInteractable(best)
-      : selectionFromSopFallback();
-    selectionHub.set(sel);
+    selectionHub.set(
+      best ? selectionFromInteractable(best) : selectionFromSopFallback(),
+    );
 
-    // Shared aim target: hovered part, else nearest live SOP part to any hand.
     let aimIt: HandInteractable | null = best;
     let aimDist = best
       ? candidateDist(sharedCands, best.id)
@@ -338,20 +270,16 @@ export function InteractionRouter() {
           }
         }
       }
-      if (!nearest && sops[0]) {
-        nearest = sops[0];
-        nearestD = Number.POSITIVE_INFINITY;
-      }
-      aimIt = nearest;
-      aimDist = nearestD;
+      aimIt = nearest ?? sops[0] ?? null;
+      aimDist = nearest ? nearestD : Number.POSITIVE_INFINITY;
     }
 
     if (aimIt?.copyWorldPosition?.(_aimWorld)) {
-      const sameTarget = aimIdRef.current === aimIt.id;
+      const same = aimIdRef.current === aimIt.id;
       aimInRangeRef.current = resolveAimInRange(
         aimDist,
         aimIt.interactionRadius,
-        sameTarget ? aimInRangeRef.current : false,
+        same ? aimInRangeRef.current : false,
       );
       aimIdRef.current = aimIt.id;
       aimTargetHub.set({

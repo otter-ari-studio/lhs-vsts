@@ -126,7 +126,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         }
         if (mgr && !tipShown.current) {
           tipShown.current = true;
-          mgr.tip('高亮后轻握拆下；甩手入栏。回装时道具弹出，抓住放回安装位');
+          mgr.tip('瞄准球停在零件上取下，移到左侧入栏；回装时道具弹出后放回安装位');
         }
         return true;
       },

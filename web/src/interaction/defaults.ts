@@ -23,13 +23,16 @@ export const GRAB_COMMIT_MS = 160;
  * When the part is already highlighted (hover / SOP), a light squeeze commits fast.
  */
 export const HIGHLIGHT_GRAB_COMMIT_MS = 40;
+/**
+ * Reach-in commit: aim point stays on a live part this long → action.
+ * No fist required (top-cam curl is unreliable). Fist only releases carries.
+ */
+export const REACH_COMMIT_MS = 220;
+
+/** @deprecated Prefer REACH_COMMIT_MS — kept for old imports. */
+export const SOP_DWELL_COMMIT_MS = REACH_COMMIT_MS;
 /** Clips / nuts / cleans commit faster — toggles, not carry. */
 export const TOGGLE_COMMIT_MS = 80;
-/**
- * SOP clip/nut: hover dwell without a fist (top-cam openRatio often stays ~1.7–1.8
- * while the aim ball is already on the part).
- */
-export const SOP_DWELL_COMMIT_MS = 320;
 
 /** Keep pending grab if hand stays within radius * this (avoids neighbor flicker). */
 export const PENDING_EXIT_SCALE = 1.5;
