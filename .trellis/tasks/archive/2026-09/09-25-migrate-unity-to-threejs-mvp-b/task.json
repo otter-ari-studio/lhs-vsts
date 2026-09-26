@@ -1,0 +1,15 @@
+{
+  "id": "migrate-unity-to-threejs-mvp-b",
+  "name": "migrate-unity-to-threejs-mvp-b",
+  "title": "MVP B — 拆装零件交互（抓取 / 顺序锁）",
+  "status": "completed",
+  "creator": "heyongqi10",
+  "assignee": null,
+  "createdAt": "2026-09-25",
+  "completedAt": "2026-09-26",
+  "base_branch": "main",
+  "children": [],
+  "subtasks": [],
+  "parent": null,
+  "notes": "Orphan PRD (no task.json). Superseded by appliance-sim-redesign children. Archived 2026-09-26."
+}

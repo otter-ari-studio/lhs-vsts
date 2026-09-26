@@ -1,0 +1,8 @@
+{
+  "id": "operation-surface-redesign",
+  "title": "操作面交互重构（顶摄方案 A）",
+  "status": "completed",
+  "name": "operation-surface-redesign",
+  "notes": "Design landed in apps/frontend operationSurface* + operation-surface.test.ts. Train path now mouse-primary; surface Z model retained. Archived 2026-09-26.",
+  "completedAt": "2026-09-26"
+}

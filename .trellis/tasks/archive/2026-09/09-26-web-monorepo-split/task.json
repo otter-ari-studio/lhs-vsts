@@ -3,7 +3,7 @@
   "name": "web-monorepo-split",
   "title": "将 web 拆入 monorepo",
   "description": "把 web 训练客户端纳入 apps/packages monorepo，抽出可共享的领域库。",
-  "status": "in_progress",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "heyongqi10",
   "assignee": "heyongqi10",
   "createdAt": "2026-09-26",
-  "completedAt": null,
+  "completedAt": "2026-09-26",
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,6 +21,6 @@
   "children": [],
   "parent": null,
   "relatedFiles": [],
-  "notes": "",
+  "notes": "AC1–AC10 complete (apps/frontend+backend+machine). Archived 2026-09-26.",
   "meta": {}
 }

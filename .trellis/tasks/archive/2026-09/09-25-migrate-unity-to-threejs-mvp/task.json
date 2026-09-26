@@ -1,0 +1,12 @@
+{
+  "id": "migrate-unity-to-threejs-mvp",
+  "title": "Migrate Unity RangeHood preview to Three.js web (MVP A)",
+  "status": "completed",
+  "priority": "P0",
+  "package": "web",
+  "slug": "migrate-unity-to-threejs-mvp",
+  "name": "migrate-unity-to-threejs-mvp",
+  "assignee": null,
+  "notes": "Superseded by 09-25-appliance-sim-redesign (browser MediaPipe greenfield). Python WS path retired. Archived 2026-09-26.",
+  "completedAt": "2026-09-26"
+}

@@ -3,7 +3,7 @@
   "name": "diagnose-and-test-capability",
   "title": "排查问题并构建测试能力",
   "description": "",
-  "status": "in_progress",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "heyongqi10",
   "assignee": "heyongqi10",
   "createdAt": "2026-09-26",
-  "completedAt": null,
+  "completedAt": "2026-09-26",
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,6 +21,6 @@
   "children": [],
   "parent": null,
   "relatedFiles": [],
-  "notes": "",
+  "notes": "AC1–AC5 done; AC6 optional human smoke deferred. Archived 2026-09-26.",
   "meta": {}
 }

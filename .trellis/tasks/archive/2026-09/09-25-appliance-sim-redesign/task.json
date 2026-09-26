@@ -3,7 +3,7 @@
   "name": "appliance-sim-redesign",
   "title": "大家电虚拟仿真训练平台完整方案重设计",
   "description": "",
-  "status": "in_progress",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "heyongqi10",
   "assignee": "heyongqi10",
   "createdAt": "2026-09-25",
-  "completedAt": null,
+  "completedAt": "2026-09-26",
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -27,6 +27,6 @@
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "All 5 children archived. Product AC2-AC6 done; AC1 needs human top-cam smoke. SOP rail bugfix applied 2026-09-25.",
+  "notes": "All 5 children archived. Product AC2–AC6 done; AC1 human top-cam smoke deferred. Archived 2026-09-26 as parent complete.",
   "meta": {}
 }
