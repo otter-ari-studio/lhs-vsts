@@ -9,10 +9,7 @@
     "dev:backend": "vp run --filter @lhs-vsts/machine build && vp run backend#start:dev",
     "test:e2e": "playwright test -c apps/frontend/playwright.config.ts",
     "test:e2e:api": "vp run --filter @lhs-vsts/machine build && vp run backend#test:e2e",
-    "test:cov": "vp run --filter @lhs-vsts/machine test:cov && vp run backend#test:cov && vp run frontend#test:cov",
-    "lint": "vp lint",
-    "lint:fix": "vp lint --fix",
-    "format": "vp fmt"
+    "test:cov": "vp run --filter @lhs-vsts/machine test:cov && vp run backend#test:cov && vp run frontend#test:cov"
   },
   "devDependencies": {
     "@playwright/test": "catalog:",

@@ -57,7 +57,6 @@ vp run test:e2e:api
 
 ```bash
 vp run test:e2e
-# or: vp run frontend#test:e2e
 ```
 
 Suites under `apps/frontend/e2e/`:

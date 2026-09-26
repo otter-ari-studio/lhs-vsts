@@ -9,9 +9,7 @@
     "lint": "rslint",
     "preview": "rsbuild preview",
     "test": "rstest",
-    "test:watch": "rstest --watch",
-    "test:cov": "rstest --coverage",
-    "test:e2e": "playwright test -c playwright.config.ts"
+    "test:cov": "rstest --coverage"
   },
   "dependencies": {
     "@lhs-vsts/machine": "workspace:*",
