@@ -12,6 +12,8 @@ export const COLLIDER_RADIUS = {
   clip: 0.28,
   /** Keep nut smaller than wheel so after nut-off the impeller wins nearby pinches. */
   rotate_nut: 0.09,
+  /** While nut is the SOP target, enlarge pick so top-cam aim can hit. */
+  rotate_nut_sop: 0.2,
   clean: 0.14,
 } as const;
 

@@ -129,8 +129,9 @@ export class TrainingSession {
   }
 
   private penalize(key: string, amount: number, tip: string): void {
+    // Cooldown blocks both score and tip — avoids "一直提醒卡扣" on sustained grasp.
+    if (!this.scores.deduct(key, amount, tip)) return;
     emitTip(tip);
-    this.scores.deduct(key, amount, tip);
     this.bump();
   }
 

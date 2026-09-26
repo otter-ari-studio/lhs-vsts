@@ -48,6 +48,8 @@ test('grab pick radius is larger than former snap-only 0.08m', () => {
 
 test('nut pick radius stays smaller than grabbable so impeller can win after nut-off', () => {
   expect(COLLIDER_RADIUS.rotate_nut).toBeLessThan(COLLIDER_RADIUS.grabbable);
+  expect(COLLIDER_RADIUS.rotate_nut_sop).toBeGreaterThan(COLLIDER_RADIUS.rotate_nut);
+  expect(COLLIDER_RADIUS.rotate_nut_sop).toBeLessThanOrEqual(COLLIDER_RADIUS.grabbable);
 });
 
 test('clip pick radius reaches deep hood clips', () => {

@@ -1,4 +1,5 @@
 import type { Vector3 } from 'three';
+import { SOP_PICK_PRIORITY } from './defaults';
 
 export type InteractableKind = 'grabbable' | 'clip' | 'rotate_nut' | 'clean';
 
@@ -42,19 +43,30 @@ export function clearInteractables(): void {
   list.length = 0;
 }
 
+/** True when any live interactable is the current SOP target. */
+export function hasLiveSopTarget(): boolean {
+  for (const it of list) {
+    if (!it.isInteractableNow()) continue;
+    if ((it.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY) return true;
+  }
+  return false;
+}
+
 /**
  * Nearest interactable within its radius.
- * Prefer higher `pickPriority` (SOP targets) so removed oil_box doesn't steal filter_top.
+ * When a SOP target is live, ignore lower-priority parts (glass won't steal the clip).
  */
 export function findNearestInteractable(handPos: Vector3): HandInteractable | null {
+  const sopOnly = hasLiveSopTarget();
   let best: HandInteractable | null = null;
   let bestPri = Number.NEGATIVE_INFINITY;
   let bestDist = Number.POSITIVE_INFINITY;
   for (const it of list) {
     if (!it.isInteractableNow()) continue;
+    const pri = it.pickPriority?.() ?? 0;
+    if (sopOnly && pri < SOP_PICK_PRIORITY) continue;
     const d = it.distanceTo(handPos);
     if (d > it.interactionRadius) continue;
-    const pri = it.pickPriority?.() ?? 0;
     if (pri > bestPri || (pri === bestPri && d < bestDist)) {
       bestPri = pri;
       bestDist = d;
@@ -74,15 +86,18 @@ export function findHoverTargetSticky(
   prev: HandInteractable | null,
   exitScale = 1.45,
 ): HandInteractable | null {
+  const sopOnly = hasLiveSopTarget();
   if (prev?.isInteractableNow()) {
-    const d = prev.distanceTo(handPos);
-    if (d <= prev.interactionRadius * exitScale) {
-      const challenger = findNearestInteractable(handPos);
-      if (!challenger || challenger.id === prev.id) return prev;
-      const cPri = challenger.pickPriority?.() ?? 0;
-      const pPri = prev.pickPriority?.() ?? 0;
-      if (cPri > pPri) return challenger;
-      return prev;
+    const pPri = prev.pickPriority?.() ?? 0;
+    if (!sopOnly || pPri >= SOP_PICK_PRIORITY) {
+      const d = prev.distanceTo(handPos);
+      if (d <= prev.interactionRadius * exitScale) {
+        const challenger = findNearestInteractable(handPos);
+        if (!challenger || challenger.id === prev.id) return prev;
+        const cPri = challenger.pickPriority?.() ?? 0;
+        if (cPri > pPri) return challenger;
+        return prev;
+      }
     }
   }
   return findNearestInteractable(handPos);
@@ -91,6 +106,14 @@ export function findHoverTargetSticky(
 /** Nearest among interactables within radius (for hover without pinch). */
 export function findHoverTarget(handPos: Vector3): HandInteractable | null {
   return findNearestInteractable(handPos);
+}
+
+/** Live SOP-priority interactables (for aim guide fallback). */
+export function listLiveSopTargets(): HandInteractable[] {
+  return list.filter(
+    (it) =>
+      it.isInteractableNow() && (it.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY,
+  );
 }
 
 export function listInteractables(): readonly HandInteractable[] {

@@ -31,7 +31,9 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
       id: part.partId,
       kind: 'clip',
       interactionRadius: COLLIDER_RADIUS.clip,
-      isInteractableNow: () => true,
+      // Only the current SOP clip is live — otherwise left/right clips steal aim
+      // and spam pry tips while working on the nut / cover.
+      isInteractableNow: () => sopRef.current,
       pickPriority: () => (sopRef.current ? SOP_PICK_PRIORITY : 0),
       distanceTo(handPos) {
         const g = groupRef.current;
@@ -46,10 +48,12 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
       },
       onPinchStart() {
         const mgr = getTrainingSession();
-        if (!mgr) return;
+        if (!mgr) return false;
         if (mgr.tryToggleClip(part.partId)) {
           setOpen(mgr.getState(part.partId) === 'clip_open');
+          return true;
         }
+        return false;
       },
       onPinchHold() {},
       onPinchEnd() {},

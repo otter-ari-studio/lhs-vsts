@@ -147,9 +147,10 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
     };
     Object.defineProperty(self, 'interactionRadius', {
       get() {
-        return isInstallOfferPart(part.partId)
-          ? COLLIDER_RADIUS.grabbable
-          : COLLIDER_RADIUS.rotate_nut;
+        if (isInstallOfferPart(part.partId) || sopRef.current) {
+          return COLLIDER_RADIUS.rotate_nut_sop;
+        }
+        return COLLIDER_RADIUS.rotate_nut;
       },
       enumerable: true,
       configurable: true,
