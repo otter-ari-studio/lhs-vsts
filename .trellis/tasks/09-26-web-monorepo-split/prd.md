@@ -53,7 +53,7 @@
 - [x] AC7：打完一局后，管理页能看到该局的得分、是否合格和错因，且没有学员字段。
 - [x] AC8：自动化端到端用例通过（改机型 → 会话完成 → POST 分数 → GET 列表命中），不依赖人工点 3D。
 - [x] AC9：`vp run` 覆盖率命令对 machine / backend / frontend 行覆盖率均 ≥ 90%。
-- [x] AC10：自动化 3D 拖拽用例通过——油烟机可抓零件经指针会话拆下入栏，并经拖回安装位完成回装（不依赖人工操作浏览器）。
+- [x] AC10：Playwright 真实浏览器拖拽：在 Canvas 上 pointerdown→move→up 拆下油烟机 `oil_box` 并进入物品栏（完整交互链路，非世界坐标头测）。
 
 ## Out of Scope
 

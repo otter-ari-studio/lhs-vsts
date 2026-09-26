@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useState } from "react";
 
 import { loadMachineDef } from "../api/loadMachineDef";
+import { E2eHarness, isE2eMode } from "../e2e/E2eHarness";
 import { isOrbitLocked, subscribeOrbitLock } from "../interaction/orbitLockHub";
 import { clearPartPoses } from "../interaction/partPoseHub";
 import { PointerInteraction } from "../interaction/PointerInteraction";
@@ -98,6 +99,7 @@ export function TrainingScene({ restartToken, onSessionReady }: TrainingScenePro
 
         {def ? <MachineView key={restartToken} def={def} /> : null}
         <PointerInteraction />
+        {isE2eMode() ? <E2eHarness /> : null}
         <OrbitGate />
 
         <OrbitControls

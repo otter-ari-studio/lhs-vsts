@@ -93,7 +93,7 @@ function mountGrabbable(part: PartDef, snapRange: number, isSop: () => boolean) 
   return { api, worldPos };
 }
 
-test("automated 3D drag: range-hood oil_box press-drag-release into inventory", () => {
+test("unit: pointer session oil_box remove into inventory (not browser E2E)", () => {
   resetHubs();
   const def = loadSeed();
   const session = new TrainingSession(def);

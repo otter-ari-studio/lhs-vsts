@@ -7,3 +7,7 @@ declare module "*.svg?react" {
   const ReactComponent: FunctionComponent<SVGProps<SVGSVGElement>>;
   export default ReactComponent;
 }
+
+interface Window {
+  __lhsE2e?: import("./e2e/E2eHarness").LhsE2eApi;
+}

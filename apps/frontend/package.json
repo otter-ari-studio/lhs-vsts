@@ -11,7 +11,8 @@
     "preview": "rsbuild preview",
     "test": "rstest",
     "test:watch": "rstest --watch",
-    "test:cov": "rstest --coverage"
+    "test:cov": "rstest --coverage",
+    "test:e2e": "playwright test -c playwright.config.ts"
   },
   "dependencies": {
     "@lhs-vsts/machine": "workspace:*",

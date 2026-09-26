@@ -34,3 +34,10 @@ dist-ssr
 !.vscode/
 !.vscode/settings.json
 !.vscode/extensions.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/apps/frontend/playwright-report/
+/apps/frontend/test-results/

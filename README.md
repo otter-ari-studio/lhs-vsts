@@ -44,10 +44,17 @@ vp run -w test:cov
 
 ## E2E and automated 3D drag (AC8 / AC10)
 
-- **AC8** — API + session write-score flow (no browser):
+- **AC8** — API + session write-score (Vitest, no browser):
 
 ```bash
-vp run -w test:e2e
+vp run test:e2e:api
 ```
 
-- **AC10** — automated 3D drag (press → drag → release) via the same `createPointerDragSession` used by `PointerInteraction`. Covered in `apps/frontend/tests/pointer-drag-3d.test.ts` (runs with `vp run frontend#test`).
+- **AC10** — **real browser drag** (Playwright): canvas `pointerdown` → move → `pointerup` removes `oil_box` into inventory.
+
+```bash
+vp run test:e2e
+# or: vp run frontend#test:e2e
+```
+
+Opens `/?e2e=1`, starts training, aims via `window.__lhsE2e.projectPart`, then drives the OS mouse on the WebGL canvas. Requires Playwright browsers (`playwright install` once).

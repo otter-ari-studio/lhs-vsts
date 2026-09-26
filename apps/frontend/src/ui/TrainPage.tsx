@@ -152,7 +152,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
       <div className="train-body">
         <aside className="step-rail" aria-label="训练步骤">
           <h2 className="step-rail-title">物品栏 · FIFO</h2>
-          <ol className="inv-list" aria-label="已拆下零件">
+          <ol className="inv-list" aria-label="已拆下零件" data-testid="train-inventory">
             {inventory.length === 0 ? (
               <li className="inv-empty">空 · 取下后拖到左侧松手入队</li>
             ) : (
@@ -169,7 +169,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
             )}
           </ol>
           <h2 className="step-rail-title">SOP 步骤</h2>
-          <ol className="step-list">
+          <ol className="step-list" data-testid="sop-steps">
             {snap.steps.length === 0 ? (
               <li className="inv-empty">步骤加载中…若一直为空请点「重新开始」</li>
             ) : (
@@ -185,7 +185,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
           </ol>
         </aside>
 
-        <main className="viewport">
+        <main className="viewport" data-testid="train-viewport">
           <TrainingScene restartToken={restartToken} onSessionReady={onSessionReady} />
 
           <aside className="selection-card" aria-live="polite">
