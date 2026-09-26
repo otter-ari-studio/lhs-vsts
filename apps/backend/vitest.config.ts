@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite-plus';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from "vite-plus";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   // Resolves the path aliases declared in tsconfig.json, including the ones
@@ -7,20 +7,16 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     globals: true,
-    root: './',
-    include: ['**/*.spec.ts'],
+    root: "./",
+    include: ["**/*.spec.ts"],
     coverage: {
-      provider: 'v8',
-      include: ['src/**/*.ts'],
-      exclude: [
-        'src/**/*.spec.ts',
-        'src/main.ts',
-        'src/scores/score.types.ts',
-      ],
+      provider: "v8",
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.spec.ts", "src/main.ts", "src/scores/score.types.ts"],
       thresholds: {
         lines: 90,
       },
-      reporter: ['text', 'html'],
+      reporter: ["text", "html"],
     },
   },
 });

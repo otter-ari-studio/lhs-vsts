@@ -1,16 +1,16 @@
-import { Body, Controller, Get, Put } from '@nestjs/common';
-import { MachinesService } from './machines.service.js';
+import { Body, Controller, Get, Put } from "@nestjs/common";
+import { MachinesService } from "./machines.service.js";
 
-@Controller('api/machines')
+@Controller("api/machines")
 export class MachinesController {
   constructor(private readonly machinesService: MachinesService) {}
 
-  @Get('current')
+  @Get("current")
   getCurrent() {
     return this.machinesService.getCurrent();
   }
 
-  @Put('current')
+  @Put("current")
   putCurrent(@Body() body: unknown) {
     return this.machinesService.putCurrent(body);
   }
