@@ -23,12 +23,12 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1. 生产启动后访问根路径加载 SPA（含 JS/CSS/WASM）。 → R1, R2, R4
-- [ ] AC2. 同端口 `/api/machines`、`/api/scores` 可用，不被静态层拦截。 → R2
-- [ ] AC3. Dockerfile/`start.sh` 使用 `pnpm run build:docker` / `start:docker`，不再依赖根 `npm run build/start`。 → R3, R6
-- [ ] AC4. `vp run dev:backend` + `dev:frontend` 仍可本地开发。 → R7
-- [ ] AC5. `/api/health`（或约定路径）返回健康信息；根路径不再返回纯文本 hello。 → R4
-- [ ] AC6. `PORT` / `CORS_ORIGIN` 行为符合 R5。 → R5
+- [x] AC1. 生产启动后访问根路径加载 SPA（含 JS/CSS/WASM）。 → R1, R2, R4
+- [x] AC2. 同端口 `/api/machines`、`/api/scores` 可用，不被静态层拦截。 → R2
+- [x] AC3. Dockerfile/`start.sh` 使用 `pnpm run build:docker` / `start:docker`，不再依赖根 `npm run build/start`。 → R3, R6
+- [x] AC4. `vp run dev:backend` + `dev:frontend` 仍可本地开发。 → R7
+- [x] AC5. `/api/health`（或约定路径）返回健康信息；根路径不再返回纯文本 hello。 → R4
+- [x] AC6. `PORT` / `CORS_ORIGIN` 行为符合 R5。 → R5
 
 ## Out of Scope
 
