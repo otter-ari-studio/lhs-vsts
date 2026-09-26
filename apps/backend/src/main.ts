@@ -23,6 +23,7 @@ async function bootstrap() {
   if (corsOrigin !== undefined) {
     app.enableCors({ origin: corsOrigin });
   }
-  await app.listen(process.env.PORT ?? 3001);
+  const port = Number(process.env.PORT) || 3001;
+  await app.listen(port);
 }
 await bootstrap();
