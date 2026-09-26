@@ -1,0 +1,4 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/guides/playwright-frontend-e2e.md", "reason": "E2E must stay green; polish is presentation-only"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Prefer shared MAT presets over duplicated materials"}
+{"file": ".trellis/spec/guides/frontend-swiss-ui.md", "reason": "Training chrome mood should stay coherent with polished scene"}
