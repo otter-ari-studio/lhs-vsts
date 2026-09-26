@@ -1,0 +1,31 @@
+{
+  "id": "frontend-swiss-ui",
+  "name": "frontend-swiss-ui",
+  "title": "Frontend Swiss Minimalism UI",
+  "description": "Swiss Minimalism restyle for apps/frontend Guide/Train/Admin chrome",
+  "status": "completed",
+  "dev_type": null,
+  "scope": "frontend",
+  "package": null,
+  "priority": "P2",
+  "creator": "heyongqi10",
+  "assignee": "heyongqi10",
+  "createdAt": "2026-09-26",
+  "completedAt": "2026-09-26",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": "61ecd55",
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "apps/frontend/src/App.css",
+    "apps/frontend/src/ui/GuidePage.tsx",
+    "apps/frontend/src/ui/TrainPage.tsx",
+    ".trellis/spec/guides/frontend-swiss-ui.md"
+  ],
+  "notes": "Implementation landed in 61ecd55; task archives PRD + UI guide.",
+  "meta": {}
+}
