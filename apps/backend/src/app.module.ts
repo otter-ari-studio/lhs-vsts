@@ -27,9 +27,14 @@ function resolveStaticRoot(): string {
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: resolveStaticRoot(),
-      exclude: ["/api*"],
+    ServeStaticModule.forRootAsync({
+      useFactory: () => [
+        {
+          rootPath: resolveStaticRoot(),
+          // path-to-regexp v8 (Nest 12): `/api*` is invalid; use named wildcard
+          exclude: ["/api/{*any}"],
+        },
+      ],
     }),
     MachinesModule,
     ScoresModule,

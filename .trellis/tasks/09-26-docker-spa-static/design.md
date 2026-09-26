@@ -28,11 +28,11 @@ Dev (unchanged): browser → :3000 Rsbuild → proxy `/api` → :3001 Nest (no p
 4. `pnpm --filter backend build` (nest)
 5. Ensure runtime can resolve `public`: either nest-cli assets copy into `dist/public`, or `ServeStatic` root = `join(process.cwd(), 'apps/backend/public')` when cwd is repo root (Docker `/home`).
 
-**Preferred resolve**: `STATIC_ROOT` env override; default `join(process.cwd(), 'apps/backend/public')` so Docker cwd `/home` works without nesting public inside `dist/`. Document that `start:docker` must run with monorepo root as cwd.
+**Preferred resolve**: `STATIC_ROOT` env override via `ServeStaticModule.forRootAsync` (factory returns options **array**; reads env at app boot). Default `join(process.cwd(), 'apps/backend/public')` so Docker cwd `/home` works without nesting public inside `dist/`. Document that `start:docker` must run with monorepo root as cwd.
 
 ## Nest static + API
 
-- `ServeStaticModule.forRoot({ rootPath, exclude: ['/api*'] })`
+- `ServeStaticModule.forRoot({ rootPath, exclude: ['/api/{*any}'] })` — Nest 12 / path-to-regexp v8: legacy `/api*` throws and breaks SPA fallback (500)
 - Move health to `@Controller('api/health')` or `@Get('api/health')` on a dedicated controller; remove `AppController` `@Get()` hello conflict with SPA index.
 - CORS: if `CORS_ORIGIN` set, use it (comma-separated optional); else if `NODE_ENV === 'production'` and no override, skip `enableCors` or reflect same-origin only; else default `http://localhost:3000` for dev.
 
