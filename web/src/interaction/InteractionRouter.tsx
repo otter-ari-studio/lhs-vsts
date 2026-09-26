@@ -8,12 +8,14 @@ import {
   GRAB_COMMIT_MS,
   HIGHLIGHT_GRAB_COMMIT_MS,
   PENDING_EXIT_SCALE,
+  SOP_DWELL_COMMIT_MS,
   SOP_PICK_PRIORITY,
   TOGGLE_COMMIT_MS,
 } from './defaults';
 import {
   findHoverTargetSticky,
   findNearestInteractable,
+  listInteractables,
   listLiveSopTargets,
   type HandInteractable,
 } from './registry';
@@ -36,8 +38,10 @@ const _aimWorld = new Vector3();
 function commitMsFor(
   it: HandInteractable | null,
   alreadyHighlighted: boolean,
+  viaDwell: boolean,
 ): number {
   if (!it) return GRAB_COMMIT_MS;
+  if (viaDwell) return SOP_DWELL_COMMIT_MS;
   if (it.id.endsWith(':install-slot')) return TOGGLE_COMMIT_MS;
   if (it.kind !== 'grabbable') return TOGGLE_COMMIT_MS;
   if (alreadyHighlighted || (it.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY) {
@@ -49,6 +53,13 @@ function commitMsFor(
 function stillPendingTarget(it: HandInteractable, handPos: Vector3): boolean {
   if (!it.isInteractableNow()) return false;
   return it.distanceTo(handPos) <= it.interactionRadius * PENDING_EXIT_SCALE;
+}
+
+/** Clips: can fire by hovering SOP without a fist (top-cam curl often never hits ON). */
+function isSopDwellToggle(it: HandInteractable | null): boolean {
+  if (!it) return false;
+  if ((it.pickPriority?.() ?? 0) < SOP_PICK_PRIORITY) return false;
+  return it.kind === 'clip';
 }
 
 /** Prefer the HUD-highlighted part so light squeeze grabs what you see. */
@@ -69,13 +80,44 @@ function pickPendingTarget(
   return nearest;
 }
 
+function commitTarget(
+  state: HandInteractionState,
+  target: HandInteractable,
+  handPos: Vector3,
+): void {
+  state.pending = null;
+  state.pendingMs = 0;
+  state.hoverCand = null;
+  const ok = target.onPinchStart(handPos);
+  if (ok === false) {
+    state.engaged = null;
+    state.lockoutId = target.id;
+    return;
+  }
+  // Instant toggles: don't keep a dead engage waiting for an open-hand edge.
+  if (target.kind === 'clip') {
+    state.engaged = null;
+    state.lockoutId = target.id;
+    return;
+  }
+  if (target.kind === 'rotate_nut' && !target.isInteractableNow()) {
+    state.engaged = null;
+    state.lockoutId = target.id;
+    return;
+  }
+  state.engaged = target;
+  state.lockoutId = null;
+}
+
 interface HandInteractionState {
   lastPinch: boolean;
   engaged: HandInteractable | null;
   hoverCand: HandInteractable | null;
   pending: HandInteractable | null;
   pendingMs: number;
-  /** After reject / release, ignore this id until hand opens (avoids tip spam). */
+  /** Pending started via SOP hover dwell (no fist). */
+  pendingViaDwell: boolean;
+  /** After reject / release, ignore this id until leave range (avoids tip spam). */
   lockoutId: string | null;
 }
 
@@ -92,6 +134,7 @@ export function InteractionRouter() {
       hoverCand: null,
       pending: null,
       pendingMs: 0,
+      pendingViaDwell: false,
       lockoutId: null,
     },
     {
@@ -100,6 +143,7 @@ export function InteractionRouter() {
       hoverCand: null,
       pending: null,
       pendingMs: 0,
+      pendingViaDwell: false,
       lockoutId: null,
     },
   ]);
@@ -121,6 +165,7 @@ export function InteractionRouter() {
         }
         state.pending = null;
         state.pendingMs = 0;
+        state.pendingViaDwell = false;
         state.lastPinch = false;
         state.lockoutId = null;
         continue;
@@ -134,17 +179,35 @@ export function InteractionRouter() {
 
       const pinch = pose.pinching;
 
-      if (!pinch) {
-        state.lockoutId = null;
+      // Drop lockout once the hand leaves that part's sticky radius.
+      if (state.lockoutId) {
+        const locked = listInteractables().find((it) => it.id === state.lockoutId);
+        if (
+          !locked ||
+          locked.distanceTo(_pos) > locked.interactionRadius * PENDING_EXIT_SCALE
+        ) {
+          state.lockoutId = null;
+        }
       }
 
-      if (!state.engaged && !state.pending) {
+      if (!state.engaged) {
         state.hoverCand = findHoverTargetSticky(_pos, state.hoverCand);
-      } else if (state.engaged) {
+      } else {
         state.hoverCand = null;
       }
 
+      const dwellHover =
+        !pinch &&
+        !state.engaged &&
+        isSopDwellToggle(state.hoverCand) &&
+        state.hoverCand &&
+        state.hoverCand.id !== state.lockoutId &&
+        stillPendingTarget(state.hoverCand, _pos)
+          ? state.hoverCand
+          : null;
+
       if (pinch && !state.engaged) {
+        state.pendingViaDwell = false;
         if (!state.pending) {
           state.pending = pickPendingTarget(
             _pos,
@@ -165,19 +228,27 @@ export function InteractionRouter() {
             state.hoverCand?.id === state.pending.id ||
             (state.pending.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY;
           state.pendingMs += dt * 1000;
-          if (state.pendingMs >= commitMsFor(state.pending, alreadyHi)) {
-            const target = state.pending;
-            state.pending = null;
-            state.pendingMs = 0;
-            state.hoverCand = null;
-            const ok = target.onPinchStart(_pos);
-            if (ok === false) {
-              state.engaged = null;
-              state.lockoutId = target.id;
-            } else {
-              state.engaged = target;
-              state.lockoutId = null;
-            }
+          if (state.pendingMs >= commitMsFor(state.pending, alreadyHi, false)) {
+            commitTarget(state, state.pending, _pos);
+          }
+        }
+      } else if (dwellHover && !state.engaged) {
+        // SOP clip/nut: aim-ball dwell opens without requiring a deep fist.
+        if (!state.pending || state.pending.id !== dwellHover.id) {
+          state.pending = dwellHover;
+          state.pendingMs = 0;
+          state.pendingViaDwell = true;
+        } else if (!stillPendingTarget(state.pending, _pos)) {
+          state.pending = null;
+          state.pendingMs = 0;
+          state.pendingViaDwell = false;
+        } else {
+          state.pendingMs += dt * 1000;
+          if (
+            state.pendingMs >=
+            commitMsFor(state.pending, true, state.pendingViaDwell)
+          ) {
+            commitTarget(state, state.pending, _pos);
           }
         }
       } else if (pinch && state.engaged) {
@@ -193,6 +264,7 @@ export function InteractionRouter() {
             state.lockoutId,
           );
           state.pendingMs = 0;
+          state.pendingViaDwell = false;
         } else {
           state.engaged.onPinchHold(_pos, dt);
         }
@@ -201,8 +273,15 @@ export function InteractionRouter() {
           state.engaged.onPinchEnd(_pos);
           state.engaged = null;
         }
+        if (!dwellHover) {
+          state.pending = null;
+          state.pendingMs = 0;
+          state.pendingViaDwell = false;
+        }
+      } else if (!pinch && !dwellHover && state.pendingViaDwell) {
         state.pending = null;
         state.pendingMs = 0;
+        state.pendingViaDwell = false;
       }
       state.lastPinch = pinch;
     }

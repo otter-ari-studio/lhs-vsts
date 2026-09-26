@@ -20,7 +20,9 @@ function hintFor(it: HandInteractable, partId: string): string {
     return '已高亮 · 瞄准球靠近后轻握拆下';
   }
   if (it.kind === 'clip') {
-    return st === 'clip_closed' ? '已高亮 · 瞄准后轻握打开' : '已高亮 · 瞄准后轻握锁止';
+    return st === 'clip_closed'
+      ? '瞄准球停在卡扣上即可打开（也可轻握）'
+      : '瞄准球停在卡扣上即可锁止（也可轻握）';
   }
   if (it.kind === 'rotate_nut') {
     if (isInstallOfferPart(partId) || st === 'removed') {
@@ -61,10 +63,10 @@ export function selectionFromSopFallback(): SelectionInfo | null {
       : '等待道具弹出';
   } else if (current.stepId.startsWith('open_')) {
     partId = current.stepId.slice('open_'.length);
-    hint = 'SOP 目标 · 把瞄准球靠近卡扣后轻握打开';
+    hint = 'SOP 目标 · 瞄准球停在卡扣上约 0.3 秒即可打开';
   } else if (current.stepId.startsWith('close_')) {
     partId = current.stepId.slice('close_'.length);
-    hint = 'SOP 目标 · 把瞄准球靠近卡扣后轻握锁止';
+    hint = 'SOP 目标 · 瞄准球停在卡扣上约 0.3 秒即可锁止';
   } else if (current.stepId === 'appliance_wash') {
     return {
       id: 'appliance_wash',

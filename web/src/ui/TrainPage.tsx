@@ -333,7 +333,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              拆下：瞄准球靠近高亮零件并握紧即可取下（不必先完全张开）；张开手/甩手入栏。球变绿=可拆。
+              零件：瞄准球靠近高亮并握紧取下。卡扣：瞄准球停在上面约 0.3 秒即可开/锁。
             </div>
           ) : null}
 
