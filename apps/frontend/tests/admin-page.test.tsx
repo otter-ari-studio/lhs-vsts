@@ -1,7 +1,19 @@
 import { expect, rs, test } from "@rstest/core";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import { AdminPage } from "../src/ui/AdminPage";
+
+function renderAdmin(initialEntries: string[] = ["/admin"]) {
+  const router = createMemoryRouter(
+    [
+      { path: "/", element: <div>guide</div> },
+      { path: "/admin", element: <AdminPage /> },
+    ],
+    { initialEntries },
+  );
+  return { router, ...render(<RouterProvider router={router} />) };
+}
 
 const machineFixture = {
   machineId: "range_hood_generic",
@@ -116,14 +128,7 @@ function mockAdminApis(options?: { putError?: boolean; emptyScores?: boolean }) 
 
 test("AdminPage lists scores and saves machine edits", async () => {
   const fetchMock = mockAdminApis();
-  let back = false;
-  render(
-    <AdminPage
-      onBack={() => {
-        back = true;
-      }}
-    />,
-  );
+  const { router } = renderAdmin();
 
   await waitFor(() => {
     expect(screen.getByDisplayValue("通用油烟机")).toBeInTheDocument();
@@ -215,7 +220,7 @@ test("AdminPage lists scores and saves machine edits", async () => {
   });
 
   fireEvent.click(screen.getByRole("button", { name: "返回引导" }));
-  expect(back).toBe(true);
+  expect(router.state.location.pathname).toBe("/");
 
   fetchMock.mockRestore();
 });
@@ -224,7 +229,7 @@ test("AdminPage shows load error", async () => {
   const failLoad = rs
     .spyOn(globalThis, "fetch")
     .mockResolvedValue(new Response("fail", { status: 503 }));
-  render(<AdminPage onBack={() => undefined} />);
+  renderAdmin();
   await waitFor(() => {
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
@@ -233,7 +238,7 @@ test("AdminPage shows load error", async () => {
 
 test("AdminPage shows save error", async () => {
   const putFail = mockAdminApis({ putError: true });
-  render(<AdminPage onBack={() => undefined} />);
+  renderAdmin();
   await waitFor(() => {
     expect(screen.getByDisplayValue("通用油烟机")).toBeInTheDocument();
   });
@@ -246,7 +251,7 @@ test("AdminPage shows save error", async () => {
 
 test("AdminPage shows empty scores message", async () => {
   const fetchMock = mockAdminApis({ emptyScores: true });
-  render(<AdminPage onBack={() => undefined} />);
+  renderAdmin();
   await waitFor(() => {
     expect(screen.getByText("暂无成绩")).toBeInTheDocument();
   });

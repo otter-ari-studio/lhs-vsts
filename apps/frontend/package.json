@@ -20,6 +20,7 @@
     "@react-three/fiber": "9.8.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "react-router-dom": "catalog:",
     "three": "0.180.0"
   },
   "devDependencies": {

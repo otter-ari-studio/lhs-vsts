@@ -76,6 +76,11 @@ body,
   font-family: inherit;
   border-radius: var(--radius);
   cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   transition:
     background-color var(--duration) var(--ease),
     color var(--duration) var(--ease),

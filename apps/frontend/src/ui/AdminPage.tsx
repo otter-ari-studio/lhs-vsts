@@ -5,6 +5,7 @@ import {
   type PartDef,
 } from "@lhs-vsts/machine";
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   fetchCurrentMachine,
@@ -14,13 +15,11 @@ import {
 } from "../api/client";
 import { listKitbashKeys } from "../visual/kitbash/KitbashAdapter";
 
-interface AdminPageProps {
-  onBack: () => void;
-}
-
 const KITBASH_KEYS = listKitbashKeys();
 
-export function AdminPage({ onBack }: AdminPageProps) {
+export function AdminPage() {
+  const navigate = useNavigate();
+  const onBack = () => navigate("/");
   const [def, setDef] = useState<MachineDef | null>(null);
   const [scores, setScores] = useState<ScoreRecord[]>([]);
   const [error, setError] = useState<string | null>(null);

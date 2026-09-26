@@ -9,7 +9,7 @@ const frontendDir = path.join(root, "apps/frontend");
 
 /**
  * Real-browser E2E for the training client.
- * Starts backend (:3001) + frontend (:3000); suites open `/?e2e=1#train`.
+ * Starts backend (:3001) + frontend (:3000); suites open `/?e2e=1#/train`.
  * Full-session demo needs a long budget (many real pointer drags).
  */
 export default defineConfig({

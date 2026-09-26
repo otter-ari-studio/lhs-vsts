@@ -1,9 +1,6 @@
-interface GuidePageProps {
-  onStart: () => void;
-  onAdmin: () => void;
-}
+import { Link } from "react-router-dom";
 
-export function GuidePage({ onStart, onAdmin }: GuidePageProps) {
+export function GuidePage() {
   return (
     <div className="guide-page">
       <header className="guide-hero">
@@ -13,12 +10,12 @@ export function GuidePage({ onStart, onAdmin }: GuidePageProps) {
           纯浏览器 3D 演示：用鼠标拖动旋转视角，点击与拖拽完成 SOP 拆洗回装。
         </p>
         <div className="guide-actions">
-          <button type="button" className="primary-btn" onClick={onStart}>
+          <Link to="/train" className="primary-btn">
             进入训练
-          </button>
-          <button type="button" className="recal-btn" onClick={onAdmin}>
+          </Link>
+          <Link to="/admin" className="recal-btn">
             管理页
-          </button>
+          </Link>
         </div>
       </header>
 

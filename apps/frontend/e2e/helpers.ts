@@ -143,8 +143,8 @@ export async function dragPartToAnchor(page: Page, partId: string): Promise<void
 /** Enter training from guide with e2e harness enabled. */
 export async function enterTraining(page: Page): Promise<void> {
   await page.goto("/?e2e=1");
-  await page.getByRole("button", { name: "进入训练" }).click();
-  await expect(page).toHaveURL(/#train/);
+  await page.getByRole("link", { name: "进入训练" }).click();
+  await expect(page).toHaveURL(/#\/train/);
   await expect(page.getByTestId("train-viewport")).toBeVisible();
   await expect(page.getByTestId("sop-steps")).toContainText("拆下", {
     timeout: 60_000,

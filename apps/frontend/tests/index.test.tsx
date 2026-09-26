@@ -1,5 +1,6 @@
 import { expect, test } from "@rstest/core";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import {
   HAND_LANDMARKER_MODEL,
@@ -8,25 +9,24 @@ import {
 } from "../src/hand/mediapipeLoader";
 import { GuidePage } from "../src/ui/GuidePage";
 
+function renderGuide() {
+  const router = createMemoryRouter([{ path: "/", element: <GuidePage /> }, { path: "/train", element: <div>train</div> }], {
+    initialEntries: ["/"],
+  });
+  return { router, ...render(<RouterProvider router={router} />) };
+}
+
 test("guide page shows mouse demo copy and brand", () => {
-  render(<GuidePage onStart={() => undefined} onAdmin={() => undefined} />);
+  renderGuide();
   expect(screen.getByText("LHS-VSTS")).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "鼠标操作" })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "进入训练" })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "进入训练" })).toBeInTheDocument();
 });
 
-test("guide start button invokes callback", () => {
-  let started = false;
-  render(
-    <GuidePage
-      onStart={() => {
-        started = true;
-      }}
-      onAdmin={() => undefined}
-    />,
-  );
-  fireEvent.click(screen.getByRole("button", { name: "进入训练" }));
-  expect(started).toBe(true);
+test("guide start link navigates to train", () => {
+  const { router } = renderGuide();
+  fireEvent.click(screen.getByRole("link", { name: "进入训练" }));
+  expect(router.state.location.pathname).toBe("/train");
 });
 
 test("mediapipe runtime assets are same-origin", () => {

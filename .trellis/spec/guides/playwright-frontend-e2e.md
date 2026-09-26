@@ -10,7 +10,7 @@ Use when adding or changing Playwright tests that drive the R3F training canvas,
 
 ### Entry
 
-- Open `/?e2e=1` then navigate to `#train` (keep the query string).
+- Open `/?e2e=1` then navigate to `#/train` (keep the query string).
 - Wait until `window.__lhsE2e?.ready === true`.
 - Aim with harness projections; **complete actions only via real `page.mouse` / click** — never call `tryBeginRemove` / `completeAllCleans` from the test as a shortcut (wash overlay may call `completeAllCleans` as product UI).
 

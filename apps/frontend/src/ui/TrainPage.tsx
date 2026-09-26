@@ -6,16 +6,13 @@ import {
   type SessionSnapshot,
 } from "@lhs-vsts/machine";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { submitSessionScoreOnce } from "../api/submitSessionScore";
 import { partInventory } from "../interaction/partInventory";
 import { currentInstallOfferPartId } from "../interaction/partOffer";
 import { selectionHub } from "../interaction/selectionHub";
 import { TrainingScene } from "../scene/TrainingScene";
-
-interface TrainPageProps {
-  onBack: () => void;
-}
 
 const EMPTY_SNAP: SessionSnapshot = {
   score: 100,
@@ -51,7 +48,9 @@ function useSessionSnapshot(sessionTick: number): SessionSnapshot {
   return useSyncExternalStore(subscribeSession, readSessionSnapshot, () => EMPTY_SNAP);
 }
 
-export function TrainPage({ onBack }: TrainPageProps) {
+export function TrainPage() {
+  const navigate = useNavigate();
+  const onBack = () => navigate("/");
   const [restartToken, setRestartToken] = useState(0);
   const [sessionTick, setSessionTick] = useState(0);
   const [tip, setTip] = useState<string | null>(null);
