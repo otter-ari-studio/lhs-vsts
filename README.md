@@ -1,6 +1,6 @@
 # LHS-VSTS Monorepo
 
-Training client (`apps/web`) and API (`apps/backend`) share machine SOP rules via `@lhs-vsts/machine`.
+Training client (`apps/frontend`) and API (`apps/backend`) share machine SOP rules via `@lhs-vsts/machine`.
 
 ## Development
 
@@ -22,22 +22,22 @@ vp run -r test
 vp run -r build
 ```
 
-- Run the development server (website template):
+- Run the development server (website template, if present):
 
 ```bash
 vp run dev
 ```
 
-Training client and API: from the repo root run `vp run dev:backend` (port 3001) and `vp run dev:web` (port 3000). Both scripts build `@lhs-vsts/machine` first. The web app proxies `/api` to the backend.
+Training client and API: from the repo root run `vp run dev:backend` (port 3001) and `vp run dev:frontend` (port 3000). Both scripts build `@lhs-vsts/machine` first. The frontend app proxies `/api` to the backend.
 
 ## Coverage (AC9)
 
-Line coverage must be ≥ 90% for machine, backend, and web (web gate covers API client, AdminPage, score submit, and the shared 3D pointer-drag modules — see `apps/web/rstest.config.ts`).
+Line coverage must be ≥ 90% for machine, backend, and frontend (frontend gate covers API client, AdminPage, score submit, and the shared 3D pointer-drag modules — see `apps/frontend/rstest.config.ts`).
 
 ```bash
 vp run --filter @lhs-vsts/machine test:cov
 vp run backend#test:cov
-vp run web#test:cov
+vp run frontend#test:cov
 # or all three from repo root:
 vp run -w test:cov
 ```
@@ -50,4 +50,4 @@ vp run -w test:cov
 vp run -w test:e2e
 ```
 
-- **AC10** — automated 3D drag (press → drag → release) via the same `createPointerDragSession` used by `PointerInteraction`. Covered in `apps/web/tests/pointer-drag-3d.test.ts` (runs with `vp run web#test`).
+- **AC10** — automated 3D drag (press → drag → release) via the same `createPointerDragSession` used by `PointerInteraction`. Covered in `apps/frontend/tests/pointer-drag-3d.test.ts` (runs with `vp run frontend#test`).

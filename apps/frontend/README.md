@@ -1,4 +1,4 @@
-# LHS-VSTS Web
+# LHS-VSTS Frontend
 
 纯浏览器大家电拆洗训练客户端：Rsbuild + React 19 + Three.js / R3F。当前为 **3D 鼠标演示**（拖动旋转视角，点击 / 拖拽零件完成 SOP）。
 
@@ -19,7 +19,7 @@ vp run --filter @lhs-vsts/machine build
 
 ```bash
 vp run dev:backend
-vp run dev:web
+vp run dev:frontend
 ```
 
 打开 http://localhost:3000 。`/api` 在开发与 preview 下代理到 `http://localhost:3001`。
@@ -30,11 +30,11 @@ vp run dev:web
 
 | Command | Purpose |
 |---------|---------|
-| `vp run web#dev` | 本地开发服务器 |
-| `vp run web#build` | 生产构建 |
-| `vp run web#preview` | 预览构建产物 |
-| `vp run web#lint` | Rslint |
-| `vp run web#test` | Rstest 单测 |
+| `vp run frontend#dev` | 本地开发服务器 |
+| `vp run frontend#build` | 生产构建 |
+| `vp run frontend#preview` | 预览构建产物 |
+| `vp run frontend#lint` | Rslint |
+| `vp run frontend#test` | Rstest 单测 |
 
 ## Module layout
 
