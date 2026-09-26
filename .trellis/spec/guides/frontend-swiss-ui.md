@@ -8,6 +8,7 @@
 - [ ] Keep `border-radius: 0` for chrome controls; no soft card shadows
 - [ ] Primary CTA = black fill / white text; status green/amber/red only for semantic state
 - [ ] Display font: Space Grotesk; body: IBM Plex Sans (+ CJK fallbacks), loaded via `@fontsource/*` (bundled). Do not use `fonts.googleapis.com` / `fonts.gstatic.com`. Do not default to Inter
+- [ ] Runtime MediaPipe / IBL assets are same-origin only (`/mediapipe`, `/models/hand_landmarker.task`, `/hdri/…`). Do not use jsDelivr, googleapis, or drei `Environment preset` (githack) CDN URLs
 - [ ] Guide landing: brand is hero-level; one headline, one lead, one CTA group before instruction grid
 - [ ] 3D viewport may stay dark; surrounding chrome stays light Swiss
 - [ ] Interactive controls need `cursor: pointer`, hover ≤ 250ms, and visible `:focus-visible`

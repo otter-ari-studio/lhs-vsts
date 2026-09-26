@@ -5,9 +5,10 @@ import { DEFAULT_AXIS_MAP, buildMapMatrix, mapPointTuple } from "../src/hand/axi
 import { fingerOpenRatio, updateGraspStateConfirmed } from "../src/hand/grasp";
 import { handHub } from "../src/hand/HandHub";
 import {
+  HAND_LANDMARKER_MODEL,
   MEDIAPIPE_VERSION,
   MEDIAPIPE_WASM_BASE,
-  MEDIAPIPE_WASM_CDN,
+  MEDIAPIPE_WASM_LOCAL,
 } from "../src/hand/mediapipeLoader";
 import { distance3, updatePinchState, updatePinchStateConfirmed } from "../src/hand/pinch";
 import type { HandSample, Vec3 } from "../src/hand/types";
@@ -133,11 +134,13 @@ test("handHub publish / clear / hasAny", () => {
   expect(handHub.hasAny()).toBe(false);
 });
 
-test("MediaPipe WASM URLs are pinned (not @latest)", () => {
+test("MediaPipe paths are local-only (no CDN)", () => {
   expect(MEDIAPIPE_VERSION).toBe("1.0.1");
   expect(MEDIAPIPE_WASM_BASE).toBe("/mediapipe");
-  expect(MEDIAPIPE_WASM_CDN).toContain(`@${MEDIAPIPE_VERSION}`);
-  expect(MEDIAPIPE_WASM_CDN).not.toContain("@latest");
+  expect(MEDIAPIPE_WASM_LOCAL).toBe("/mediapipe");
+  expect(HAND_LANDMARKER_MODEL).toBe("/models/hand_landmarker.task");
+  expect(HAND_LANDMARKER_MODEL).not.toMatch(/^https?:\/\//);
+  expect(MEDIAPIPE_WASM_BASE).not.toMatch(/^https?:\/\//);
 });
 
 test("imageLandmarksToCaptureMeters maps frame center XY; Z from depth + finger", async () => {

@@ -23,3 +23,15 @@ vp run dev:frontend  # :3000 — proxies /api
 | `e2e/`             | Playwright specs                                      |
 
 Visual adapter boundary: change `visual.adapter` / kitbash implementation only; `TrainingSession` / `StepGraph` stay on `partId`, anchors, and prereqs.
+
+## Offline runtime assets
+
+Intranet / Docker deployments must not fetch Google, jsDelivr, or githack at runtime. Vendored under `public/` (copied into `dist/` and `build:docker` → backend `public/`):
+
+| Path                              | Source / license note                                                      |
+| --------------------------------- | -------------------------------------------------------------------------- |
+| `/models/hand_landmarker.task`    | MediaPipe Hand Landmarker float16 (Apache-2.0)                             |
+| `/hdri/empty_warehouse_01_1k.hdr` | pmndrs/drei-assets warehouse HDR                                           |
+| `/mediapipe/*`                    | `@mediapipe/tasks-vision` WASM (rsbuild `output.copy` from `node_modules`) |
+
+Fonts use `@fontsource/*` (bundled). Do not reintroduce CDN URLs in `src/` for MediaPipe, IBL, or fonts.

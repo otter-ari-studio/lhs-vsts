@@ -80,10 +80,14 @@ export function TrainingScene({ restartToken, onSessionReady }: TrainingScenePro
         gl={{ antialias: true, toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.92 }}
       >
         <color attach="background" args={["#0c121c"]} />
-        {/* Soft IBL for metal read. Suspense + skip in e2e: preset HDR must not block harness/first paint. */}
+        {/* Soft IBL for metal read. Local HDR (no CDN preset). Suspense + skip in e2e so harness mounts without waiting on IBL. */}
         {isE2eMode() ? null : (
           <Suspense fallback={null}>
-            <Environment preset="warehouse" environmentIntensity={0.32} />
+            <Environment
+              files="empty_warehouse_01_1k.hdr"
+              path="/hdri/"
+              environmentIntensity={0.32}
+            />
           </Suspense>
         )}
         <ambientLight intensity={0.28} />

@@ -1,7 +1,11 @@
 import { expect, test } from "@rstest/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 
-import { MEDIAPIPE_WASM_CDN, MEDIAPIPE_VERSION } from "../src/hand/mediapipeLoader";
+import {
+  HAND_LANDMARKER_MODEL,
+  MEDIAPIPE_VERSION,
+  MEDIAPIPE_WASM_LOCAL,
+} from "../src/hand/mediapipeLoader";
 import { GuidePage } from "../src/ui/GuidePage";
 
 test("guide page shows mouse demo copy and brand", () => {
@@ -25,8 +29,10 @@ test("guide start button invokes callback", () => {
   expect(started).toBe(true);
 });
 
-test("mediapipe CDN path is version-pinned", () => {
-  expect(MEDIAPIPE_WASM_CDN).toContain("tasks-vision");
-  expect(MEDIAPIPE_WASM_CDN).toContain(MEDIAPIPE_VERSION);
-  expect(MEDIAPIPE_WASM_CDN).not.toContain("@latest");
+test("mediapipe runtime assets are same-origin", () => {
+  expect(MEDIAPIPE_VERSION).toBe("1.0.1");
+  expect(MEDIAPIPE_WASM_LOCAL).toBe("/mediapipe");
+  expect(HAND_LANDMARKER_MODEL).toBe("/models/hand_landmarker.task");
+  expect(MEDIAPIPE_WASM_LOCAL).not.toMatch(/^https?:\/\//);
+  expect(HAND_LANDMARKER_MODEL).not.toMatch(/^https?:\/\//);
 });
