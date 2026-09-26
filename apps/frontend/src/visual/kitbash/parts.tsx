@@ -14,20 +14,48 @@ export function ShellMainKitbash() {
         <boxGeometry args={[0.68, 0.32, 0.04]} />
         <meshStandardMaterial {...MAT.metalDark} />
       </mesh>
+      {/* Angled suction plane — side-suction read */}
+      <mesh position={[0, 0.12, 0.14]} rotation={[-0.35, 0, 0]} castShadow>
+        <boxGeometry args={[0.66, 0.2, 0.018]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
       {/* Canopy lip */}
       <mesh position={[0, 0.02, 0.12]} castShadow>
         <boxGeometry args={[0.78, 0.06, 0.22]} />
         <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      {/* Lip edge bead — sharper canopy silhouette */}
+      <mesh position={[0, -0.005, 0.2]} castShadow>
+        <boxGeometry args={[0.8, 0.02, 0.03]} />
+        <meshStandardMaterial {...MAT.metal} />
       </mesh>
       {/* Chimney */}
       <mesh position={[0, 0.62, -0.08]} castShadow>
         <boxGeometry args={[0.28, 0.35, 0.22]} />
         <meshStandardMaterial {...MAT.metalLight} />
       </mesh>
+      {/* Chimney collar — stack read */}
+      <mesh position={[0, 0.46, -0.08]} castShadow>
+        <boxGeometry args={[0.32, 0.04, 0.26]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
       {/* Control strip */}
       <mesh position={[0.22, 0.42, 0.125]}>
         <boxGeometry args={[0.18, 0.04, 0.01]} />
         <meshStandardMaterial {...MAT.plastic} />
+      </mesh>
+      {/* Control buttons — plastic vs metal cue */}
+      <mesh position={[0.16, 0.42, 0.132]}>
+        <boxGeometry args={[0.028, 0.022, 0.008]} />
+        <meshStandardMaterial {...MAT.plasticAccent} />
+      </mesh>
+      <mesh position={[0.22, 0.42, 0.132]}>
+        <boxGeometry args={[0.028, 0.022, 0.008]} />
+        <meshStandardMaterial {...MAT.plasticAccent} />
+      </mesh>
+      <mesh position={[0.28, 0.42, 0.132]}>
+        <boxGeometry args={[0.028, 0.022, 0.008]} />
+        <meshStandardMaterial {...MAT.plasticAccent} />
       </mesh>
     </group>
   );
@@ -45,9 +73,23 @@ export function OilBoxKitbash() {
         <boxGeometry args={[0.3, 0.012, 0.15]} />
         <meshStandardMaterial {...MAT.metalDark} />
       </mesh>
+      {/* Side rails — detachable scan cue */}
+      <mesh position={[-0.145, 0.01, 0]}>
+        <boxGeometry args={[0.012, 0.04, 0.12]} />
+        <meshStandardMaterial {...MAT.metal} />
+      </mesh>
+      <mesh position={[0.145, 0.01, 0]}>
+        <boxGeometry args={[0.012, 0.04, 0.12]} />
+        <meshStandardMaterial {...MAT.metal} />
+      </mesh>
       {/* Handle notch */}
       <mesh position={[0, -0.01, 0.06]}>
         <boxGeometry args={[0.08, 0.02, 0.03]} />
+        <meshStandardMaterial {...MAT.plastic} />
+      </mesh>
+      {/* Pull tab — grab affordance */}
+      <mesh position={[0, -0.025, 0.075]}>
+        <boxGeometry args={[0.06, 0.014, 0.02]} />
         <meshStandardMaterial {...MAT.plastic} />
       </mesh>
     </group>
@@ -68,7 +110,24 @@ function FilterMesh({ color }: { color: typeof MAT.filter | typeof MAT.filterAlt
           <meshStandardMaterial {...MAT.metalLight} />
         </mesh>
       ))}
-      {/* Frame */}
+      {/* Outer frame rails */}
+      <mesh position={[0, 0.012, 0.09]}>
+        <boxGeometry args={[0.42, 0.01, 0.012]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      <mesh position={[0, 0.012, -0.09]}>
+        <boxGeometry args={[0.42, 0.01, 0.012]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      <mesh position={[-0.205, 0.012, 0]}>
+        <boxGeometry args={[0.012, 0.01, 0.18]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      <mesh position={[0.205, 0.012, 0]}>
+        <boxGeometry args={[0.012, 0.01, 0.18]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      {/* Cross frame */}
       <mesh position={[0, 0.01, 0]}>
         <boxGeometry args={[0.42, 0.004, 0.02]} />
         <meshStandardMaterial {...MAT.metal} />
@@ -76,6 +135,11 @@ function FilterMesh({ color }: { color: typeof MAT.filter | typeof MAT.filterAlt
       <mesh position={[0, 0.01, 0]} rotation={[0, Math.PI / 2, 0]}>
         <boxGeometry args={[0.2, 0.004, 0.02]} />
         <meshStandardMaterial {...MAT.metal} />
+      </mesh>
+      {/* Pull lip */}
+      <mesh position={[0, 0.006, 0.1]}>
+        <boxGeometry args={[0.1, 0.008, 0.02]} />
+        <meshStandardMaterial {...MAT.metalLight} />
       </mesh>
     </group>
   );
@@ -97,9 +161,20 @@ function ClipMesh({ side }: { side: "left" | "right" }) {
         <boxGeometry args={[0.035, 0.055, 0.035]} />
         <meshStandardMaterial {...MAT.plastic} />
       </mesh>
+      {/* Latch arm */}
       <mesh position={[flip * 0.02, 0.02, 0.01]} rotation={[0, 0, flip * 0.35]}>
         <boxGeometry args={[0.05, 0.012, 0.018]} />
         <meshStandardMaterial {...MAT.metalLight} />
+      </mesh>
+      {/* Latch tip — clip silhouette */}
+      <mesh position={[flip * 0.042, 0.028, 0.01]} rotation={[0, 0, flip * 0.35]}>
+        <boxGeometry args={[0.018, 0.01, 0.014]} />
+        <meshStandardMaterial {...MAT.metal} />
+      </mesh>
+      {/* Pivot pin cue */}
+      <mesh position={[0, 0.01, 0.02]}>
+        <boxGeometry args={[0.012, 0.012, 0.01]} />
+        <meshStandardMaterial {...MAT.metalDark} />
       </mesh>
     </group>
   );
@@ -120,9 +195,26 @@ export function PanelGlassKitbash() {
         <boxGeometry args={[0.52, 0.26, 0.018]} />
         <meshStandardMaterial {...MAT.glass} />
       </mesh>
-      {/* Frame edge */}
+      {/* Frame edge — dark rim against glass */}
       <mesh position={[0, 0, -0.008]}>
         <boxGeometry args={[0.54, 0.28, 0.006]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      {/* Front bezel rails */}
+      <mesh position={[0, 0.135, 0.006]}>
+        <boxGeometry args={[0.54, 0.012, 0.008]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      <mesh position={[0, -0.135, 0.006]}>
+        <boxGeometry args={[0.54, 0.012, 0.008]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      <mesh position={[-0.265, 0, 0.006]}>
+        <boxGeometry args={[0.012, 0.28, 0.008]} />
+        <meshStandardMaterial {...MAT.metalDark} />
+      </mesh>
+      <mesh position={[0.265, 0, 0.006]}>
+        <boxGeometry args={[0.012, 0.28, 0.008]} />
         <meshStandardMaterial {...MAT.metalDark} />
       </mesh>
     </group>
@@ -134,12 +226,7 @@ export function WindCoverKitbash() {
     <group>
       <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.11, 0.11, 0.04, 24]} />
-        <meshStandardMaterial
-          {...MAT.metalLight}
-          color="#6a8aa8"
-          emissive="#1a3a4a"
-          emissiveIntensity={0.25}
-        />
+        <meshStandardMaterial {...MAT.windCoverBody} />
       </mesh>
       <mesh position={[0, 0, 0.015]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.06, 0.06, 0.01, 16]} />
@@ -148,7 +235,12 @@ export function WindCoverKitbash() {
       {/* Front face disc so it reads after glass is gone */}
       <mesh position={[0, 0, 0.028]} rotation={[Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.1, 24]} />
-        <meshStandardMaterial color="#4a7a9a" metalness={0.4} roughness={0.45} />
+        <meshStandardMaterial {...MAT.windCoverFace} />
+      </mesh>
+      {/* Rim ring — cover ID after glass removal */}
+      <mesh position={[0, 0, 0.03]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.1, 0.008, 8, 24]} />
+        <meshStandardMaterial {...MAT.metalDark} />
       </mesh>
     </group>
   );
@@ -188,6 +280,11 @@ export function WindWheelKitbash() {
           <meshStandardMaterial {...MAT.impeller} />
         </mesh>
       ))}
+      {/* Hub cap — impeller ID cue */}
+      <mesh position={[0, 0, 0.028]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.02, 0.02, 0.008, 12]} />
+        <meshStandardMaterial {...MAT.metalLight} />
+      </mesh>
     </group>
   );
 }
