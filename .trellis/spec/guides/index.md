@@ -24,6 +24,7 @@ These guides help you **ask the right questions before coding**.
 | [Code Reuse Thinking Guide](./code-reuse-thinking-guide.md)   | Identify patterns and reduce duplication | When you notice repeated patterns |
 | [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md) | Think through data flow across layers    | Features spanning multiple layers |
 | [Playwright Frontend E2E](./playwright-frontend-e2e.md)       | `/?e2e=1` harness, webServer, score assert | Adding/changing training Playwright E2E |
+| [Frontend Swiss UI Tokens](./frontend-swiss-ui.md)            | Guide/Train/Admin chrome Minimalism & Swiss | Restyling frontend UI / CSS tokens |
 
 ---
 
@@ -49,6 +50,14 @@ These guides help you **ask the right questions before coding**.
 - [ ] React `removeChildFromContainer` during R3F E2E
 
 → Read [Playwright Frontend E2E](./playwright-frontend-e2e.md)
+
+### When Restyling Frontend Chrome
+
+- [ ] Changing Guide / Train / Admin colors, radius, or typography
+- [ ] Adding new overlay / toast / button styles beside the 3D viewport
+- [ ] Tempted to bring back dark cards or Inter as the default UI font
+
+→ Read [Frontend Swiss UI Tokens](./frontend-swiss-ui.md)
 
 ### When to Think About Code Reuse
 
