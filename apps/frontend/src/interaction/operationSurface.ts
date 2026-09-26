@@ -5,7 +5,7 @@
  * depth layers of the appliance face — not in free 3D space.
  */
 
-export type SurfaceLayer = 'front' | 'mid' | 'deep';
+export type SurfaceLayer = "front" | "mid" | "deep";
 
 /** Scene Z for each face layer (range-hood kitbash anchors). */
 export const SURFACE_LAYER_Z: Record<SurfaceLayer, number> = {
@@ -24,9 +24,9 @@ export function layerForPartZ(partZ: number): SurfaceLayer {
   const dFront = Math.abs(partZ - front);
   const dMid = Math.abs(partZ - mid);
   const dDeep = Math.abs(partZ - deep);
-  if (dFront <= dMid && dFront <= dDeep) return 'front';
-  if (dMid <= dDeep) return 'mid';
-  return 'deep';
+  if (dFront <= dMid && dFront <= dDeep) return "front";
+  if (dMid <= dDeep) return "mid";
+  return "deep";
 }
 
 export function layerZ(layer: SurfaceLayer): number {

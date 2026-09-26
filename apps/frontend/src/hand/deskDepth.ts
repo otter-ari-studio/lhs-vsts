@@ -53,11 +53,8 @@ export const DEPTH_MAX_METERS = 1.8;
 export const INDEX_MCP = 5;
 export const PINKY_MCP = 17;
 
-export function frameWidthMetersAtDepth(
-  depthMeters: number,
-  hfovDeg = WEBCAM_HFOV_DEG,
-): number {
-  const half = Math.tan(((hfovDeg * Math.PI) / 180) / 2);
+export function frameWidthMetersAtDepth(depthMeters: number, hfovDeg = WEBCAM_HFOV_DEG): number {
+  const half = Math.tan((hfovDeg * Math.PI) / 180 / 2);
   return 2 * depthMeters * half;
 }
 
@@ -70,9 +67,7 @@ export function deskXySpanMeters(
 }
 
 /** Palm width as a fraction of image width (0–1). */
-export function palmWidthNorm(
-  image: readonly { x: number; y: number; z: number }[],
-): number {
+export function palmWidthNorm(image: readonly { x: number; y: number; z: number }[]): number {
   if (image.length <= PINKY_MCP) return 0;
   const a = image[INDEX_MCP];
   const b = image[PINKY_MCP];
@@ -98,11 +93,7 @@ export function estimateDepthFromPalmNorm(
   return clamp(depth, DEPTH_MIN_METERS, DEPTH_MAX_METERS);
 }
 
-export function applyDepthDeadzone(
-  depth: number,
-  originDepth: number,
-  deadzone = 0.02,
-): number {
+export function applyDepthDeadzone(depth: number, originDepth: number, deadzone = 0.02): number {
   const d = depth - originDepth;
   if (Math.abs(d) < deadzone) return originDepth;
   return originDepth + (d > 0 ? d - deadzone : d + deadzone);

@@ -1,9 +1,5 @@
-import type { HandInteractable } from './registry';
-import {
-  AIM_IN_RANGE_EXIT_SCALE,
-  SHARED_HOVER_STICK_SLACK_M,
-  SOP_PICK_PRIORITY,
-} from './defaults';
+import type { HandInteractable } from "./registry";
+import { AIM_IN_RANGE_EXIT_SCALE, SHARED_HOVER_STICK_SLACK_M, SOP_PICK_PRIORITY } from "./defaults";
 
 export interface SharedHoverCandidate {
   it: HandInteractable;
@@ -39,9 +35,7 @@ export function pickSharedHover(
   const live = [...byId.values()];
   if (live.length === 0) return null;
 
-  const sopPool = live.filter(
-    (c) => (c.it.pickPriority?.() ?? 0) >= sopPri,
-  );
+  const sopPool = live.filter((c) => (c.it.pickPriority?.() ?? 0) >= sopPri);
   const pool = sopPool.length > 0 ? sopPool : live;
 
   const best = pickBestInPool(pool);
@@ -62,9 +56,7 @@ export function pickSharedHover(
   return best.it;
 }
 
-function pickBestInPool(
-  pool: SharedHoverCandidate[],
-): SharedHoverCandidate | null {
+function pickBestInPool(pool: SharedHoverCandidate[]): SharedHoverCandidate | null {
   if (pool.length === 0) return null;
   let best = pool[0]!;
   for (let i = 1; i < pool.length; i++) {
@@ -94,10 +86,7 @@ export function resolveAimInRange(
 }
 
 /** Distance to a shared candidate by id, or +Infinity if missing. */
-export function candidateDist(
-  candidates: SharedHoverCandidate[],
-  id: string,
-): number {
+export function candidateDist(candidates: SharedHoverCandidate[], id: string): number {
   let best = Number.POSITIVE_INFINITY;
   for (const c of candidates) {
     if (c.it.id === id && c.dist < best) best = c.dist;

@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 html,
 body,
@@ -7,7 +7,7 @@ body,
   height: 100%;
   background: #101725;
   color: #e8eef5;
-  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
 
 .guide-page {

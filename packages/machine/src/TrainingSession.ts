@@ -1,4 +1,4 @@
-import { createScoreBook, type FaultEntry, type ScoreBook } from './ScoreBook.js';
+import { createScoreBook, type FaultEntry, type ScoreBook } from "./ScoreBook.js";
 import {
   buildRequiredSteps,
   buildStepPrereqs,
@@ -8,8 +8,8 @@ import {
   prereqsMet,
   stepLabel,
   type PartRuntimeState,
-} from './StepGraph.js';
-import { emitSessionChange, emitTip } from './sessionEvents.js';
+} from "./StepGraph.js";
+import { emitSessionChange, emitTip } from "./sessionEvents.js";
 import {
   closeStep,
   installStep,
@@ -17,16 +17,13 @@ import {
   removeStep,
   type MachineDef,
   type PartDef,
-} from './types.js';
-import {
-  APPLIANCE_WASH_STEP_ID,
-  isCleanStepId,
-} from './wash.js';
+} from "./types.js";
+import { APPLIANCE_WASH_STEP_ID, isCleanStepId } from "./wash.js";
 
 export interface StepChromeRow {
   stepId: string;
   label: string;
-  status: 'done' | 'current' | 'locked' | 'todo';
+  status: "done" | "current" | "locked" | "todo";
   lockReason?: string;
 }
 
@@ -99,7 +96,7 @@ export class TrainingSession {
   }
 
   getState(partId: string): PartRuntimeState {
-    return this.states.get(partId) ?? 'installed';
+    return this.states.get(partId) ?? "installed";
   }
 
   getPassed(): boolean {
@@ -154,7 +151,7 @@ export class TrainingSession {
   /** Every part that has a clean spot is removed. */
   isApplianceWashReady(): boolean {
     if (this.def.cleanSpots.length === 0) return false;
-    return this.def.cleanSpots.every((s) => this.getState(s.partId) === 'removed');
+    return this.def.cleanSpots.every((s) => this.getState(s.partId) === "removed");
   }
 
   /** All clean_* steps already completed. */
@@ -171,7 +168,7 @@ export class TrainingSession {
   /** Complete every clean_* step at once (after wash animation). */
   completeAllCleans(): boolean {
     if (!this.isApplianceWashReady()) {
-      emitTip('⚠️ 请先拆完所有待清洁零件');
+      emitTip("⚠️ 请先拆完所有待清洁零件");
       this.bump();
       return false;
     }
@@ -179,7 +176,7 @@ export class TrainingSession {
     for (const spot of this.def.cleanSpots) {
       this.complete(spot.stepId);
     }
-    emitTip('✅ 家电清洗完毕');
+    emitTip("✅ 家电清洗完毕");
     this.bump();
     return true;
   }
@@ -189,8 +186,7 @@ export class TrainingSession {
     if (!cfg) return false;
     const step = removeStep(partId);
     if (!prereqsMet(step, this.completed, this.stepPrereqs)) {
-      const tip =
-        cfg.tips.removeLocked ?? `⚠️ 顺序锁定：无法拆卸 ${cfg.displayName}`;
+      const tip = cfg.tips.removeLocked ?? `⚠️ 顺序锁定：无法拆卸 ${cfg.displayName}`;
       this.penalize(`remove:${partId}`, this.def.scoring.deductIllegalOrder, tip);
       return false;
     }
@@ -198,7 +194,7 @@ export class TrainingSession {
   }
 
   notifyRemoved(partId: string): void {
-    this.states.set(partId, 'removed');
+    this.states.set(partId, "removed");
     this.complete(removeStep(partId));
     const cfg = this.partById.get(partId);
     emitTip(`✅ 已拆下 ${cfg?.displayName ?? partId}`);
@@ -210,12 +206,11 @@ export class TrainingSession {
     if (!cfg) return false;
     const step = installStep(partId);
     if (!prereqsMet(step, this.completed, this.stepPrereqs)) {
-      const tip =
-        cfg.tips.installLocked ?? `⚠️ 顺序锁定：无法回装 ${cfg.displayName}`;
+      const tip = cfg.tips.installLocked ?? `⚠️ 顺序锁定：无法回装 ${cfg.displayName}`;
       this.penalize(`install:${partId}`, this.def.scoring.deductIllegalOrder, tip);
       return false;
     }
-    this.states.set(partId, 'installed');
+    this.states.set(partId, "installed");
     this.complete(step);
     emitTip(`✅ 已回装 ${cfg.displayName}`);
     this.bump();
@@ -224,15 +219,15 @@ export class TrainingSession {
 
   /** True when part is removed and install prereqs are satisfied (no penalty). */
   canInstall(partId: string): boolean {
-    if (this.getState(partId) !== 'removed') return false;
+    if (this.getState(partId) !== "removed") return false;
     return prereqsMet(installStep(partId), this.completed, this.stepPrereqs);
   }
 
   /** Human-readable why install is locked, or null if ready. */
   installBlockReason(partId: string): string | null {
     const cfg = this.partById.get(partId);
-    if (!cfg) return '未知零件';
-    if (this.getState(partId) !== 'removed') return '零件未在物品栏';
+    if (!cfg) return "未知零件";
+    if (this.getState(partId) !== "removed") return "零件未在物品栏";
     if (this.canInstall(partId)) return null;
     return cfg.tips.installLocked ?? `需先完成前置步骤才能回装 ${cfg.displayName}`;
   }
@@ -248,9 +243,9 @@ export class TrainingSession {
 
   tryToggleClip(partId: string): boolean {
     const cfg = this.partById.get(partId);
-    if (!cfg || cfg.kind !== 'clip') return false;
+    if (!cfg || cfg.kind !== "clip") return false;
     const state = this.getState(partId);
-    if (state === 'clip_closed') {
+    if (state === "clip_closed") {
       const step = openStep(partId);
       if (!prereqsMet(step, this.completed, this.stepPrereqs)) {
         this.penalize(
@@ -260,7 +255,7 @@ export class TrainingSession {
         );
         return false;
       }
-      this.states.set(partId, 'clip_open');
+      this.states.set(partId, "clip_open");
       this.complete(step);
       emitTip(`✅ 已打开 ${cfg.displayName}`);
       this.bump();
@@ -275,7 +270,7 @@ export class TrainingSession {
       );
       return false;
     }
-    this.states.set(partId, 'clip_closed');
+    this.states.set(partId, "clip_closed");
     this.complete(step);
     emitTip(`✅ 已锁止 ${cfg.displayName}`);
     this.bump();
@@ -285,18 +280,18 @@ export class TrainingSession {
   /** Grasp remove/install for rotate_nut (same edge as grabbable). */
   tryNutAction(partId: string): boolean {
     const cfg = this.partById.get(partId);
-    if (!cfg || cfg.kind !== 'rotate_nut') return false;
+    if (!cfg || cfg.kind !== "rotate_nut") return false;
     const state = this.getState(partId);
-    if (state === 'installed') {
+    if (state === "installed") {
       if (!this.tryBeginRemove(partId)) return false;
       this.notifyRemoved(partId);
-      if (cfg.thread === 'reverse' && cfg.tips.wrongDirection) {
+      if (cfg.thread === "reverse" && cfg.tips.wrongDirection) {
         // Tip only — no auto-deduct for direction in first version.
         emitTip(cfg.tips.wrongDirection);
       }
       return true;
     }
-    if (state === 'removed') {
+    if (state === "removed") {
       return this.tryInstall(partId);
     }
     return false;
@@ -311,7 +306,7 @@ export class TrainingSession {
       this.bump();
       return false;
     }
-    if (this.getState(spot.partId) !== 'removed') {
+    if (this.getState(spot.partId) !== "removed") {
       emitTip(`⚠️ 请先拆下零件再清洁：${spot.displayName}`);
       this.bump();
       return false;
@@ -346,45 +341,45 @@ export class TrainingSession {
       else teardown.push(row);
     }
 
-    const display: { stepId: string; label: string; kind: 'normal' | 'wash' }[] = [
-      ...teardown.map((r) => ({ ...r, kind: 'normal' as const })),
+    const display: { stepId: string; label: string; kind: "normal" | "wash" }[] = [
+      ...teardown.map((r) => ({ ...r, kind: "normal" as const })),
     ];
     if (this.def.cleanSpots.length > 0) {
       display.push({
         stepId: APPLIANCE_WASH_STEP_ID,
-        label: '家电清洗',
-        kind: 'wash',
+        label: "家电清洗",
+        kind: "wash",
       });
     }
-    display.push(...reinstall.map((r) => ({ ...r, kind: 'normal' as const })));
+    display.push(...reinstall.map((r) => ({ ...r, kind: "normal" as const })));
 
     let sawIncomplete = false;
     return display.map((item) => {
-      if (item.kind === 'wash') {
+      if (item.kind === "wash") {
         if (this.isApplianceWashDone()) {
-          return { stepId: item.stepId, label: item.label, status: 'done' as const };
+          return { stepId: item.stepId, label: item.label, status: "done" as const };
         }
         if (!this.isApplianceWashReady()) {
           const missing = this.def.cleanSpots
-            .filter((s) => this.getState(s.partId) !== 'removed')
+            .filter((s) => this.getState(s.partId) !== "removed")
             .map((s) => this.partById.get(s.partId)?.displayName ?? s.partId);
           const unique = [...new Set(missing)];
           return {
             stepId: item.stepId,
             label: item.label,
-            status: 'locked' as const,
-            lockReason: `需先拆完：${unique.join('、')}`,
+            status: "locked" as const,
+            lockReason: `需先拆完：${unique.join("、")}`,
           };
         }
         if (!sawIncomplete) {
           sawIncomplete = true;
-          return { stepId: item.stepId, label: item.label, status: 'current' as const };
+          return { stepId: item.stepId, label: item.label, status: "current" as const };
         }
-        return { stepId: item.stepId, label: item.label, status: 'todo' as const };
+        return { stepId: item.stepId, label: item.label, status: "todo" as const };
       }
 
       if (this.completed.has(item.stepId)) {
-        return { stepId: item.stepId, label: item.label, status: 'done' as const };
+        return { stepId: item.stepId, label: item.label, status: "done" as const };
       }
       const missing = missingPrereqs(item.stepId, this.completed, this.stepPrereqs);
       // Treat incomplete cleans as missing when they block install — surface wash instead.
@@ -393,23 +388,23 @@ export class TrainingSession {
         return {
           stepId: item.stepId,
           label: item.label,
-          status: 'locked' as const,
-          lockReason: `需先完成：${missingVisible.map((m) => stepLabel(this.def, m)).join('、')}`,
+          status: "locked" as const,
+          lockReason: `需先完成：${missingVisible.map((m) => stepLabel(this.def, m)).join("、")}`,
         };
       }
       if (missing.some((m) => isCleanStepId(m, this.def)) && !this.isApplianceWashDone()) {
         return {
           stepId: item.stepId,
           label: item.label,
-          status: 'locked' as const,
-          lockReason: '需先完成：家电清洗',
+          status: "locked" as const,
+          lockReason: "需先完成：家电清洗",
         };
       }
       if (!sawIncomplete) {
         sawIncomplete = true;
-        return { stepId: item.stepId, label: item.label, status: 'current' as const };
+        return { stepId: item.stepId, label: item.label, status: "current" as const };
       }
-      return { stepId: item.stepId, label: item.label, status: 'todo' as const };
+      return { stepId: item.stepId, label: item.label, status: "todo" as const };
     });
   }
 

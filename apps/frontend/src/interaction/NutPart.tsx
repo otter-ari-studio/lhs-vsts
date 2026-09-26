@@ -1,23 +1,19 @@
-import { useFrame } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Group, Vector3 } from 'three';
-import { getTrainingSession, subscribeSession } from '@lhs-vsts/machine';
-import type { PartDef, Vec3 } from '@lhs-vsts/machine';
-import { KitbashPart } from '../visual/kitbash/KitbashAdapter';
+import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Group, Vector3 } from "three";
+import { getTrainingSession, subscribeSession } from "@lhs-vsts/machine";
+import type { PartDef, Vec3 } from "@lhs-vsts/machine";
+import { KitbashPart } from "../visual/kitbash/KitbashAdapter";
 import {
   COLLIDER_RADIUS,
   INSTALLED_PICK_PRIORITY,
   REMOVED_PICK_PRIORITY,
   SOP_PICK_PRIORITY,
-} from './defaults';
-import { isInstallOfferPart, PROP_OFFER_POS } from './partOffer';
-import { surfaceDistance } from './operationSurface';
-import {
-  registerInteractable,
-  unregisterInteractable,
-  type HandInteractable,
-} from './registry';
-import { SopTargetHighlight } from './SopTargetHighlight';
+} from "./defaults";
+import { isInstallOfferPart, PROP_OFFER_POS } from "./partOffer";
+import { surfaceDistance } from "./operationSurface";
+import { registerInteractable, unregisterInteractable, type HandInteractable } from "./registry";
+import { SopTargetHighlight } from "./SopTargetHighlight";
 
 interface NutPartProps {
   part: PartDef;
@@ -38,10 +34,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
   const carrying = useRef(false);
   const grabOffset = useRef(new Vector3());
   const followPos = useRef(new Vector3(...part.anchor.position));
-  const homePos = useMemo(
-    () => new Vector3(...part.anchor.position),
-    [part.anchor.position],
-  );
+  const homePos = useMemo(() => new Vector3(...part.anchor.position), [part.anchor.position]);
   const spinUntil = useRef(0);
   const popT = useRef(0);
   const offerTipShown = useRef(false);
@@ -49,7 +42,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
   useEffect(() => {
     const sync = () => {
       const mgr = getTrainingSession();
-      if (mgr) setRemoved(mgr.getState(part.partId) === 'removed');
+      if (mgr) setRemoved(mgr.getState(part.partId) === "removed");
     };
     sync();
     return subscribeSession(sync);
@@ -58,15 +51,15 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
   const api = useMemo(() => {
     const self: HandInteractable = {
       id: part.partId,
-      kind: 'rotate_nut',
+      kind: "rotate_nut",
       interactionRadius: COLLIDER_RADIUS.grabbable,
       isInteractableNow() {
         const mgr = getTrainingSession();
         if (!mgr) return true;
         if (carrying.current) return false;
         const st = mgr.getState(part.partId);
-        if (st === 'installed') return true;
-        if (st === 'removed') return isInstallOfferPart(part.partId);
+        if (st === "installed") return true;
+        if (st === "removed") return isInstallOfferPart(part.partId);
         return false;
       },
       pickPriority() {
@@ -74,17 +67,14 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
         if (sopRef.current) return SOP_PICK_PRIORITY;
         const mgr = getTrainingSession();
         const st = mgr?.getState(part.partId);
-        if (st === 'removed') return REMOVED_PICK_PRIORITY;
+        if (st === "removed") return REMOVED_PICK_PRIORITY;
         return INSTALLED_PICK_PRIORITY;
       },
       distanceTo(handPos) {
         const g = groupRef.current;
         if (!g) return Number.POSITIVE_INFINITY;
         g.getWorldPosition(_tmp);
-        return surfaceDistance(
-          [handPos.x, handPos.y, handPos.z],
-          [_tmp.x, _tmp.y, _tmp.z],
-        );
+        return surfaceDistance([handPos.x, handPos.y, handPos.z], [_tmp.x, _tmp.y, _tmp.z]);
       },
       copyWorldPosition(out) {
         const g = groupRef.current;
@@ -96,7 +86,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
         const mgr = getTrainingSession();
         const st = mgr?.getState(part.partId);
 
-        if (st === 'removed' && isInstallOfferPart(part.partId)) {
+        if (st === "removed" && isInstallOfferPart(part.partId)) {
           carrying.current = true;
           const g = groupRef.current;
           if (g) {
@@ -106,11 +96,11 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
           return true;
         }
 
-        if (st === 'installed') {
+        if (st === "installed") {
           if (!mgr?.tryNutAction(part.partId)) return false;
           setRemoved(true);
-          const follow = '螺母已拧下 · 再点击风轮叶轮取下';
-          if (part.thread === 'reverse' && part.tips.wrongDirection) {
+          const follow = "螺母已拧下 · 再点击风轮叶轮取下";
+          if (part.thread === "reverse" && part.tips.wrongDirection) {
             mgr.tip(`${part.tips.wrongDirection} · ${follow}`);
           } else {
             mgr.tip(follow);
@@ -133,10 +123,8 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
           g.getWorldPosition(_tmp);
           const range = Math.max(part.snapRangeMeters ?? 0.08, 0.18);
           const slot: [number, number, number] = [homePos.x, homePos.y, homePos.z];
-          const partNear =
-            surfaceDistance([_tmp.x, _tmp.y, _tmp.z], slot) <= range;
-          const pointerNear =
-            surfaceDistance([handPos.x, handPos.y, handPos.z], slot) <= range;
+          const partNear = surfaceDistance([_tmp.x, _tmp.y, _tmp.z], slot) <= range;
+          const pointerNear = surfaceDistance([handPos.x, handPos.y, handPos.z], slot) <= range;
           if ((partNear || pointerNear) && mgr.canInstall(part.partId)) {
             if (mgr.tryInstall(part.partId)) {
               setRemoved(false);
@@ -149,14 +137,14 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
           }
           g.position.set(...PROP_OFFER_POS);
           followPos.current.set(...PROP_OFFER_POS);
-          mgr.tip('放到螺母安装位松手，即可自动拧上');
+          mgr.tip("放到螺母安装位松手，即可自动拧上");
         }
       },
       onHover(active) {
         setHover(active);
       },
     };
-    Object.defineProperty(self, 'interactionRadius', {
+    Object.defineProperty(self, "interactionRadius", {
       get() {
         if (isInstallOfferPart(part.partId) || sopRef.current) {
           return COLLIDER_RADIUS.rotate_nut_sop;
@@ -179,7 +167,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
     if (!g) return;
     const mgr = getTrainingSession();
     const st = mgr?.getState(part.partId);
-    const offering = !!mgr && st === 'removed' && isInstallOfferPart(part.partId);
+    const offering = !!mgr && st === "removed" && isInstallOfferPart(part.partId);
 
     if (carrying.current) {
       const t = 1 - Math.exp(-40 * dt);
@@ -198,7 +186,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
         PROP_OFFER_POS[1] + bob + (1 - ease) * 0.12,
         PROP_OFFER_POS[2],
       );
-    } else if (st === 'removed') {
+    } else if (st === "removed") {
       offerTipShown.current = false;
       g.position.set(
         part.anchor.position[0] + PARK_OFFSET[0],
@@ -233,7 +221,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
       userData={{ partId: part.partId, kind: part.kind }}
     >
       <group ref={meshRef}>
-        {part.visual.adapter === 'kitbash' && part.visual.kitbashKey ? (
+        {part.visual.adapter === "kitbash" && part.visual.kitbashKey ? (
           <KitbashPart kitbashKey={part.visual.kitbashKey} />
         ) : null}
       </group>

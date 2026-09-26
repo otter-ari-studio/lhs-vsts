@@ -31,12 +31,7 @@ export function updatePinchStateConfirmed(
   pendingCount: number,
   confirmFrames: number,
 ): { pinching: boolean; pendingCount: number } {
-  const raw = updatePinchState(
-    wasPinching,
-    distanceMeters,
-    onThreshold,
-    offThreshold,
-  );
+  const raw = updatePinchState(wasPinching, distanceMeters, onThreshold, offThreshold);
   if (raw === wasPinching) {
     return { pinching: wasPinching, pendingCount: 0 };
   }

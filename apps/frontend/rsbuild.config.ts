@@ -1,6 +1,6 @@
-import { defineConfig } from '@rsbuild/core';
-import { pluginReact } from '@rsbuild/plugin-react';
-import { pluginTailwindcss } from '@rsbuild/plugin-tailwindcss';
+import { defineConfig } from "@rsbuild/core";
+import { pluginReact } from "@rsbuild/plugin-react";
+import { pluginTailwindcss } from "@rsbuild/plugin-tailwindcss";
 
 // Docs: https://rsbuild.rs/config/
 export default defineConfig({
@@ -13,8 +13,8 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
+      "/api": {
+        target: "http://localhost:3001",
         changeOrigin: true,
       },
     },
@@ -23,8 +23,8 @@ export default defineConfig({
   output: {
     copy: [
       {
-        from: './node_modules/@mediapipe/tasks-vision/wasm',
-        to: 'mediapipe',
+        from: "./node_modules/@mediapipe/tasks-vision/wasm",
+        to: "mediapipe",
       },
     ],
   },

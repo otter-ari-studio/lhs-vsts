@@ -1,4 +1,4 @@
-import { submitScore, type ScoreFault, type ScoreRecord } from './client';
+import { submitScore, type ScoreFault, type ScoreRecord } from "./client";
 
 export interface SubmitSessionScoreArgs {
   sessionId: string;
@@ -20,9 +20,7 @@ export interface SubmitSessionScoreArgs {
  * POST score once per sessionId. On failure, clears the guard so retry is allowed.
  * Returns true when a submit was attempted (and completed without throw from caller path).
  */
-export async function submitSessionScoreOnce(
-  args: SubmitSessionScoreArgs,
-): Promise<boolean> {
+export async function submitSessionScoreOnce(args: SubmitSessionScoreArgs): Promise<boolean> {
   if (args.submittedRef.current === args.sessionId) {
     return false;
   }

@@ -1,31 +1,23 @@
-import { useFrame } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Group, Vector3 } from 'three';
-import { getTrainingSession } from '@lhs-vsts/machine';
-import type { PartDef, Vec3 } from '@lhs-vsts/machine';
-import { KitbashPart } from '../visual/kitbash/KitbashAdapter';
+import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Group, Vector3 } from "three";
+import { getTrainingSession } from "@lhs-vsts/machine";
+import type { PartDef, Vec3 } from "@lhs-vsts/machine";
+import { KitbashPart } from "../visual/kitbash/KitbashAdapter";
 import {
   COLLIDER_RADIUS,
   INSTALLED_PICK_PRIORITY,
   REMOVED_PICK_PRIORITY,
   SOP_PICK_PRIORITY,
-} from './defaults';
-import { setGrabHolding } from './grabHoldHub';
-import { INVENTORY_PARK, partInventory } from './partInventory';
-import { isInstallOfferPart, PROP_OFFER_POS } from './partOffer';
-import { setPartPose } from './partPoseHub';
-import { surfaceDistance } from './operationSurface';
-import {
-  registerInteractable,
-  unregisterInteractable,
-  type HandInteractable,
-} from './registry';
-import { SopTargetHighlight } from './SopTargetHighlight';
-import {
-  detectLateralThrow,
-  pushThrowSample,
-  type ThrowSample,
-} from './throwDetect';
+} from "./defaults";
+import { setGrabHolding } from "./grabHoldHub";
+import { INVENTORY_PARK, partInventory } from "./partInventory";
+import { isInstallOfferPart, PROP_OFFER_POS } from "./partOffer";
+import { setPartPose } from "./partPoseHub";
+import { surfaceDistance } from "./operationSurface";
+import { registerInteractable, unregisterInteractable, type HandInteractable } from "./registry";
+import { SopTargetHighlight } from "./SopTargetHighlight";
+import { detectLateralThrow, pushThrowSample, type ThrowSample } from "./throwDetect";
 
 interface GrabPartProps {
   part: PartDef;
@@ -40,10 +32,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
   const grabbed = useRef(false);
   const grabOffset = useRef(new Vector3());
   const followPos = useRef(new Vector3(...part.anchor.position));
-  const installedPos = useMemo(
-    () => new Vector3(...part.anchor.position),
-    [part.anchor.position],
-  );
+  const installedPos = useMemo(() => new Vector3(...part.anchor.position), [part.anchor.position]);
   const throwBuf = useRef<ThrowSample[]>([]);
   const [hover, setHover] = useState(false);
   const [inInventory, setInInventory] = useState(() => partInventory.has(part.partId));
@@ -64,7 +53,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       if (!now) {
         const mgr = getTrainingSession();
         const g = groupRef.current;
-        if (g && mgr?.getState(part.partId) === 'installed') {
+        if (g && mgr?.getState(part.partId) === "installed") {
           g.position.copy(installedPos);
           followPos.current.copy(installedPos);
           g.visible = true;
@@ -76,7 +65,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
   const api = useMemo(() => {
     const self: HandInteractable = {
       id: part.partId,
-      kind: 'grabbable',
+      kind: "grabbable",
       interactionRadius: COLLIDER_RADIUS.grabbable,
       isInteractableNow() {
         if (grabbed.current) return false;
@@ -84,10 +73,10 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         if (!mgr) return true;
         const st = mgr.getState(part.partId);
         // Operation-surface: only the current SOP part is live on the face.
-        if (st === 'installed') return sopRef.current;
-        if (st === 'removed' && isInstallOfferPart(part.partId)) return true;
+        if (st === "installed") return sopRef.current;
+        if (st === "removed" && isInstallOfferPart(part.partId)) return true;
         if (partInventory.has(part.partId)) return false;
-        if (st === 'removed') return sopRef.current;
+        if (st === "removed") return sopRef.current;
         return false;
       },
       pickPriority() {
@@ -95,17 +84,14 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         if (sopRef.current) return SOP_PICK_PRIORITY;
         const mgr = getTrainingSession();
         const st = mgr?.getState(part.partId);
-        if (st === 'removed') return REMOVED_PICK_PRIORITY;
+        if (st === "removed") return REMOVED_PICK_PRIORITY;
         return INSTALLED_PICK_PRIORITY;
       },
       distanceTo(handPos) {
         const g = groupRef.current;
         if (!g) return Number.POSITIVE_INFINITY;
         g.getWorldPosition(_tmp);
-        return surfaceDistance(
-          [handPos.x, handPos.y, handPos.z],
-          [_tmp.x, _tmp.y, _tmp.z],
-        );
+        return surfaceDistance([handPos.x, handPos.y, handPos.z], [_tmp.x, _tmp.y, _tmp.z]);
       },
       copyWorldPosition(out) {
         const g = groupRef.current;
@@ -116,8 +102,8 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       onPinchStart(handPos) {
         if (grabbed.current) return true;
         const mgr = getTrainingSession();
-        const st = mgr?.getState(part.partId) ?? 'installed';
-        if (st === 'installed') {
+        const st = mgr?.getState(part.partId) ?? "installed";
+        if (st === "installed") {
           if (!mgr?.tryBeginRemove(part.partId)) return false;
           mgr.notifyRemoved(part.partId);
         }
@@ -132,7 +118,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         }
         if (mgr && !tipShown.current) {
           tipShown.current = true;
-          mgr.tip('点击取下零件，拖到左侧入栏；回装时拖回安装位松手');
+          mgr.tip("点击取下零件，拖到左侧入栏；回装时拖回安装位松手");
         }
         return true;
       },
@@ -156,15 +142,9 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         const throwDir = detectLateralThrow(throwBuf.current);
         throwBuf.current = [];
 
-        const slot: [number, number, number] = [
-          installedPos.x,
-          installedPos.y,
-          installedPos.z,
-        ];
-        const partNear =
-          surfaceDistance([_tmp.x, _tmp.y, _tmp.z], slot) <= range;
-        const pointerNear =
-          surfaceDistance([handPos.x, handPos.y, handPos.z], slot) <= range;
+        const slot: [number, number, number] = [installedPos.x, installedPos.y, installedPos.z];
+        const partNear = surfaceDistance([_tmp.x, _tmp.y, _tmp.z], slot) <= range;
+        const pointerNear = surfaceDistance([handPos.x, handPos.y, handPos.z], slot) <= range;
         // Place into slot → auto install (拧上)
         if ((partNear || pointerNear) && mgr.canInstall(part.partId)) {
           if (mgr.tryInstall(part.partId)) {
@@ -180,14 +160,14 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
           }
         }
 
-        if (mgr.getState(part.partId) === 'removed') {
+        if (mgr.getState(part.partId) === "removed") {
           if (isInstallOfferPart(part.partId)) {
             // Still this step — return to offer tray
             g.position.set(...PROP_OFFER_POS);
             followPos.current.set(...PROP_OFFER_POS);
             g.visible = true;
             setOffered(true);
-            mgr.tip('放到机身安装位松手，即可自动拧上');
+            mgr.tip("放到机身安装位松手，即可自动拧上");
             return;
           }
           partInventory.enqueue(part.partId);
@@ -198,12 +178,10 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
           setOffered(false);
           if (throwDir) {
             mgr.tip(
-              throwDir === 'left'
-                ? '已甩向左侧 · 零件进入物品栏'
-                : '已甩向右侧 · 零件进入物品栏',
+              throwDir === "left" ? "已甩向左侧 · 零件进入物品栏" : "已甩向右侧 · 零件进入物品栏",
             );
           } else {
-            mgr.tip('零件已进入左侧物品栏');
+            mgr.tip("零件已进入左侧物品栏");
           }
           return;
         }
@@ -216,7 +194,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         setHover(active);
       },
     };
-    Object.defineProperty(self, 'interactionRadius', {
+    Object.defineProperty(self, "interactionRadius", {
       get() {
         return sopRef.current || isInstallOfferPart(part.partId)
           ? COLLIDER_RADIUS.grabbable + 0.06
@@ -245,7 +223,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
     const mgr = getTrainingSession();
     const st = mgr?.getState(part.partId);
     const shouldOffer =
-      !!mgr && st === 'removed' && isInstallOfferPart(part.partId) && !grabbed.current;
+      !!mgr && st === "removed" && isInstallOfferPart(part.partId) && !grabbed.current;
 
     if (shouldOffer !== offered) {
       setOffered(shouldOffer);
@@ -295,11 +273,12 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       }
 
       const popScale = shouldOffer ? 0.75 + 0.25 * Math.min(1, popT.current) : 1;
-      const pulse = isSopTarget || shouldOffer
-        ? 1.04 + 0.05 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 7))
-        : hover
-          ? 1.03
-          : 1;
+      const pulse =
+        isSopTarget || shouldOffer
+          ? 1.04 + 0.05 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 7))
+          : hover
+            ? 1.03
+            : 1;
       mesh.scale.setScalar(pulse * popScale);
     }
   });
@@ -313,7 +292,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       userData={{ partId: part.partId, kind: part.kind }}
     >
       <group ref={meshScaleRef}>
-        {part.visual.adapter === 'kitbash' && part.visual.kitbashKey ? (
+        {part.visual.adapter === "kitbash" && part.visual.kitbashKey ? (
           <KitbashPart kitbashKey={part.visual.kitbashKey} />
         ) : (
           <mesh>
@@ -364,12 +343,7 @@ export function GrabInstallGhost({
         <boxGeometry args={[0.12, 0.08, 0.06]} />
         <meshBasicMaterial color="#3ddc97" wireframe transparent opacity={0.55} />
       </mesh>
-      <SopTargetHighlight
-        active
-        radius={0.04}
-        ringRadius={0.09}
-        label="放入此处"
-      />
+      <SopTargetHighlight active radius={0.04} ringRadius={0.09} label="放入此处" />
     </group>
   );
 }

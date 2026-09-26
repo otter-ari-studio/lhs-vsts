@@ -1,8 +1,8 @@
-import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
-import { Plane, Raycaster, Vector2, Vector3 } from 'three';
-import { operationSurfaceHub } from './operationSurfaceHub';
-import { createPointerDragSession } from './pointerDragSession';
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
+import { Plane, Raycaster, Vector2, Vector3 } from "three";
+import { operationSurfaceHub } from "./operationSurfaceHub";
+import { createPointerDragSession } from "./pointerDragSession";
 
 const _planeN = new Vector3(0, 0, 1);
 
@@ -69,20 +69,20 @@ export function PointerInteraction() {
       session.pointerLeave();
     };
 
-    el.addEventListener('pointermove', onPointerMove);
-    el.addEventListener('pointerdown', onPointerDown, true);
-    el.addEventListener('pointerup', onPointerUp);
-    el.addEventListener('pointerleave', onPointerLeave);
-    el.addEventListener('pointercancel', onPointerLeave);
-    el.style.touchAction = 'none';
-    el.style.cursor = 'grab';
+    el.addEventListener("pointermove", onPointerMove);
+    el.addEventListener("pointerdown", onPointerDown, true);
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("pointerleave", onPointerLeave);
+    el.addEventListener("pointercancel", onPointerLeave);
+    el.style.touchAction = "none";
+    el.style.cursor = "grab";
 
     return () => {
-      el.removeEventListener('pointermove', onPointerMove);
-      el.removeEventListener('pointerdown', onPointerDown, true);
-      el.removeEventListener('pointerup', onPointerUp);
-      el.removeEventListener('pointerleave', onPointerLeave);
-      el.removeEventListener('pointercancel', onPointerLeave);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerdown", onPointerDown, true);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("pointerleave", onPointerLeave);
+      el.removeEventListener("pointercancel", onPointerLeave);
       session.pointerLeave();
     };
   }, [camera, gl]);

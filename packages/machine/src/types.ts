@@ -1,13 +1,13 @@
 /** Logical meters in training world space (Y-up). */
 export type Vec3 = [number, number, number];
 
-export type PartKind = 'fixed_shell' | 'grabbable' | 'clip' | 'rotate_nut';
+export type PartKind = "fixed_shell" | "grabbable" | "clip" | "rotate_nut";
 
-export type VisualAdapter = 'kitbash' | 'gltf';
+export type VisualAdapter = "kitbash" | "gltf";
 
-export type NutThread = 'normal' | 'reverse';
+export type NutThread = "normal" | "reverse";
 
-export type CleanSpace = 'world' | 'part_local';
+export type CleanSpace = "world" | "part_local";
 
 export interface ScoringConfig {
   baseScore: number;
@@ -73,7 +73,7 @@ export interface CleanSpotDef {
 export interface MachineDef {
   machineId: string;
   displayName: string;
-  unit: 'meter';
+  unit: "meter";
   scoring: ScoringConfig;
   assemblyDefaults: AssemblyDefaults;
   parts: PartDef[];

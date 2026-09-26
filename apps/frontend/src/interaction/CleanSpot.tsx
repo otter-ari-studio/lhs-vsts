@@ -1,17 +1,13 @@
-import { useFrame } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Group, Vector3 } from 'three';
-import { getTrainingSession } from '@lhs-vsts/machine';
-import type { CleanSpotDef, Vec3 } from '@lhs-vsts/machine';
-import { SOP_PICK_PRIORITY } from './defaults';
-import { createDwellTracker } from './dwell';
-import { getPartPose } from './partPoseHub';
-import {
-  registerInteractable,
-  unregisterInteractable,
-  type HandInteractable,
-} from './registry';
-import { SopTargetHighlight } from './SopTargetHighlight';
+import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Group, Vector3 } from "three";
+import { getTrainingSession } from "@lhs-vsts/machine";
+import type { CleanSpotDef, Vec3 } from "@lhs-vsts/machine";
+import { SOP_PICK_PRIORITY } from "./defaults";
+import { createDwellTracker } from "./dwell";
+import { getPartPose } from "./partPoseHub";
+import { registerInteractable, unregisterInteractable, type HandInteractable } from "./registry";
+import { SopTargetHighlight } from "./SopTargetHighlight";
 
 interface CleanSpotProps {
   spot: CleanSpotDef;
@@ -23,7 +19,7 @@ interface CleanSpotProps {
 const _tmp = new Vector3();
 
 function resolveWorldPos(spot: CleanSpotDef, partWorldPos: Vec3): Vec3 {
-  if (spot.space === 'world') return spot.position;
+  if (spot.space === "world") return spot.position;
   return [
     partWorldPos[0] + spot.position[0],
     partWorldPos[1] + spot.position[1],
@@ -52,7 +48,7 @@ export function CleanSpotMesh({ spot, partWorldPos, isSopTarget }: CleanSpotProp
   const api = useMemo(() => {
     const self: HandInteractable = {
       id: `clean:${spot.cleanId}`,
-      kind: 'clean',
+      kind: "clean",
       interactionRadius: spot.radiusMeters,
       isInteractableNow() {
         const mgr = getTrainingSession();
@@ -125,7 +121,7 @@ export function CleanSpotMesh({ spot, partWorldPos, isSopTarget }: CleanSpotProp
       <mesh>
         <sphereGeometry args={[spot.radiusMeters * 0.35, 16, 16]} />
         <meshBasicMaterial
-          color={isSopTarget || hover ? '#3ddc97' : '#5b9bd5'}
+          color={isSopTarget || hover ? "#3ddc97" : "#5b9bd5"}
           transparent
           opacity={0.35 + progress * 0.4}
           wireframe

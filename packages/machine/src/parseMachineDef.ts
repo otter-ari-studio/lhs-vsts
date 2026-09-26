@@ -11,40 +11,35 @@ import type {
   ScoringConfig,
   Vec3,
   VisualAdapter,
-} from './types.js';
+} from "./types.js";
 
-const PART_KINDS = new Set<PartKind>([
-  'fixed_shell',
-  'grabbable',
-  'clip',
-  'rotate_nut',
-]);
+const PART_KINDS = new Set<PartKind>(["fixed_shell", "grabbable", "clip", "rotate_nut"]);
 
-const VISUAL_ADAPTERS = new Set<VisualAdapter>(['kitbash', 'gltf']);
-const THREADS = new Set<NutThread>(['normal', 'reverse']);
-const SPACES = new Set<CleanSpace>(['world', 'part_local']);
+const VISUAL_ADAPTERS = new Set<VisualAdapter>(["kitbash", "gltf"]);
+const THREADS = new Set<NutThread>(["normal", "reverse"]);
+const SPACES = new Set<CleanSpace>(["world", "part_local"]);
 
 function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
+  return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
 function asString(v: unknown, field: string): string {
-  if (typeof v !== 'string' || v.length === 0) {
+  if (typeof v !== "string" || v.length === 0) {
     throw new Error(`MachineDef: ${field} must be a non-empty string`);
   }
   return v;
 }
 
 function asOptionalString(v: unknown): string | undefined {
-  if (v === undefined || v === null || v === '') return undefined;
-  if (typeof v !== 'string') {
-    throw new Error('MachineDef: optional string field has wrong type');
+  if (v === undefined || v === null || v === "") return undefined;
+  if (typeof v !== "string") {
+    throw new Error("MachineDef: optional string field has wrong type");
   }
   return v;
 }
 
 function asNumber(v: unknown, field: string): number {
-  if (typeof v !== 'number' || !Number.isFinite(v)) {
+  if (typeof v !== "number" || !Number.isFinite(v)) {
     throw new Error(`MachineDef: ${field} must be a finite number`);
   }
   return v;
@@ -69,33 +64,33 @@ function asVec3(v: unknown, field: string): Vec3 {
 }
 
 function parseScoring(raw: unknown): ScoringConfig {
-  if (!isRecord(raw)) throw new Error('MachineDef: scoring must be an object');
+  if (!isRecord(raw)) throw new Error("MachineDef: scoring must be an object");
   return {
-    baseScore: asNumber(raw.baseScore, 'scoring.baseScore'),
-    deductIllegalOrder: asNumber(raw.deductIllegalOrder, 'scoring.deductIllegalOrder'),
-    deductClipPry: asNumber(raw.deductClipPry, 'scoring.deductClipPry'),
+    baseScore: asNumber(raw.baseScore, "scoring.baseScore"),
+    deductIllegalOrder: asNumber(raw.deductIllegalOrder, "scoring.deductIllegalOrder"),
+    deductClipPry: asNumber(raw.deductClipPry, "scoring.deductClipPry"),
     deductNutWrongDirection: asNumber(
       raw.deductNutWrongDirection,
-      'scoring.deductNutWrongDirection',
+      "scoring.deductNutWrongDirection",
     ),
-    deductToleranceFail: asNumber(raw.deductToleranceFail, 'scoring.deductToleranceFail'),
+    deductToleranceFail: asNumber(raw.deductToleranceFail, "scoring.deductToleranceFail"),
   };
 }
 
 function parseAssemblyDefaults(raw: unknown): AssemblyDefaults {
   if (!isRecord(raw)) {
-    throw new Error('MachineDef: assemblyDefaults must be an object');
+    throw new Error("MachineDef: assemblyDefaults must be an object");
   }
   return {
     positionToleranceMeters: asNumber(
       raw.positionToleranceMeters,
-      'assemblyDefaults.positionToleranceMeters',
+      "assemblyDefaults.positionToleranceMeters",
     ),
     angleToleranceDegrees: asNumber(
       raw.angleToleranceDegrees,
-      'assemblyDefaults.angleToleranceDegrees',
+      "assemblyDefaults.angleToleranceDegrees",
     ),
-    snapRangeMeters: asNumber(raw.snapRangeMeters, 'assemblyDefaults.snapRangeMeters'),
+    snapRangeMeters: asNumber(raw.snapRangeMeters, "assemblyDefaults.snapRangeMeters"),
   };
 }
 
@@ -122,7 +117,7 @@ function parseVisual(raw: unknown, partId: string): PartVisual {
   if (kitbashKey) visual.kitbashKey = kitbashKey;
   if (gltfUrl) visual.gltfUrl = gltfUrl;
   if (nodeName) visual.nodeName = nodeName;
-  if (visual.adapter === 'kitbash' && !visual.kitbashKey) {
+  if (visual.adapter === "kitbash" && !visual.kitbashKey) {
     throw new Error(`MachineDef: parts[${partId}] kitbash visual needs kitbashKey`);
   }
   return visual;
@@ -130,7 +125,7 @@ function parseVisual(raw: unknown, partId: string): PartVisual {
 
 function parseTips(raw: unknown): PartTips {
   if (raw === undefined || raw === null) return {};
-  if (!isRecord(raw)) throw new Error('MachineDef: tips must be an object');
+  if (!isRecord(raw)) throw new Error("MachineDef: tips must be an object");
   const tips: PartTips = {};
   const removeLocked = asOptionalString(raw.removeLocked);
   const installLocked = asOptionalString(raw.installLocked);
@@ -144,7 +139,7 @@ function parseTips(raw: unknown): PartTips {
 }
 
 function parseThread(raw: unknown, field: string): NutThread | undefined {
-  if (raw === undefined || raw === null || raw === '') return undefined;
+  if (raw === undefined || raw === null || raw === "") return undefined;
   const s = asString(raw, field);
   if (!THREADS.has(s as NutThread)) {
     throw new Error(`MachineDef: unknown thread "${s}"`);
@@ -157,7 +152,7 @@ function parsePart(raw: unknown, index: number): PartDef {
     throw new Error(`MachineDef: parts[${index}] must be an object`);
   }
   const partId = asString(raw.partId, `parts[${index}].partId`);
-  if ('prefabPath' in raw && raw.prefabPath) {
+  if ("prefabPath" in raw && raw.prefabPath) {
     throw new Error(
       `MachineDef: parts[${partId}] must not include Unity prefabPath (use visual.adapter)`,
     );
@@ -165,7 +160,7 @@ function parsePart(raw: unknown, index: number): PartDef {
   if (!isRecord(raw.anchor)) {
     throw new Error(`MachineDef: parts[${partId}].anchor must be an object`);
   }
-  const anchor: PartDef['anchor'] = {
+  const anchor: PartDef["anchor"] = {
     position: asVec3(raw.anchor.position, `parts[${partId}].anchor.position`),
   };
   if (raw.anchor.rotation !== undefined) {
@@ -197,7 +192,7 @@ function parseCleanSpot(raw: unknown, index: number): CleanSpotDef {
     throw new Error(`MachineDef: cleanSpots[${index}] must be an object`);
   }
   const cleanId = asString(raw.cleanId, `cleanSpots[${index}].cleanId`);
-  const spaceRaw = asString(raw.space ?? 'world', `cleanSpots[${cleanId}].space`);
+  const spaceRaw = asString(raw.space ?? "world", `cleanSpots[${cleanId}].space`);
   if (!SPACES.has(spaceRaw as CleanSpace)) {
     throw new Error(`MachineDef: unknown clean space "${spaceRaw}"`);
   }
@@ -218,27 +213,27 @@ function parseCleanSpot(raw: unknown, index: number): CleanSpotDef {
  * Rejects Unity `prefabPath` and unknown kinds/adapters.
  */
 export function parseMachineDef(raw: unknown): MachineDef {
-  if (!isRecord(raw)) throw new Error('MachineDef: root must be an object');
+  if (!isRecord(raw)) throw new Error("MachineDef: root must be an object");
 
-  const unit = asString(raw.unit ?? 'meter', 'unit');
-  if (unit !== 'meter') {
+  const unit = asString(raw.unit ?? "meter", "unit");
+  if (unit !== "meter") {
     throw new Error(`MachineDef: unit must be "meter", got "${unit}"`);
   }
 
   const partsRaw = raw.parts;
   if (!Array.isArray(partsRaw) || partsRaw.length === 0) {
-    throw new Error('MachineDef: parts must be a non-empty array');
+    throw new Error("MachineDef: parts must be a non-empty array");
   }
   const parts = partsRaw.map(parsePart);
 
   const partIds = new Set(parts.map((p) => p.partId));
   if (partIds.size !== parts.length) {
-    throw new Error('MachineDef: duplicate partId');
+    throw new Error("MachineDef: duplicate partId");
   }
 
   const cleanRaw = raw.cleanSpots ?? [];
   if (!Array.isArray(cleanRaw)) {
-    throw new Error('MachineDef: cleanSpots must be an array');
+    throw new Error("MachineDef: cleanSpots must be an array");
   }
   const cleanSpots = cleanRaw.map(parseCleanSpot);
   for (const spot of cleanSpots) {
@@ -250,9 +245,9 @@ export function parseMachineDef(raw: unknown): MachineDef {
   }
 
   return {
-    machineId: asString(raw.machineId, 'machineId'),
-    displayName: asString(raw.displayName, 'displayName'),
-    unit: 'meter',
+    machineId: asString(raw.machineId, "machineId"),
+    displayName: asString(raw.displayName, "displayName"),
+    unit: "meter",
     scoring: parseScoring(raw.scoring),
     assemblyDefaults: parseAssemblyDefaults(raw.assemblyDefaults),
     parts,

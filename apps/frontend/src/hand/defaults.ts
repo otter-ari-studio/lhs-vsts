@@ -1,5 +1,5 @@
-import type { HandId, Vec3 } from './types';
-import { DESK_TO_SCREEN_METERS, deskXySpanMeters } from './deskDepth';
+import type { HandId, Vec3 } from "./types";
+import { DESK_TO_SCREEN_METERS, deskXySpanMeters } from "./deskDepth";
 
 export interface HandRestPose {
   position: Vec3;
@@ -16,9 +16,9 @@ export const HAND_DEFAULTS: Record<HandId, HandRestPose> = {
   1: { position: [0.16, 0.08, 0.38], eulerY: 180 },
 };
 
-export const LEFT_HAND_COLOR = '#00ffff';
-export const RIGHT_HAND_COLOR = '#ff8c1a';
-export const PINCH_COLOR = '#ffee58';
+export const LEFT_HAND_COLOR = "#00ffff";
+export const RIGHT_HAND_COLOR = "#ff8c1a";
+export const PINCH_COLOR = "#ffee58";
 
 /**
  * Per-render-frame exponential approach rates (higher = snappier / jitterier).

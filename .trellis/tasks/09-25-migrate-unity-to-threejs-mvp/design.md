@@ -16,11 +16,11 @@
 
 ## Boundaries
 
-| Layer | Owns | Does not own |
-|-------|------|--------------|
-| Python `lhs-vsts` | Capture, MediaPipe, LPF, pinch, WS broadcast, OpenCV preview | Scene, axis map, relative drive |
-| `web` | WS client, axis map, relative drive, skeleton, placeholder scene | Camera / MediaPipe |
-| Unity repo | Reference only | Runtime path |
+| Layer             | Owns                                                             | Does not own                    |
+| ----------------- | ---------------------------------------------------------------- | ------------------------------- |
+| Python `lhs-vsts` | Capture, MediaPipe, LPF, pinch, WS broadcast, OpenCV preview     | Scene, axis map, relative drive |
+| `web`             | WS client, axis map, relative drive, skeleton, placeholder scene | Camera / MediaPipe              |
+| Unity repo        | Reference only                                                   | Runtime path                    |
 
 ## Data contract (unchanged shape)
 

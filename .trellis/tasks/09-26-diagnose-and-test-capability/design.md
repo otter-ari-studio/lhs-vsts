@@ -41,8 +41,8 @@ Rules (D-arbitrate):
 
 ### `resolveAimInRange` / sticky inRange
 
-- Enter: `dist ≤ radius` → true  
-- Exit: 仅当 `dist > radius * AIM_IN_RANGE_EXIT_SCALE`（建议与 hover 一致 `1.45`，或抽共享常量）→ false  
+- Enter: `dist ≤ radius` → true
+- Exit: 仅当 `dist > radius * AIM_IN_RANGE_EXIT_SCALE`（建议与 hover 一致 `1.45`，或抽共享常量）→ false
 - 中间带保持上一值
 
 ### `aimTargetHub`
@@ -51,11 +51,11 @@ Rules (D-arbitrate):
 
 ## Trade-offs
 
-| 选择 | 收益 | 代价 |
-|------|------|------|
-| 抽纯函数 | 可测、Router 变薄 | 多一个小模块 |
-| SOP 优先于 sticky | 跟教学步骤 | 双手都非 SOP 时才完全 sticky |
-| 保留远距 SOP fallback | 不扩大范围 | D 级「瞎指」仍可能存在 |
+| 选择                  | 收益              | 代价                         |
+| --------------------- | ----------------- | ---------------------------- |
+| 抽纯函数              | 可测、Router 变薄 | 多一个小模块                 |
+| SOP 优先于 sticky     | 跟教学步骤        | 双手都非 SOP 时才完全 sticky |
+| 保留远距 SOP fallback | 不扩大范围        | D 级「瞎指」仍可能存在       |
 
 ## Compatibility
 

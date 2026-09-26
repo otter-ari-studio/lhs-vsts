@@ -1,16 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Group, Vector3 } from 'three';
-import { getTrainingSession } from '@lhs-vsts/machine';
-import type { PartDef, Vec3 } from '@lhs-vsts/machine';
-import { KitbashPart } from '../visual/kitbash/KitbashAdapter';
-import { COLLIDER_RADIUS, SOP_PICK_PRIORITY } from './defaults';
-import { surfaceDistance } from './operationSurface';
-import {
-  registerInteractable,
-  unregisterInteractable,
-  type HandInteractable,
-} from './registry';
-import { SopTargetHighlight } from './SopTargetHighlight';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Group, Vector3 } from "three";
+import { getTrainingSession } from "@lhs-vsts/machine";
+import type { PartDef, Vec3 } from "@lhs-vsts/machine";
+import { KitbashPart } from "../visual/kitbash/KitbashAdapter";
+import { COLLIDER_RADIUS, SOP_PICK_PRIORITY } from "./defaults";
+import { surfaceDistance } from "./operationSurface";
+import { registerInteractable, unregisterInteractable, type HandInteractable } from "./registry";
+import { SopTargetHighlight } from "./SopTargetHighlight";
 
 interface ClipPartProps {
   part: PartDef;
@@ -30,7 +26,7 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
   const api = useMemo(() => {
     const self: HandInteractable = {
       id: part.partId,
-      kind: 'clip',
+      kind: "clip",
       interactionRadius: COLLIDER_RADIUS.clip,
       // Only the current SOP clip is live — otherwise left/right clips steal aim
       // and spam pry tips while working on the nut / cover.
@@ -40,10 +36,7 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
         const g = groupRef.current;
         if (!g) return Number.POSITIVE_INFINITY;
         g.getWorldPosition(_tmp);
-        return surfaceDistance(
-          [handPos.x, handPos.y, handPos.z],
-          [_tmp.x, _tmp.y, _tmp.z],
-        );
+        return surfaceDistance([handPos.x, handPos.y, handPos.z], [_tmp.x, _tmp.y, _tmp.z]);
       },
       copyWorldPosition(out) {
         const g = groupRef.current;
@@ -55,7 +48,7 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
         const mgr = getTrainingSession();
         if (!mgr) return false;
         if (mgr.tryToggleClip(part.partId)) {
-          setOpen(mgr.getState(part.partId) === 'clip_open');
+          setOpen(mgr.getState(part.partId) === "clip_open");
           return true;
         }
         return false;
@@ -77,7 +70,7 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
   // Sync open from session (e.g. restart).
   useEffect(() => {
     const mgr = getTrainingSession();
-    if (mgr) setOpen(mgr.getState(part.partId) === 'clip_open');
+    if (mgr) setOpen(mgr.getState(part.partId) === "clip_open");
   }, [part.partId, setOpen]);
 
   return (
@@ -89,7 +82,7 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
       userData={{ partId: part.partId, kind: part.kind }}
     >
       <group scale={isSopTarget || hover ? 1.05 : 1}>
-        {part.visual.adapter === 'kitbash' && part.visual.kitbashKey ? (
+        {part.visual.adapter === "kitbash" && part.visual.kitbashKey ? (
           <KitbashPart kitbashKey={part.visual.kitbashKey} />
         ) : null}
       </group>

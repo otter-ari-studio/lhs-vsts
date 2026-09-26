@@ -1,16 +1,13 @@
-import { expect, test } from '@rstest/core';
-import { aimTargetHub } from '../src/interaction/aimTargetHub';
+import { expect, test } from "@rstest/core";
+import { aimTargetHub } from "../src/interaction/aimTargetHub";
 import {
   AIM_IN_RANGE_EXIT_SCALE,
   INSTALLED_PICK_PRIORITY,
   SHARED_HOVER_STICK_SLACK_M,
   SOP_PICK_PRIORITY,
-} from '../src/interaction/defaults';
-import type { HandInteractable } from '../src/interaction/registry';
-import {
-  pickSharedHover,
-  resolveAimInRange,
-} from '../src/interaction/sharedAim';
+} from "../src/interaction/defaults";
+import type { HandInteractable } from "../src/interaction/registry";
+import { pickSharedHover, resolveAimInRange } from "../src/interaction/sharedAim";
 
 function stub(
   id: string,
@@ -18,7 +15,7 @@ function stub(
 ): HandInteractable {
   return {
     id,
-    kind: 'grabbable',
+    kind: "grabbable",
     interactionRadius: opts.radius ?? 0.2,
     isInteractableNow: () => opts.active !== false,
     pickPriority: () => opts.priority ?? 0,
@@ -31,9 +28,9 @@ function stub(
   };
 }
 
-test('two-hand non-SOP: sticky keeps winner when distances alternate slightly', () => {
-  const a = stub('filter', { priority: INSTALLED_PICK_PRIORITY });
-  const b = stub('oil_box', { priority: INSTALLED_PICK_PRIORITY });
+test("two-hand non-SOP: sticky keeps winner when distances alternate slightly", () => {
+  const a = stub("filter", { priority: INSTALLED_PICK_PRIORITY });
+  const b = stub("oil_box", { priority: INSTALLED_PICK_PRIORITY });
   const slack = SHARED_HOVER_STICK_SLACK_M;
 
   const first = pickSharedHover(
@@ -43,7 +40,7 @@ test('two-hand non-SOP: sticky keeps winner when distances alternate slightly', 
     ],
     null,
   );
-  expect(first?.id).toBe('filter');
+  expect(first?.id).toBe("filter");
 
   // b closer by less than slack — must not steal
   const held = pickSharedHover(
@@ -53,7 +50,7 @@ test('two-hand non-SOP: sticky keeps winner when distances alternate slightly', 
     ],
     first,
   );
-  expect(held?.id).toBe('filter');
+  expect(held?.id).toBe("filter");
 
   // b closer by more than slack — steals
   const stolen = pickSharedHover(
@@ -63,12 +60,12 @@ test('two-hand non-SOP: sticky keeps winner when distances alternate slightly', 
     ],
     held,
   );
-  expect(stolen?.id).toBe('oil_box');
+  expect(stolen?.id).toBe("oil_box");
 });
 
-test('SOP candidate beats closer non-SOP hand target', () => {
-  const near = stub('glass', { priority: INSTALLED_PICK_PRIORITY });
-  const sop = stub('clip_left', { priority: SOP_PICK_PRIORITY });
+test("SOP candidate beats closer non-SOP hand target", () => {
+  const near = stub("glass", { priority: INSTALLED_PICK_PRIORITY });
+  const sop = stub("clip_left", { priority: SOP_PICK_PRIORITY });
 
   const win = pickSharedHover(
     [
@@ -77,12 +74,12 @@ test('SOP candidate beats closer non-SOP hand target', () => {
     ],
     near,
   );
-  expect(win?.id).toBe('clip_left');
+  expect(win?.id).toBe("clip_left");
 });
 
-test('among SOP candidates sticky still applies', () => {
-  const sopA = stub('clip_left', { priority: SOP_PICK_PRIORITY });
-  const sopB = stub('clip_right', { priority: SOP_PICK_PRIORITY });
+test("among SOP candidates sticky still applies", () => {
+  const sopA = stub("clip_left", { priority: SOP_PICK_PRIORITY });
+  const sopB = stub("clip_right", { priority: SOP_PICK_PRIORITY });
   const slack = SHARED_HOVER_STICK_SLACK_M;
 
   const first = pickSharedHover(
@@ -92,7 +89,7 @@ test('among SOP candidates sticky still applies', () => {
     ],
     null,
   );
-  expect(first?.id).toBe('clip_left');
+  expect(first?.id).toBe("clip_left");
 
   const held = pickSharedHover(
     [
@@ -101,10 +98,10 @@ test('among SOP candidates sticky still applies', () => {
     ],
     first,
   );
-  expect(held?.id).toBe('clip_left');
+  expect(held?.id).toBe("clip_left");
 });
 
-test('aim inRange enter / mid-band sticky / exit', () => {
+test("aim inRange enter / mid-band sticky / exit", () => {
   const radius = 0.1;
   const exit = radius * AIM_IN_RANGE_EXIT_SCALE;
 
@@ -114,7 +111,7 @@ test('aim inRange enter / mid-band sticky / exit', () => {
   expect(resolveAimInRange(exit + 0.01, radius, true)).toBe(false);
 });
 
-test('aimTargetHub dedupes identical set; notifies on id/inRange/position change', () => {
+test("aimTargetHub dedupes identical set; notifies on id/inRange/position change", () => {
   aimTargetHub.clear();
   let n = 0;
   const unsub = aimTargetHub.subscribe(() => {
@@ -122,21 +119,21 @@ test('aimTargetHub dedupes identical set; notifies on id/inRange/position change
   });
 
   aimTargetHub.set({
-    id: 'a',
+    id: "a",
     position: [1, 2, 3],
     inRange: false,
   });
   expect(n).toBe(1);
 
   aimTargetHub.set({
-    id: 'a',
+    id: "a",
     position: [1, 2, 3],
     inRange: false,
   });
   expect(n).toBe(1);
 
   aimTargetHub.set({
-    id: 'a',
+    id: "a",
     position: [1, 2, 3],
     inRange: true,
   });
@@ -144,7 +141,7 @@ test('aimTargetHub dedupes identical set; notifies on id/inRange/position change
   expect(aimTargetHub.get()?.inRange).toBe(true);
 
   aimTargetHub.set({
-    id: 'a',
+    id: "a",
     position: [1.1, 2, 3],
     inRange: true,
   });
@@ -152,12 +149,12 @@ test('aimTargetHub dedupes identical set; notifies on id/inRange/position change
   expect(aimTargetHub.get()?.position).toEqual([1.1, 2, 3]);
 
   aimTargetHub.set({
-    id: 'b',
+    id: "b",
     position: [1.1, 2, 3],
     inRange: true,
   });
   expect(n).toBe(4);
-  expect(aimTargetHub.get()?.id).toBe('b');
+  expect(aimTargetHub.get()?.id).toBe("b");
 
   aimTargetHub.clear();
   expect(n).toBe(5);
@@ -165,9 +162,9 @@ test('aimTargetHub dedupes identical set; notifies on id/inRange/position change
   unsub();
 });
 
-test('inactive candidates are dropped; empty pool returns null', () => {
-  const dead = stub('gone', { active: false, priority: SOP_PICK_PRIORITY });
-  const live = stub('filter', { priority: INSTALLED_PICK_PRIORITY });
+test("inactive candidates are dropped; empty pool returns null", () => {
+  const dead = stub("gone", { active: false, priority: SOP_PICK_PRIORITY });
+  const live = stub("filter", { priority: INSTALLED_PICK_PRIORITY });
   expect(
     pickSharedHover(
       [
@@ -176,7 +173,7 @@ test('inactive candidates are dropped; empty pool returns null', () => {
       ],
       null,
     )?.id,
-  ).toBe('filter');
+  ).toBe("filter");
   expect(pickSharedHover([{ it: dead, dist: 0.01 }], null)).toBeNull();
   expect(pickSharedHover([], null)).toBeNull();
 });

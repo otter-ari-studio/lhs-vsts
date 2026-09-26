@@ -15,17 +15,17 @@
 
 ## Decisions
 
-| ID | Decision |
-|----|----------|
-| D1 | 训练客户端位于 `apps/frontend`（包名 `frontend`；由原 `apps/web` 改名）。 |
-| D2 | 机型、SOP、分数的数据归属是 `apps/backend`。本任务做读取、保存配置和写入成绩。 |
-| D3 | 纯规则放在 `@lhs-vsts/machine`：类型、`parseMachineDef`、StepGraph、ScoreBook。前后端共用。 |
-| D4 | `TrainingSession` 仍在浏览器推进。后端不持有这个单例。 |
-| D5 | 不改 `packages/utils`（若仍存在）。 |
-| D6 | 管理页在 `apps/frontend`（`#admin`）：编辑当前这一份油烟机的 SOP 字段，并列出成绩。无登录。 |
-| D7 | 成绩不区分学员。每条只有时间、机型、得分、是否合格、错因。 |
-| D8 | 持久化用后端数据目录里的文件，不引入数据库。 |
-| D9 | 验收必须含端到端链路，且 `@lhs-vsts/machine`、`apps/backend`、`apps/frontend` 行覆盖率各自 ≥ 90%。 |
+| ID  | Decision                                                                                                                           |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | 训练客户端位于 `apps/frontend`（包名 `frontend`；由原 `apps/web` 改名）。                                                          |
+| D2  | 机型、SOP、分数的数据归属是 `apps/backend`。本任务做读取、保存配置和写入成绩。                                                     |
+| D3  | 纯规则放在 `@lhs-vsts/machine`：类型、`parseMachineDef`、StepGraph、ScoreBook。前后端共用。                                        |
+| D4  | `TrainingSession` 仍在浏览器推进。后端不持有这个单例。                                                                             |
+| D5  | 不改 `packages/utils`（若仍存在）。                                                                                                |
+| D6  | 管理页在 `apps/frontend`（`#admin`）：编辑当前这一份油烟机的 SOP 字段，并列出成绩。无登录。                                        |
+| D7  | 成绩不区分学员。每条只有时间、机型、得分、是否合格、错因。                                                                         |
+| D8  | 持久化用后端数据目录里的文件，不引入数据库。                                                                                       |
+| D9  | 验收必须含端到端链路，且 `@lhs-vsts/machine`、`apps/backend`、`apps/frontend` 行覆盖率各自 ≥ 90%。                                 |
 | D10 | 端到端以「API + 会话逻辑 + 管理页/写分」为准；**必须**有自动化 3D 拖拽（按下 → 拖动 → 松手）用例，覆盖可抓零件拆下入栏与回装吸附。 |
 
 ## Requirements

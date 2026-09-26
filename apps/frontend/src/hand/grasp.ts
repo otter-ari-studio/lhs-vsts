@@ -1,5 +1,5 @@
-import { distance3, updatePinchStateConfirmed } from './pinch';
-import type { Vec3 } from './types';
+import { distance3, updatePinchStateConfirmed } from "./pinch";
+import type { Vec3 } from "./types";
 
 /** MediaPipe: wrist, middle MCP, finger tips. */
 const WRIST = 0;

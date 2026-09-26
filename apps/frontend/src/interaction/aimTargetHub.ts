@@ -1,4 +1,4 @@
-import type { Vec3 } from '@lhs-vsts/machine';
+import type { Vec3 } from "@lhs-vsts/machine";
 
 type Listener = () => void;
 

@@ -1,4 +1,4 @@
-import type { ScoringConfig } from './types.js';
+import type { ScoringConfig } from "./types.js";
 
 export interface FaultEntry {
   key: string;

@@ -1,1 +1,1 @@
-export type AppPage = 'guide' | 'train' | 'admin';
+export type AppPage = "guide" | "train" | "admin";

@@ -1,7 +1,7 @@
-import type { Vector3 } from 'three';
-import { AIM_IN_RANGE_EXIT_SCALE, SOP_PICK_PRIORITY } from './defaults';
+import type { Vector3 } from "three";
+import { AIM_IN_RANGE_EXIT_SCALE, SOP_PICK_PRIORITY } from "./defaults";
 
-export type InteractableKind = 'grabbable' | 'clip' | 'rotate_nut' | 'clean';
+export type InteractableKind = "grabbable" | "clip" | "rotate_nut" | "clean";
 
 export interface HandInteractable {
   readonly id: string;
@@ -125,8 +125,7 @@ export function findHoverTarget(handPos: Vector3): HandInteractable | null {
 /** Live SOP-priority interactables (for aim guide fallback). */
 export function listLiveSopTargets(): HandInteractable[] {
   return list.filter(
-    (it) =>
-      it.isInteractableNow() && (it.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY,
+    (it) => it.isInteractableNow() && (it.pickPriority?.() ?? 0) >= SOP_PICK_PRIORITY,
   );
 }
 

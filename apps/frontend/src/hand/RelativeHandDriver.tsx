@@ -1,6 +1,6 @@
-import { useFrame } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
-import { Euler, Group, MeshStandardMaterial, Quaternion, Vector3 } from 'three';
+import { useFrame } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
+import { Euler, Group, MeshStandardMaterial, Quaternion, Vector3 } from "three";
 import {
   GRASP_CONFIRM_FRAMES,
   GRASP_OFF_RATIO,
@@ -14,15 +14,15 @@ import {
   PALM_SMOOTH_SPEED,
   PINCH_COLOR,
   RIGHT_HAND_COLOR,
-} from './defaults';
-import { ema } from './deskDepth';
-import { fingerOpenRatio, updateGraspStateConfirmed } from './grasp';
-import { handHub } from './HandHub';
-import { handWorldHub } from './handWorldHub';
-import { LandmarkRig, type LandmarkRigHandle } from './LandmarkRig';
-import { JOINT_COUNT, type HandId, type Vec3 } from './types';
-import { projectToSurface } from '../interaction/operationSurface';
-import { operationSurfaceHub } from '../interaction/operationSurfaceHub';
+} from "./defaults";
+import { ema } from "./deskDepth";
+import { fingerOpenRatio, updateGraspStateConfirmed } from "./grasp";
+import { handHub } from "./HandHub";
+import { handWorldHub } from "./handWorldHub";
+import { LandmarkRig, type LandmarkRigHandle } from "./LandmarkRig";
+import { JOINT_COUNT, type HandId, type Vec3 } from "./types";
+import { projectToSurface } from "../interaction/operationSurface";
+import { operationSurfaceHub } from "../interaction/operationSurfaceHub";
 
 interface RelativeHandDriverProps {
   handId: HandId;
@@ -61,12 +61,8 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
   const lastSampleAt = useRef(0);
   const lmVisible = useRef(false);
   const hasSmoothLm = useRef(false);
-  const lmTarget = useRef<Vector3[]>(
-    Array.from({ length: JOINT_COUNT }, () => new Vector3()),
-  );
-  const smoothLm = useRef<Vector3[]>(
-    Array.from({ length: JOINT_COUNT }, () => new Vector3()),
-  );
+  const lmTarget = useRef<Vector3[]>(Array.from({ length: JOINT_COUNT }, () => new Vector3()));
+  const smoothLm = useRef<Vector3[]>(Array.from({ length: JOINT_COUNT }, () => new Vector3()));
   const graspState = useRef(false);
   const graspRatioEma = useRef<number | null>(null);
   const graspPending = useRef(0);
@@ -122,12 +118,7 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     } else {
       _wrist.set(sample.position[0], sample.position[1], sample.position[2]);
     }
-    _rawRot.set(
-      sample.rotation[0],
-      sample.rotation[1],
-      sample.rotation[2],
-      sample.rotation[3],
-    );
+    _rawRot.set(sample.rotation[0], sample.rotation[1], sample.rotation[2], sample.rotation[3]);
 
     if (!hasRotOrigin.current) {
       originRot.current.copy(_rawRot);
@@ -212,7 +203,7 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     const mat = palmMatRef.current;
     if (mat) {
       mat.color.set(grasping ? PINCH_COLOR : baseColor);
-      mat.emissive.set(grasping ? PINCH_COLOR : '#000000');
+      mat.emissive.set(grasping ? PINCH_COLOR : "#000000");
       mat.emissiveIntensity = grasping ? 0.45 : 0;
     }
 
@@ -222,8 +213,7 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       if (mesh) mesh.visible = false;
     }
 
-    const stale =
-      state.clock.elapsedTime - lastSampleAt.current > LANDMARK_STALE_HIDE_DELAY;
+    const stale = state.clock.elapsedTime - lastSampleAt.current > LANDMARK_STALE_HIDE_DELAY;
     if (stale && lmVisible.current) {
       rig?.hideSkeleton();
       lmVisible.current = false;

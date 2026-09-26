@@ -1,31 +1,24 @@
-import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
-import { Vector3 } from 'three';
-import type { HandId } from '../hand/types';
-import { handWorldHub } from '../hand/handWorldHub';
-import { aimTargetHub } from './aimTargetHub';
-import {
-  PENDING_EXIT_SCALE,
-  REACH_COMMIT_MS,
-  REACH_COMMIT_RADIUS_SCALE,
-} from './defaults';
+import { useFrame } from "@react-three/fiber";
+import { useRef } from "react";
+import { Vector3 } from "three";
+import type { HandId } from "../hand/types";
+import { handWorldHub } from "../hand/handWorldHub";
+import { aimTargetHub } from "./aimTargetHub";
+import { PENDING_EXIT_SCALE, REACH_COMMIT_MS, REACH_COMMIT_RADIUS_SCALE } from "./defaults";
 import {
   findNearestInteractable,
   listInteractables,
   listLiveSopTargets,
   type HandInteractable,
-} from './registry';
+} from "./registry";
 import {
   candidateDist,
   pickSharedHover,
   resolveAimInRange,
   type SharedHoverCandidate,
-} from './sharedAim';
-import {
-  selectionFromInteractable,
-  selectionFromSopFallback,
-} from './selectionInfo';
-import { selectionHub } from './selectionHub';
+} from "./sharedAim";
+import { selectionFromInteractable, selectionFromSopFallback } from "./selectionInfo";
+import { selectionHub } from "./selectionHub";
 
 const _pos = new Vector3();
 const _hoverPos = new Vector3();
@@ -54,9 +47,7 @@ function inReach(it: HandInteractable, handPos: Vector3): boolean {
 /** Inner hot zone — must be here to accumulate commit time. */
 function inCommitZone(it: HandInteractable, handPos: Vector3): boolean {
   if (!it.isInteractableNow()) return false;
-  return (
-    it.distanceTo(handPos) <= it.interactionRadius * REACH_COMMIT_RADIUS_SCALE
-  );
+  return it.distanceTo(handPos) <= it.interactionRadius * REACH_COMMIT_RADIUS_SCALE;
 }
 
 function stillNear(it: HandInteractable, handPos: Vector3): boolean {
@@ -125,11 +116,7 @@ export function InteractionRouter() {
         continue;
       }
 
-      _pos.set(
-        pose.interactionPoint[0],
-        pose.interactionPoint[1],
-        pose.interactionPoint[2],
-      );
+      _pos.set(pose.interactionPoint[0], pose.interactionPoint[1], pose.interactionPoint[2]);
       const pinch = pose.pinching;
 
       if (state.lockoutId) {
@@ -141,16 +128,10 @@ export function InteractionRouter() {
 
       // --- carrying: follow hand; open fist or flick left to inventory releases ---
       if (state.engaged) {
-        if (
-          state.engaged.kind === 'rotate_nut' &&
-          !state.engaged.isInteractableNow()
-        ) {
+        if (state.engaged.kind === "rotate_nut" && !state.engaged.isInteractableNow()) {
           state.engaged.onPinchEnd(_pos);
           state.engaged = null;
-        } else if (
-          state.engaged.kind === 'grabbable' ||
-          state.engaged.kind === 'rotate_nut'
-        ) {
+        } else if (state.engaged.kind === "grabbable" || state.engaged.kind === "rotate_nut") {
           state.engaged.onPinchHold(_pos, dt);
           const releaseOpen = !pinch && state.lastPinch;
           const releaseInventory = !pinch && _pos.x < -0.28;
@@ -168,9 +149,7 @@ export function InteractionRouter() {
 
       // Prefer shared HUD/aim target when this hand can reach it.
       const preferred =
-        globalHover.current && inReach(globalHover.current, _pos)
-          ? globalHover.current
-          : null;
+        globalHover.current && inReach(globalHover.current, _pos) ? globalHover.current : null;
       const target = pickReachTarget(_pos, preferred, state.lockoutId);
       state.hoverCand = target;
 
@@ -189,13 +168,10 @@ export function InteractionRouter() {
           state.contactMs = 0;
           if (ok === false) {
             state.lockoutId = target.id;
-          } else if (target.kind === 'clip') {
+          } else if (target.kind === "clip") {
             state.lockoutId = target.id;
             state.engaged = null;
-          } else if (
-            target.kind === 'rotate_nut' &&
-            !target.isInteractableNow()
-          ) {
+          } else if (target.kind === "rotate_nut" && !target.isInteractableNow()) {
             state.lockoutId = target.id;
             state.engaged = null;
           } else {
@@ -218,11 +194,7 @@ export function InteractionRouter() {
       if (!cand) continue;
       const pose = handWorldHub.tryGet(handId);
       if (!pose) continue;
-      _hoverPos.set(
-        pose.interactionPoint[0],
-        pose.interactionPoint[1],
-        pose.interactionPoint[2],
-      );
+      _hoverPos.set(pose.interactionPoint[0], pose.interactionPoint[1], pose.interactionPoint[2]);
       sharedCands.push({ it: cand, dist: cand.distanceTo(_hoverPos) });
     }
     // Also seed SOP targets near either hand so HUD/line stay on the glowing part
@@ -230,11 +202,7 @@ export function InteractionRouter() {
     for (const handId of [0, 1] as HandId[]) {
       const pose = handWorldHub.tryGet(handId);
       if (!pose) continue;
-      _hoverPos.set(
-        pose.interactionPoint[0],
-        pose.interactionPoint[1],
-        pose.interactionPoint[2],
-      );
+      _hoverPos.set(pose.interactionPoint[0], pose.interactionPoint[1], pose.interactionPoint[2]);
       for (const it of listLiveSopTargets()) {
         const d = it.distanceTo(_hoverPos);
         if (d <= it.interactionRadius * 2.2) {
@@ -250,14 +218,10 @@ export function InteractionRouter() {
       globalHover.current = best;
     }
 
-    selectionHub.set(
-      best ? selectionFromInteractable(best) : selectionFromSopFallback(),
-    );
+    selectionHub.set(best ? selectionFromInteractable(best) : selectionFromSopFallback());
 
     let aimIt: HandInteractable | null = best;
-    let aimDist = best
-      ? candidateDist(sharedCands, best.id)
-      : Number.POSITIVE_INFINITY;
+    let aimDist = best ? candidateDist(sharedCands, best.id) : Number.POSITIVE_INFINITY;
     if (!aimIt) {
       const sops = listLiveSopTargets();
       let nearest: HandInteractable | null = null;
@@ -265,11 +229,7 @@ export function InteractionRouter() {
       for (const handId of [0, 1] as HandId[]) {
         const pose = handWorldHub.tryGet(handId);
         if (!pose) continue;
-        _hoverPos.set(
-          pose.interactionPoint[0],
-          pose.interactionPoint[1],
-          pose.interactionPoint[2],
-        );
+        _hoverPos.set(pose.interactionPoint[0], pose.interactionPoint[1], pose.interactionPoint[2]);
         for (const it of sops) {
           const d = it.distanceTo(_hoverPos);
           if (d < nearestD) {

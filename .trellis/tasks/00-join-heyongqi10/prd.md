@@ -49,6 +49,7 @@ code every session.
   — reviews changes against specs, auto-fixes issues, runs lint/typecheck.
 
 File layout (mention when they ask "where does what live"):
+
 - `.trellis/.runtime/sessions/<session>.json` — session active-task state, gitignored
 - `.trellis/tasks/<task>/{implement,check}.jsonl` — per-task context manifests
 - `.trellis/spec/` — project-wide conventions (source of truth)

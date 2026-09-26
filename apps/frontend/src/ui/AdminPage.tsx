@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import {
   parseMachineDef,
   type CleanSpotDef,
   type MachineDef,
   type PartDef,
-} from '@lhs-vsts/machine';
-import { listKitbashKeys } from '../visual/kitbash/KitbashAdapter';
+} from "@lhs-vsts/machine";
+import { listKitbashKeys } from "../visual/kitbash/KitbashAdapter";
 import {
   fetchCurrentMachine,
   fetchScores,
   saveCurrentMachine,
   type ScoreRecord,
-} from '../api/client';
+} from "../api/client";
 
 interface AdminPageProps {
   onBack: () => void;
@@ -29,10 +29,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
   const reload = useCallback(async () => {
     setError(null);
     try {
-      const [raw, scoreList] = await Promise.all([
-        fetchCurrentMachine(),
-        fetchScores(),
-      ]);
+      const [raw, scoreList] = await Promise.all([fetchCurrentMachine(), fetchScores()]);
       setDef(parseMachineDef(raw));
       setScores(scoreList);
     } catch (err) {
@@ -49,18 +46,12 @@ export function AdminPage({ onBack }: AdminPageProps) {
       if (!prev) return prev;
       return {
         ...prev,
-        parts: prev.parts.map((p) =>
-          p.partId === partId ? { ...p, ...patch } : p,
-        ),
+        parts: prev.parts.map((p) => (p.partId === partId ? { ...p, ...patch } : p)),
       };
     });
   };
 
-  const updateTips = (
-    partId: string,
-    field: keyof PartDef['tips'],
-    value: string,
-  ) => {
+  const updateTips = (partId: string, field: keyof PartDef["tips"], value: string) => {
     setDef((prev) => {
       if (!prev) return prev;
       return {
@@ -68,7 +59,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
         parts: prev.parts.map((p) => {
           if (p.partId !== partId) return p;
           const tips = { ...p.tips };
-          if (value.trim() === '') {
+          if (value.trim() === "") {
             delete tips[field];
           } else {
             tips[field] = value;
@@ -81,11 +72,11 @@ export function AdminPage({ onBack }: AdminPageProps) {
 
   const updatePrereqs = (
     partId: string,
-    field: 'removePrereqs' | 'installPrereqs',
+    field: "removePrereqs" | "installPrereqs",
     value: string,
   ) => {
     const list = value
-      .split(',')
+      .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
     updatePart(partId, { [field]: list });
@@ -96,9 +87,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
       if (!prev) return prev;
       return {
         ...prev,
-        cleanSpots: prev.cleanSpots.map((s) =>
-          s.cleanId === cleanId ? { ...s, ...patch } : s,
-        ),
+        cleanSpots: prev.cleanSpots.map((s) => (s.cleanId === cleanId ? { ...s, ...patch } : s)),
       };
     });
   };
@@ -111,7 +100,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
     try {
       const saved = parseMachineDef(await saveCurrentMachine(def));
       setDef(saved);
-      setStatus('已保存机型定义');
+      setStatus("已保存机型定义");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -135,8 +124,13 @@ export function AdminPage({ onBack }: AdminPageProps) {
           <h1 className="admin-title">机型 SOP / 成绩</h1>
         </div>
         <div className="admin-header-actions">
-          <button type="button" className="primary-btn" disabled={saving || !def} onClick={() => void save()}>
-            {saving ? '保存中…' : '保存机型'}
+          <button
+            type="button"
+            className="primary-btn"
+            disabled={saving || !def}
+            onClick={() => void save()}
+          >
+            {saving ? "保存中…" : "保存机型"}
           </button>
           <button type="button" className="recal-btn" onClick={onBack}>
             返回引导
@@ -144,7 +138,11 @@ export function AdminPage({ onBack }: AdminPageProps) {
         </div>
       </header>
 
-      {error ? <p className="admin-error" role="alert">{error}</p> : null}
+      {error ? (
+        <p className="admin-error" role="alert">
+          {error}
+        </p>
+      ) : null}
       {status ? <p className="admin-status">{status}</p> : null}
 
       {def ? (
@@ -155,9 +153,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
               <span>显示名</span>
               <input
                 value={def.displayName}
-                onChange={(e) =>
-                  setDef({ ...def, displayName: e.target.value })
-                }
+                onChange={(e) => setDef({ ...def, displayName: e.target.value })}
               />
             </label>
             <p className="admin-meta">machineId: {def.machineId}</p>
@@ -168,11 +164,11 @@ export function AdminPage({ onBack }: AdminPageProps) {
             <div className="admin-grid">
               {(
                 [
-                  ['baseScore', '基础分'],
-                  ['deductIllegalOrder', '非法顺序'],
-                  ['deductClipPry', '卡扣撬动'],
-                  ['deductNutWrongDirection', '螺母反转'],
-                  ['deductToleranceFail', '公差失败'],
+                  ["baseScore", "基础分"],
+                  ["deductIllegalOrder", "非法顺序"],
+                  ["deductClipPry", "卡扣撬动"],
+                  ["deductNutWrongDirection", "螺母反转"],
+                  ["deductToleranceFail", "公差失败"],
                 ] as const
               ).map(([key, label]) => (
                 <label key={key} className="admin-field">
@@ -200,8 +196,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
             {def.parts.map((part) => (
               <details key={part.partId} className="admin-part">
                 <summary>
-                  {part.displayName}{' '}
-                  <span className="admin-muted">({part.partId})</span>
+                  {part.displayName} <span className="admin-muted">({part.partId})</span>
                 </summary>
                 <div className="admin-grid">
                   <label className="admin-field">
@@ -218,8 +213,8 @@ export function AdminPage({ onBack }: AdminPageProps) {
                   <label className="admin-field">
                     <span>kitbashKey</span>
                     <select
-                      value={part.visual.kitbashKey ?? ''}
-                      disabled={part.visual.adapter !== 'kitbash'}
+                      value={part.visual.kitbashKey ?? ""}
+                      disabled={part.visual.adapter !== "kitbash"}
                       onChange={(e) =>
                         updatePart(part.partId, {
                           visual: {
@@ -239,40 +234,30 @@ export function AdminPage({ onBack }: AdminPageProps) {
                   <label className="admin-field admin-field-wide">
                     <span>removePrereqs（逗号分隔）</span>
                     <input
-                      value={part.removePrereqs.join(', ')}
-                      onChange={(e) =>
-                        updatePrereqs(part.partId, 'removePrereqs', e.target.value)
-                      }
+                      value={part.removePrereqs.join(", ")}
+                      onChange={(e) => updatePrereqs(part.partId, "removePrereqs", e.target.value)}
                     />
                   </label>
                   <label className="admin-field admin-field-wide">
                     <span>installPrereqs（逗号分隔）</span>
                     <input
-                      value={part.installPrereqs.join(', ')}
-                      onChange={(e) =>
-                        updatePrereqs(
-                          part.partId,
-                          'installPrereqs',
-                          e.target.value,
-                        )
-                      }
+                      value={part.installPrereqs.join(", ")}
+                      onChange={(e) => updatePrereqs(part.partId, "installPrereqs", e.target.value)}
                     />
                   </label>
                   {(
                     [
-                      ['removeLocked', '拆卸锁定提示'],
-                      ['installLocked', '回装锁定提示'],
-                      ['pry', '撬动提示'],
-                      ['wrongDirection', '方向错误提示'],
+                      ["removeLocked", "拆卸锁定提示"],
+                      ["installLocked", "回装锁定提示"],
+                      ["pry", "撬动提示"],
+                      ["wrongDirection", "方向错误提示"],
                     ] as const
                   ).map(([field, label]) => (
                     <label key={field} className="admin-field admin-field-wide">
                       <span>{label}</span>
                       <input
-                        value={part.tips[field] ?? ''}
-                        onChange={(e) =>
-                          updateTips(part.partId, field, e.target.value)
-                        }
+                        value={part.tips[field] ?? ""}
+                        onChange={(e) => updateTips(part.partId, field, e.target.value)}
                       />
                     </label>
                   ))}
@@ -345,9 +330,9 @@ export function AdminPage({ onBack }: AdminPageProps) {
               .map((s) => (
                 <li key={s.id} className="admin-score-row">
                   <div>
-                    <strong>{s.passed ? '合格' : '未合格'}</strong>
-                    {' · '}得分 {s.score}
-                    {' · '}
+                    <strong>{s.passed ? "合格" : "未合格"}</strong>
+                    {" · "}得分 {s.score}
+                    {" · "}
                     {s.machineId}
                   </div>
                   <div className="admin-muted">{s.finishedAt}</div>

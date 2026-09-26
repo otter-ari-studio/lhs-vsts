@@ -14,16 +14,12 @@ export interface ThrowSample {
 
 const MAX_SAMPLES = 12;
 
-export function pushThrowSample(
-  buf: ThrowSample[],
-  t: number,
-  x: number,
-): void {
+export function pushThrowSample(buf: ThrowSample[], t: number, x: number): void {
   buf.push({ t, x });
   while (buf.length > MAX_SAMPLES) buf.shift();
 }
 
-export type ThrowDir = 'left' | 'right' | null;
+export type ThrowDir = "left" | "right" | null;
 
 /**
  * Returns throw direction if recent lateral motion is strong enough.
@@ -37,7 +33,7 @@ export function detectLateralThrow(buf: readonly ThrowSample[]): ThrowDir {
   const dx = newest.x - oldest.x;
   const speed = dx / dt;
   if (Math.abs(speed) >= THROW_LATERAL_SPEED || Math.abs(dx) >= THROW_LATERAL_DELTA) {
-    return dx < 0 ? 'left' : 'right';
+    return dx < 0 ? "left" : "right";
   }
   return null;
 }

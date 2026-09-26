@@ -1,9 +1,5 @@
-import type { Vec3 } from './types';
-import {
-  HAND_Z_FAR,
-  HAND_Z_NEAR,
-  IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,
-} from './defaults';
+import type { Vec3 } from "./types";
+import { HAND_Z_FAR, HAND_Z_NEAR, IMAGE_LANDMARK_FINGER_Z_SPAN_METERS } from "./defaults";
 
 /**
  * Map the full webcam frame onto the 3D training workspace.
@@ -65,11 +61,7 @@ export function imageLandmarkToScene(
   const fingerZ = opts.fingerZSpan ?? IMAGE_LANDMARK_FINGER_Z_SPAN_METERS;
   let z = opts.depthZ - zRel * fingerZ;
   if (opts.clampZ !== false) z = clampHandZ(z);
-  return [
-    ws.center[0] + (u - 0.5) * ws.width,
-    ws.center[1] + (0.5 - v) * ws.height,
-    z,
-  ];
+  return [ws.center[0] + (u - 0.5) * ws.width, ws.center[1] + (0.5 - v) * ws.height, z];
 }
 
 /** All 21 landmarks → scene meters (absolute screen mapping). */

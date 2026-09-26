@@ -1,9 +1,5 @@
-import type { HandLandmarker, HandLandmarkerResult } from '@mediapipe/tasks-vision';
-import {
-  handCaptureRecorder,
-  landmarkListToVec3,
-  type HandCaptureHandFrame,
-} from './captureLog';
+import type { HandLandmarker, HandLandmarkerResult } from "@mediapipe/tasks-vision";
+import { handCaptureRecorder, landmarkListToVec3, type HandCaptureHandFrame } from "./captureLog";
 import {
   ema,
   median,
@@ -11,7 +7,7 @@ import {
   palmWidthNorm,
   PALM_ORIGIN_MIN_SAMPLES,
   PALM_ORIGIN_SAMPLE_MS,
-} from './deskDepth';
+} from "./deskDepth";
 import {
   HAND_HOLD_MS,
   HAND_Z_FAR,
@@ -21,23 +17,14 @@ import {
   GRASP_ON_RATIO,
   GRASP_RATIO_EMA,
   IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,
-} from './defaults';
-import { handHub } from './HandHub';
-import { estimatePalmRotation } from './palmRotation';
-import { fingerOpenRatio, updateGraspStateConfirmed } from './grasp';
-import {
-  clampHandZ,
-  imageLandmarksToSceneMeters,
-  SCREEN_WORKSPACE,
-} from './screenMap';
-import {
-  JOINT_COUNT,
-  type HandId,
-  type HandSample,
-  type Vec3,
-} from './types';
+} from "./defaults";
+import { handHub } from "./HandHub";
+import { estimatePalmRotation } from "./palmRotation";
+import { fingerOpenRatio, updateGraspStateConfirmed } from "./grasp";
+import { clampHandZ, imageLandmarksToSceneMeters, SCREEN_WORKSPACE } from "./screenMap";
+import { JOINT_COUNT, type HandId, type HandSample, type Vec3 } from "./types";
 
-export type TrackingPresence = 'none' | 'partial' | 'both';
+export type TrackingPresence = "none" | "partial" | "both";
 
 export interface HandTrackerOptions {
   landmarker: HandLandmarker;
@@ -158,8 +145,7 @@ export class HandTracker {
     }
     const started = this.originPalmStartedAt[handId]!;
     const ready =
-      samples.length >= PALM_ORIGIN_MIN_SAMPLES &&
-      now - started >= PALM_ORIGIN_SAMPLE_MS;
+      samples.length >= PALM_ORIGIN_MIN_SAMPLES && now - started >= PALM_ORIGIN_SAMPLE_MS;
     const running = median(samples);
     if (ready) {
       this.originPalm[handId] = running;
@@ -188,7 +174,7 @@ export class HandTracker {
     try {
       result = this.landmarker.detectForVideo(video, ts);
     } catch (err) {
-      console.warn('[HandTracker] detectForVideo failed', err);
+      console.warn("[HandTracker] detectForVideo failed", err);
       this.applyHold(now);
       return;
     }
@@ -202,7 +188,7 @@ export class HandTracker {
       const image = result.landmarks[i];
       if (!image || image.length < JOINT_COUNT) continue;
 
-      const label = result.handedness?.[i]?.[0]?.categoryName ?? '';
+      const label = result.handedness?.[i]?.[0]?.categoryName ?? "";
       const handId = handednessToId(label);
       if (handId === null) continue;
 
@@ -225,11 +211,7 @@ export class HandTracker {
       const rotation = estimatePalmRotation(mapped);
 
       const openRaw = fingerOpenRatio(mapped);
-      this.graspRatioEma[handId] = ema(
-        this.graspRatioEma[handId],
-        openRaw,
-        GRASP_RATIO_EMA,
-      );
+      this.graspRatioEma[handId] = ema(this.graspRatioEma[handId], openRaw, GRASP_RATIO_EMA);
       const openRatio = this.graspRatioEma[handId] ?? openRaw;
       const graspUpdate = updateGraspStateConfirmed(
         this.pinchState[handId],
@@ -324,7 +306,7 @@ export class HandTracker {
     if (!this.onPresence || !this.publishEnabled) return;
     const l = handHub.tryGetLatest(0) !== null;
     const r = handHub.tryGetLatest(1) !== null;
-    const presence: TrackingPresence = l && r ? 'both' : l || r ? 'partial' : 'none';
+    const presence: TrackingPresence = l && r ? "both" : l || r ? "partial" : "none";
     this.onPresence(presence);
   }
 }
@@ -332,8 +314,8 @@ export class HandTracker {
 function handednessToId(label: string | undefined): HandId | null {
   if (!label) return null;
   const lower = label.toLowerCase();
-  if (lower === 'left') return 0;
-  if (lower === 'right') return 1;
+  if (lower === "left") return 0;
+  if (lower === "right") return 1;
   return null;
 }
 
@@ -343,7 +325,7 @@ export function imageLandmarksToCaptureMeters(
   opts: { depthZ: number; xySpan?: number; fingerZSpan?: number } | number = 1,
   legacyZSpan?: number,
 ): Vec3[] {
-  if (typeof opts === 'number') {
+  if (typeof opts === "number") {
     return imageLandmarksToSceneMeters(image, {
       depthZ: 0,
       fingerZSpan: legacyZSpan ?? IMAGE_LANDMARK_FINGER_Z_SPAN_METERS,

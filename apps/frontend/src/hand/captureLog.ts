@@ -1,8 +1,8 @@
-import type { HandId, HandSample, Quat, Vec3 } from './types';
-import { JOINT_COUNT } from './types';
-import { HAND_Z_FAR, HAND_Z_NEAR } from './defaults';
-import { SCREEN_WORKSPACE } from './screenMap';
-import { handHub } from './HandHub';
+import type { HandId, HandSample, Quat, Vec3 } from "./types";
+import { JOINT_COUNT } from "./types";
+import { HAND_Z_FAR, HAND_Z_NEAR } from "./defaults";
+import { SCREEN_WORKSPACE } from "./screenMap";
+import { handHub } from "./HandHub";
 
 export const HAND_CAPTURE_LOG_VERSION = 1 as const;
 
@@ -144,12 +144,10 @@ class HandCaptureRecorderImpl {
 export const handCaptureRecorder = new HandCaptureRecorderImpl();
 
 export function downloadHandCaptureLog(log: HandCaptureLog, filename?: string): void {
-  const name =
-    filename ??
-    `hand-capture-${log.createdAt.replace(/[:.]/g, '-').slice(0, 19)}.json`;
-  const blob = new Blob([JSON.stringify(log)], { type: 'application/json' });
+  const name = filename ?? `hand-capture-${log.createdAt.replace(/[:.]/g, "-").slice(0, 19)}.json`;
+  const blob = new Blob([JSON.stringify(log)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = name;
   a.click();
@@ -157,12 +155,12 @@ export function downloadHandCaptureLog(log: HandCaptureLog, filename?: string): 
 }
 
 export function parseHandCaptureLog(raw: unknown): HandCaptureLog {
-  if (!raw || typeof raw !== 'object') {
-    throw new Error('手部日志格式无效');
+  if (!raw || typeof raw !== "object") {
+    throw new Error("手部日志格式无效");
   }
   const obj = raw as HandCaptureLog;
   if (obj.version !== HAND_CAPTURE_LOG_VERSION || !Array.isArray(obj.frames)) {
-    throw new Error('手部日志版本或 frames 无效');
+    throw new Error("手部日志版本或 frames 无效");
   }
   return obj;
 }

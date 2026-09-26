@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { partInventory } from '../interaction/partInventory';
-import { currentInstallOfferPartId } from '../interaction/partOffer';
-import { selectionHub } from '../interaction/selectionHub';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { partInventory } from "../interaction/partInventory";
+import { currentInstallOfferPartId } from "../interaction/partOffer";
+import { selectionHub } from "../interaction/selectionHub";
 import {
   APPLIANCE_WASH_DURATION_MS,
   getTrainingSession,
   subscribeSession,
   subscribeTips,
   type SessionSnapshot,
-} from '@lhs-vsts/machine';
-import { submitSessionScoreOnce } from '../api/submitSessionScore';
-import { TrainingScene } from '../scene/TrainingScene';
+} from "@lhs-vsts/machine";
+import { submitSessionScoreOnce } from "../api/submitSessionScore";
+import { TrainingScene } from "../scene/TrainingScene";
 
 interface TrainPageProps {
   onBack: () => void;
@@ -58,10 +58,10 @@ export function TrainPage({ onBack }: TrainPageProps) {
   const snap = useSessionSnapshot(sessionTick);
   const inventoryIds = useSyncExternalStore(
     (cb) => partInventory.subscribe(cb),
-    () => partInventory.list().join('|'),
-    () => '',
+    () => partInventory.list().join("|"),
+    () => "",
   );
-  const inventory = inventoryIds ? inventoryIds.split('|') : [];
+  const inventory = inventoryIds ? inventoryIds.split("|") : [];
   const session = getTrainingSession();
   const partName = (id: string) =>
     session?.def.parts.find((p) => p.partId === id)?.displayName ?? id;
@@ -115,7 +115,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
         amount: f.amount,
       })),
     }).catch((err: unknown) => {
-      console.error('Failed to submit score', err);
+      console.error("Failed to submit score", err);
     });
   }, [showEnd, snap.score, snap.passed, snap.faultLog]);
 
@@ -158,12 +158,10 @@ export function TrainPage({ onBack }: TrainPageProps) {
               inventory.map((id, i) => {
                 const offered = currentInstallOfferPartId() === id;
                 return (
-                  <li key={`${id}-${i}`} className={`inv-row ${offered ? 'ready' : ''}`}>
+                  <li key={`${id}-${i}`} className={`inv-row ${offered ? "ready" : ""}`}>
                     <span className="inv-idx">{i + 1}</span>
                     <span className="inv-name">{partName(id)}</span>
-                    <span className="inv-status">
-                      {offered ? '已弹出' : '排队中'}
-                    </span>
+                    <span className="inv-status">{offered ? "已弹出" : "排队中"}</span>
                   </li>
                 );
               })
@@ -177,7 +175,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
               snap.steps.map((row) => (
                 <li key={row.stepId} className={`step-row ${row.status}`}>
                   <span className="step-label">{row.label}</span>
-                  {row.status === 'locked' && row.lockReason ? (
+                  {row.status === "locked" && row.lockReason ? (
                     <span className="step-lock">{row.lockReason}</span>
                   ) : null}
                 </li>
@@ -187,16 +185,13 @@ export function TrainPage({ onBack }: TrainPageProps) {
         </aside>
 
         <main className="viewport">
-          <TrainingScene
-            restartToken={restartToken}
-            onSessionReady={onSessionReady}
-          />
+          <TrainingScene restartToken={restartToken} onSessionReady={onSessionReady} />
 
           <aside className="selection-card" aria-live="polite">
             {selection ? (
               <>
                 <div className="selection-kicker">
-                  {selection.hint.startsWith('SOP') ? 'SOP 目标' : '鼠标选中'}
+                  {selection.hint.startsWith("SOP") ? "SOP 目标" : "鼠标选中"}
                 </div>
                 <div className="selection-name">{selection.displayName}</div>
                 <div className="selection-hint">{selection.hint}</div>
@@ -236,7 +231,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {showEnd ? (
             <div className="end-screen" role="dialog" aria-labelledby="end-title">
-              <h2 id="end-title">{snap.passed ? '合格' : '训练结束'}</h2>
+              <h2 id="end-title">{snap.passed ? "合格" : "训练结束"}</h2>
               <p className="end-score">得分：{snap.score}</p>
               <p className="end-meta">
                 已完成 {snap.completedSteps.length} / {snap.requiredSteps.length} 步

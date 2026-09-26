@@ -1,23 +1,23 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import type { HandLandmarker } from '@mediapipe/tasks-vision';
-import { requestUserCamera, stopMediaStream, type CameraError } from './camera';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { HandLandmarker } from "@mediapipe/tasks-vision";
+import { requestUserCamera, stopMediaStream, type CameraError } from "./camera";
 import {
   downloadHandCaptureLog,
   handCaptureRecorder,
   HandCaptureReplayer,
   readHandCaptureFile,
   type HandCaptureLog,
-} from './captureLog';
-import { HandTracker, type TrackingPresence } from './HandTracker';
-import { createHandLandmarker } from './mediapipeLoader';
+} from "./captureLog";
+import { HandTracker, type TrackingPresence } from "./HandTracker";
+import { createHandLandmarker } from "./mediapipeLoader";
 
 export type HandCameraPhase =
-  | 'idle'
-  | 'requesting'
-  | 'loading_model'
-  | 'tracking'
-  | 'denied'
-  | 'error';
+  | "idle"
+  | "requesting"
+  | "loading_model"
+  | "tracking"
+  | "denied"
+  | "error";
 
 export interface UseHandCameraResult {
   phase: HandCameraPhase;
@@ -46,9 +46,9 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const trackerRef = useRef<HandTracker | null>(null);
   const replayerRef = useRef<HandCaptureReplayer | null>(null);
-  const [phase, setPhase] = useState<HandCameraPhase>('idle');
+  const [phase, setPhase] = useState<HandCameraPhase>("idle");
   const [error, setError] = useState<CameraError | null>(null);
-  const [presence, setPresence] = useState<TrackingPresence>('none');
+  const [presence, setPresence] = useState<TrackingPresence>("none");
   const [retryToken, setRetryToken] = useState(0);
   const [replaying, setReplaying] = useState(false);
 
@@ -65,8 +65,8 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
 
   useEffect(() => {
     if (!enabled) {
-      setPhase('idle');
-      setPresence('none');
+      setPhase("idle");
+      setPresence("none");
       return;
     }
 
@@ -78,9 +78,9 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
     let videoEl: HTMLVideoElement | null = null;
 
     const run = async () => {
-      setPhase('requesting');
+      setPhase("requesting");
       setError(null);
-      setPresence('none');
+      setPresence("none");
 
       const cam = await requestUserCamera();
       if (cancelled) {
@@ -89,15 +89,15 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
       }
       if (!cam.ok) {
         setError(cam.error);
-        setPhase(cam.error.kind === 'denied' ? 'denied' : 'error');
+        setPhase(cam.error.kind === "denied" ? "denied" : "error");
         return;
       }
 
       stream = cam.stream;
       const video = videoRef.current;
       if (!video) {
-        setError({ kind: 'unknown', message: '视频元素未就绪。' });
-        setPhase('error');
+        setError({ kind: "unknown", message: "视频元素未就绪。" });
+        setPhase("error");
         stopMediaStream(stream);
         stream = null;
         return;
@@ -113,7 +113,7 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
         // Autoplay can fail; still try detection once frames arrive.
       }
 
-      setPhase('loading_model');
+      setPhase("loading_model");
       try {
         const created = await createHandLandmarker();
         if (cancelled) {
@@ -130,11 +130,11 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
         });
         trackerBox.current = tracker;
         tracker.start();
-        setPhase('tracking');
+        setPhase("tracking");
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setError({ kind: 'unknown', message });
-        setPhase('error');
+        setError({ kind: "unknown", message });
+        setPhase("error");
         stopMediaStream(stream);
         stream = null;
       }
@@ -168,7 +168,7 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
   }, [trackerRef]);
 
   const startRecording = useCallback(() => {
-    handCaptureRecorder.start('train-grasp-pass');
+    handCaptureRecorder.start("train-grasp-pass");
   }, []);
 
   const stopAndDownload = useCallback(() => {
@@ -195,7 +195,7 @@ export function useHandCamera(enabled: boolean): UseHandCameraResult {
       stopReplay();
       trackerRef.current?.setPublishEnabled(false);
       setReplaying(true);
-      setPresence(log.frames.some((f) => f.hands.length >= 2) ? 'both' : 'partial');
+      setPresence(log.frames.some((f) => f.hands.length >= 2) ? "both" : "partial");
       const replayer = new HandCaptureReplayer(log, {
         onDone: () => {
           stopReplay();

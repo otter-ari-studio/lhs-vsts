@@ -13,14 +13,14 @@
 
 ## Decisions
 
-| ID | Decision |
-|----|----------|
-| D-purpose | 先修闭环再补测试 |
-| D-priority | 瞄准/高亮 > 抓取 > 追踪 > SOP |
-| D-aim-mode | 目标乱跳 > inRange 闪烁 > 指错件 > 远距离瞎指 |
-| D-repro | 主复现 = 双手同时靠近、两手目标互抢 |
-| D-arbitrate | 有 SOP 候选则 SOP 优先；否则 global sticky（滞回） |
-| D-mvp | **B**：仲裁 + aim `inRange` 滞回；单测覆盖仲裁/互抢/进出半径；不含 capture 回放/CI 大改、不含抓取/追踪专项 |
+| ID          | Decision                                                                                                   |
+| ----------- | ---------------------------------------------------------------------------------------------------------- |
+| D-purpose   | 先修闭环再补测试                                                                                           |
+| D-priority  | 瞄准/高亮 > 抓取 > 追踪 > SOP                                                                              |
+| D-aim-mode  | 目标乱跳 > inRange 闪烁 > 指错件 > 远距离瞎指                                                              |
+| D-repro     | 主复现 = 双手同时靠近、两手目标互抢                                                                        |
+| D-arbitrate | 有 SOP 候选则 SOP 优先；否则 global sticky（滞回）                                                         |
+| D-mvp       | **B**：仲裁 + aim `inRange` 滞回；单测覆盖仲裁/互抢/进出半径；不含 capture 回放/CI 大改、不含抓取/追踪专项 |
 
 ## Requirements
 

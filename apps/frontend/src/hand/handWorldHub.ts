@@ -1,4 +1,4 @@
-import type { HandId, Vec3 } from '../hand/types';
+import type { HandId, Vec3 } from "../hand/types";
 
 /** World-space hand pose published by RelativeHandDriver for interaction. */
 export interface WorldHandPose {

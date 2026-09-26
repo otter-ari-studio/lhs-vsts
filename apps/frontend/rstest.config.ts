@@ -1,5 +1,5 @@
-import { withRsbuildConfig } from '@rstest/adapter-rsbuild';
-import { defineConfig } from '@rstest/core';
+import { withRsbuildConfig } from "@rstest/adapter-rsbuild";
+import { defineConfig } from "@rstest/core";
 
 // Docs: https://rstest.rs/config/
 //
@@ -10,29 +10,29 @@ import { defineConfig } from '@rstest/core';
 // other interaction React components, TrainPage chrome.
 export default defineConfig({
   extends: withRsbuildConfig(),
-  setupFiles: ['./tests/rstest.setup.ts'],
+  setupFiles: ["./tests/rstest.setup.ts"],
   coverage: {
     enabled: false,
-    provider: 'istanbul',
+    provider: "istanbul",
     include: [
-      'src/api/**/*.{ts,tsx}',
-      'src/ui/AdminPage.tsx',
-      'src/interaction/pointerDragSession.ts',
-      'src/interaction/grabbableDragApi.ts',
+      "src/api/**/*.{ts,tsx}",
+      "src/ui/AdminPage.tsx",
+      "src/interaction/pointerDragSession.ts",
+      "src/interaction/grabbableDragApi.ts",
     ],
     exclude: [
-      'src/visual/**',
-      'src/scene/**',
-      'src/hand/**',
-      'src/App.tsx',
-      'src/index.tsx',
-      'src/ui/TrainPage.tsx',
-      'src/ui/GuidePage.tsx',
-      '**/*.{test,spec}.{ts,tsx}',
+      "src/visual/**",
+      "src/scene/**",
+      "src/hand/**",
+      "src/App.tsx",
+      "src/index.tsx",
+      "src/ui/TrainPage.tsx",
+      "src/ui/GuidePage.tsx",
+      "**/*.{test,spec}.{ts,tsx}",
     ],
     thresholds: {
       lines: 90,
     },
-    reporters: ['text', 'html'],
+    reporters: ["text", "html"],
   },
 });

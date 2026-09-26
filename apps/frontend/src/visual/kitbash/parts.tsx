@@ -1,4 +1,4 @@
-import { MAT } from '../materials';
+import { MAT } from "../materials";
 
 /** Main chassis: canopy body + lip + chimney (identifiable side-suction hood). */
 export function ShellMainKitbash() {
@@ -89,8 +89,8 @@ export function FilterBottomKitbash() {
   return <FilterMesh color={MAT.filterAlt} />;
 }
 
-function ClipMesh({ side }: { side: 'left' | 'right' }) {
-  const flip = side === 'right' ? 1 : -1;
+function ClipMesh({ side }: { side: "left" | "right" }) {
+  const flip = side === "right" ? 1 : -1;
   return (
     <group>
       <mesh castShadow>
@@ -134,7 +134,12 @@ export function WindCoverKitbash() {
     <group>
       <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.11, 0.11, 0.04, 24]} />
-        <meshStandardMaterial {...MAT.metalLight} color="#6a8aa8" emissive="#1a3a4a" emissiveIntensity={0.25} />
+        <meshStandardMaterial
+          {...MAT.metalLight}
+          color="#6a8aa8"
+          emissive="#1a3a4a"
+          emissiveIntensity={0.25}
+        />
       </mesh>
       <mesh position={[0, 0, 0.015]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.06, 0.06, 0.01, 16]} />

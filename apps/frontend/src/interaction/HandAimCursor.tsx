@@ -1,9 +1,9 @@
-import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
-import { Color, Group, Mesh, MeshBasicMaterial, Vector3 } from 'three';
-import type { HandId } from '../hand/types';
-import { handWorldHub } from '../hand/handWorldHub';
-import { aimTargetHub } from './aimTargetHub';
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import { Color, Group, Mesh, MeshBasicMaterial, Vector3 } from "three";
+import type { HandId } from "../hand/types";
+import { handWorldHub } from "../hand/handWorldHub";
+import { aimTargetHub } from "./aimTargetHub";
 
 const _aim = new Vector3();
 const _target = new Vector3();
@@ -11,10 +11,10 @@ const _dir = new Vector3();
 const _mid = new Vector3();
 const _up = new Vector3(0, 1, 0);
 
-const IDLE = new Color('#7ec8ff');
-const GRASP = new Color('#ffee58');
-const IN_RANGE = new Color('#3ddc97');
-const NEAR = new Color('#ffb74d');
+const IDLE = new Color("#7ec8ff");
+const GRASP = new Color("#ffee58");
+const IN_RANGE = new Color("#3ddc97");
+const NEAR = new Color("#ffb74d");
 
 const GUIDE_MAX_M = 0.65;
 
@@ -43,7 +43,7 @@ export function HandAimCursor() {
       [0, 1].map(
         () =>
           new MeshBasicMaterial({
-            color: '#9ad0ff',
+            color: "#9ad0ff",
             transparent: true,
             opacity: 0.5,
           }),
@@ -88,11 +88,7 @@ export function HandAimCursor() {
         continue;
       }
       group.visible = true;
-      _aim.set(
-        pose.interactionPoint[0],
-        pose.interactionPoint[1],
-        pose.interactionPoint[2],
-      );
+      _aim.set(pose.interactionPoint[0], pose.interactionPoint[1], pose.interactionPoint[2]);
       orb.position.copy(_aim);
 
       const distToTarget = shared

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 import {
   ClipLeftKitbash,
   ClipRightKitbash,
@@ -10,7 +10,7 @@ import {
   ShellMainKitbash,
   WindCoverKitbash,
   WindWheelKitbash,
-} from './parts';
+} from "./parts";
 
 const REGISTRY: Record<string, () => ReactNode> = {
   shell_main: () => <ShellMainKitbash />,

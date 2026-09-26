@@ -31,14 +31,14 @@
 
 **硬边界**
 
-| 模块 | 负责 | 不负责 |
-|------|------|--------|
-| `hand/` | 摄像头、MediaPipe、滤波、pinch、标定、虚拟手渲染输入 | 零件逻辑、评分 |
-| `machine/` | MachineDef 解析、步骤图、状态、得分、错因 | 网格形状 |
-| `interaction/` | 命中、抓取、卡扣、螺母停留、清洁停留/UI 事件 | 课件文案布局 |
-| `visual/` | Kitbash/GLTF 适配器、锚点挂载 | 改写步骤图 |
-| `ui/` | 步骤条、tip、结束页、权限/标定引导 | 3D 命中算法 |
-| 旧 Python / WS | **无** | 全部退役 |
+| 模块           | 负责                                                 | 不负责         |
+| -------------- | ---------------------------------------------------- | -------------- |
+| `hand/`        | 摄像头、MediaPipe、滤波、pinch、标定、虚拟手渲染输入 | 零件逻辑、评分 |
+| `machine/`     | MachineDef 解析、步骤图、状态、得分、错因            | 网格形状       |
+| `interaction/` | 命中、抓取、卡扣、螺母停留、清洁停留/UI 事件         | 课件文案布局   |
+| `visual/`      | Kitbash/GLTF 适配器、锚点挂载                        | 改写步骤图     |
+| `ui/`          | 步骤条、tip、结束页、权限/标定引导                   | 3D 命中算法    |
+| 旧 Python / WS | **无**                                               | 全部退役       |
 
 ## 2. 动捕方案（D-arch / D-device）
 
@@ -65,36 +65,36 @@
 ```ts
 // 概念契约（实现时可拆文件）
 type MachineDef = {
-  machineId: string
-  displayName: string
-  scoring: { baseScore: number; deductIllegalOrder: number; deductClipPry: number; /* … */ }
-  assemblyDefaults: { snapRangeMeters: number; /* … */ }
-  parts: PartDef[]
-  cleanSpots: CleanSpotDef[]  // 新增
-}
+  machineId: string;
+  displayName: string;
+  scoring: { baseScore: number; deductIllegalOrder: number; deductClipPry: number /* … */ };
+  assemblyDefaults: { snapRangeMeters: number /* … */ };
+  parts: PartDef[];
+  cleanSpots: CleanSpotDef[]; // 新增
+};
 
 type PartDef = {
-  partId: string
-  displayName: string
-  kind: 'fixed_shell' | 'grabbable' | 'clip' | 'rotate_nut'
-  anchor: { position: Vec3; rotation?: Vec3 }  // 逻辑锚点，单位米
-  visual: { adapter: 'kitbash' | 'gltf'; kitbashKey?: string; gltfUrl?: string; nodeName?: string }
-  removePrereqs: string[]  // step ids
-  installPrereqs: string[]
-  tips: { removeLocked?: string; installLocked?: string; pry?: string; wrongDirection?: string }
-  snapRangeMeters?: number
-  thread?: 'normal' | 'reverse'  // nut
-}
+  partId: string;
+  displayName: string;
+  kind: "fixed_shell" | "grabbable" | "clip" | "rotate_nut";
+  anchor: { position: Vec3; rotation?: Vec3 }; // 逻辑锚点，单位米
+  visual: { adapter: "kitbash" | "gltf"; kitbashKey?: string; gltfUrl?: string; nodeName?: string };
+  removePrereqs: string[]; // step ids
+  installPrereqs: string[];
+  tips: { removeLocked?: string; installLocked?: string; pry?: string; wrongDirection?: string };
+  snapRangeMeters?: number;
+  thread?: "normal" | "reverse"; // nut
+};
 
 type CleanSpotDef = {
-  cleanId: string
-  displayName: string
-  partId: string           // 所属零件；通常要求该 part 已 removed
-  position: Vec3           // 世界或 part-local（需在 def 标明 space）
-  radiusMeters: number
-  dwellMs: number          // 默认 1500
-  stepId: string           // e.g. clean_oil_box
-}
+  cleanId: string;
+  displayName: string;
+  partId: string; // 所属零件；通常要求该 part 已 removed
+  position: Vec3; // 世界或 part-local（需在 def 标明 space）
+  radiusMeters: number;
+  dwellMs: number; // 默认 1500
+  stepId: string; // e.g. clean_oil_box
+};
 ```
 
 - **删除**运行时对 Unity `prefabPath` 的依赖。
@@ -120,12 +120,12 @@ type CleanSpotDef = {
 
 ### 与旧代码关系
 
-| 旧模块 | 新去向 |
-|--------|--------|
-| `LockManager` 顺序/扣分思想 | 保留并扩展 `clean_*`、faultLog；API 可重写 |
-| `GrabPart` 腕距 8cm | 重写为 collider + hover 引导 |
-| `RelativeHandDriver` | 思想保留；输入改为 HandHub（无 WS） |
-| `handSocket` / Python | 删除 |
+| 旧模块                           | 新去向                                     |
+| -------------------------------- | ------------------------------------------ |
+| `LockManager` 顺序/扣分思想      | 保留并扩展 `clean_*`、faultLog；API 可重写 |
+| `GrabPart` 腕距 8cm              | 重写为 collider + hover 引导               |
+| `RelativeHandDriver`             | 思想保留；输入改为 HandHub（无 WS）        |
+| `handSocket` / Python            | 删除                                       |
 | `RangeHoodShell` + `PART_LAYOUT` | 由 Kitbash 适配器 + MachineDef.anchor 取代 |
 
 ## 5. 视觉（D-asset）
@@ -144,12 +144,12 @@ type CleanSpotDef = {
 
 ## 7. 技术栈推荐
 
-| 层 | 选择 | 理由 |
-|----|------|------|
-| 构建 | 继续 Rsbuild + React 19 + TS | 已有工程与 AGENTS 约定 |
-| 3D | three + R3F + drei | 已有依赖 |
-| 动捕 | `@mediapipe/tasks-vision` HandLandmarker | 官方浏览器路径，双掌 |
-| 测试 | rstest：StepGraph/ScoreBook/命中纯函数优先 | 交互可测核 |
+| 层   | 选择                                       | 理由                   |
+| ---- | ------------------------------------------ | ---------------------- |
+| 构建 | 继续 Rsbuild + React 19 + TS               | 已有工程与 AGENTS 约定 |
+| 3D   | three + R3F + drei                         | 已有依赖               |
+| 动捕 | `@mediapipe/tasks-vision` HandLandmarker   | 官方浏览器路径，双掌   |
+| 测试 | rstest：StepGraph/ScoreBook/命中纯函数优先 | 交互可测核             |
 
 备选：若 Tasks 包体积/兼容成问题，可评估 `@tensorflow-models/hand-pose-detection`；需在实现子任务做一次 spike 后写回 research。
 
@@ -169,22 +169,22 @@ Phase N（首期 AC5 前）:
 
 ## 9. 关键权衡
 
-| 决策 | 取 | 舍 |
-|------|----|----|
-| 纯浏览器动捕 | 真·在线单页 | 本机 Python 滤波成熟度；需重做标定 |
-| Kitbash 先行 | 不堵开发 | 观感非量产；换模要严守契约 |
-| 通关即合格 | 降挫败 | 考核严谨性后置 |
-| 清洁 dwell + UI | 不卡关 | 非真实擦拭 |
-| 螺母 dwell 简化 | 可训闭环 | 反牙手感弱 |
+| 决策            | 取          | 舍                                 |
+| --------------- | ----------- | ---------------------------------- |
+| 纯浏览器动捕    | 真·在线单页 | 本机 Python 滤波成熟度；需重做标定 |
+| Kitbash 先行    | 不堵开发    | 观感非量产；换模要严守契约         |
+| 通关即合格      | 降挫败      | 考核严谨性后置                     |
+| 清洁 dwell + UI | 不卡关      | 非真实擦拭                         |
+| 螺母 dwell 简化 | 可训闭环    | 反牙手感弱                         |
 
 ## 10. 风险与缓解
 
-| 风险 | 缓解 |
-|------|------|
-| 顶摄 MediaPipe 不稳 | 强引导、hold、UI 清洁兜底、pinch 滞回 |
-| Kitbash 仍被嫌丑 | 提高轮廓辨识度 + 零件色标；并行正式资产线 |
-| 包体过大 | MediaPipe WASM CDN/本地缓存；按需加载 |
-| 标定失败 | 强制引导流，未标定不可抓取 |
+| 风险                | 缓解                                      |
+| ------------------- | ----------------------------------------- |
+| 顶摄 MediaPipe 不稳 | 强引导、hold、UI 清洁兜底、pinch 滞回     |
+| Kitbash 仍被嫌丑    | 提高轮廓辨识度 + 零件色标；并行正式资产线 |
+| 包体过大            | MediaPipe WASM CDN/本地缓存；按需加载     |
+| 标定失败            | 强制引导流，未标定不可抓取                |
 
 ## 11. 回滚
 

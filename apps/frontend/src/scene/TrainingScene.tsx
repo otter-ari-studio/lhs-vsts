@@ -1,20 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import { PointerInteraction } from '../interaction/PointerInteraction';
-import {
-  isOrbitLocked,
-  subscribeOrbitLock,
-} from '../interaction/orbitLockHub';
-import { clearInteractables } from '../interaction/registry';
-import { clearPartPoses } from '../interaction/partPoseHub';
-import {
-  setTrainingSession,
-  TrainingSession,
-  type MachineDef,
-} from '@lhs-vsts/machine';
-import { loadMachineDef } from '../api/loadMachineDef';
-import { MachineView } from '../visual/MachineView';
+import { useEffect, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { PointerInteraction } from "../interaction/PointerInteraction";
+import { isOrbitLocked, subscribeOrbitLock } from "../interaction/orbitLockHub";
+import { clearInteractables } from "../interaction/registry";
+import { clearPartPoses } from "../interaction/partPoseHub";
+import { setTrainingSession, TrainingSession, type MachineDef } from "@lhs-vsts/machine";
+import { loadMachineDef } from "../api/loadMachineDef";
+import { MachineView } from "../visual/MachineView";
 
 interface TrainingSceneProps {
   /** Bumps to restart session with a fresh TrainingSession. */
@@ -27,12 +20,12 @@ function OrbitGate() {
   useEffect(() => {
     return subscribeOrbitLock(() => {
       const c = controls as { enabled?: boolean } | null;
-      if (c && 'enabled' in c) c.enabled = !isOrbitLocked();
+      if (c && "enabled" in c) c.enabled = !isOrbitLocked();
     });
   }, [controls]);
   useFrame(() => {
     const c = controls as { enabled?: boolean } | null;
-    if (c && 'enabled' in c) c.enabled = !isOrbitLocked();
+    if (c && "enabled" in c) c.enabled = !isOrbitLocked();
   });
   return null;
 }
@@ -40,10 +33,7 @@ function OrbitGate() {
 /**
  * Training R3F scene: lighting, Kitbash machine, mouse click/drag interaction.
  */
-export function TrainingScene({
-  restartToken,
-  onSessionReady,
-}: TrainingSceneProps) {
+export function TrainingScene({ restartToken, onSessionReady }: TrainingSceneProps) {
   const [def, setDef] = useState<MachineDef | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,9 +76,9 @@ export function TrainingScene({
         camera={{ position: [0.55, 0.42, 1.55], fov: 42, near: 0.05, far: 50 }}
         gl={{ antialias: true }}
       >
-        <color attach="background" args={['#101725']} />
+        <color attach="background" args={["#101725"]} />
         <ambientLight intensity={0.5} />
-        <hemisphereLight args={['#c9d6e5', '#2a3038', 0.4]} />
+        <hemisphereLight args={["#c9d6e5", "#2a3038", 0.4]} />
         <directionalLight
           castShadow
           position={[2.4, 3.8, 2.2]}

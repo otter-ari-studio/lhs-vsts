@@ -1,6 +1,6 @@
-import { Matrix4, Quaternion, Vector3 } from 'three';
+import { Matrix4, Quaternion, Vector3 } from "three";
 
-export type AxisSource = 'x' | 'y' | 'z';
+export type AxisSource = "x" | "y" | "z";
 
 export interface AxisMapConfig {
   sceneXFrom: AxisSource;
@@ -22,11 +22,11 @@ export interface AxisMapConfig {
  * Single source of truth — do not flip axes elsewhere.
  */
 export const DEFAULT_AXIS_MAP: AxisMapConfig = {
-  sceneXFrom: 'x',
+  sceneXFrom: "x",
   invertX: true,
-  sceneYFrom: 'y',
+  sceneYFrom: "y",
   invertY: true,
-  sceneZFrom: 'z',
+  sceneZFrom: "z",
   invertZ: false,
 };
 
@@ -53,9 +53,9 @@ export function buildMapMatrix(cfg: AxisMapConfig = DEFAULT_AXIS_MAP): Matrix4 {
     console.warn(
       `[axisMap] illegal axis config ${cfg.sceneXFrom}/${cfg.sceneYFrom}/${cfg.sceneZFrom}, using identity`,
     );
-    xFrom = 'x';
-    yFrom = 'y';
-    zFrom = 'z';
+    xFrom = "x";
+    yFrom = "y";
+    zFrom = "z";
     invertX = false;
     invertY = false;
     invertZ = false;
@@ -64,24 +64,7 @@ export function buildMapMatrix(cfg: AxisMapConfig = DEFAULT_AXIS_MAP): Matrix4 {
   const r1 = srcAxis(yFrom, invertY);
   const r2 = srcAxis(zFrom, invertZ);
   const m = new Matrix4();
-  m.set(
-    r0[0],
-    r0[1],
-    r0[2],
-    0,
-    r1[0],
-    r1[1],
-    r1[2],
-    0,
-    r2[0],
-    r2[1],
-    r2[2],
-    0,
-    0,
-    0,
-    0,
-    1,
-  );
+  m.set(r0[0], r0[1], r0[2], 0, r1[0], r1[1], r1[2], 0, r2[0], r2[1], r2[2], 0, 0, 0, 0, 1);
   return m;
 }
 

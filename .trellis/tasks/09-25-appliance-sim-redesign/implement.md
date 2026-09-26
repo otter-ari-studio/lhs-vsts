@@ -10,13 +10,13 @@
 python3 ./.trellis/scripts/task.py create "<title>" --slug <slug> --parent 09-25-appliance-sim-redesign
 ```
 
-| 顺序 | Slug（建议） | 标题 | 可独立验收 |
-|------|--------------|------|------------|
-| 1 | `greenfield-scaffold` | Greenfield 脚手架 + 旧栈退役/归档 | 纯 Web 可启动；无 WS 依赖；README 草案 |
-| 2 | `browser-hand-tracking` | 浏览器 HandLandmarker + 标定 + 虚拟手 | 顶摄端坐双手跟随/重标定 |
-| 3 | `kitbash-machine-def` | MachineDef 契约 + Kitbash 油烟机场景 | 可辨识机身/零件；锚点正确 |
-| 4 | `interaction-sop-clean` | 拆装交互 + 步骤图 + 清洁 dwell/UI + 结束页 | AC2–AC4 可训闭环 |
-| 5 | `harden-docs-retire` | 测试加固、legacy 删除、README 定稿 | AC5–AC6 |
+| 顺序 | Slug（建议）            | 标题                                       | 可独立验收                             |
+| ---- | ----------------------- | ------------------------------------------ | -------------------------------------- |
+| 1    | `greenfield-scaffold`   | Greenfield 脚手架 + 旧栈退役/归档          | 纯 Web 可启动；无 WS 依赖；README 草案 |
+| 2    | `browser-hand-tracking` | 浏览器 HandLandmarker + 标定 + 虚拟手      | 顶摄端坐双手跟随/重标定                |
+| 3    | `kitbash-machine-def`   | MachineDef 契约 + Kitbash 油烟机场景       | 可辨识机身/零件；锚点正确              |
+| 4    | `interaction-sop-clean` | 拆装交互 + 步骤图 + 清洁 dwell/UI + 结束页 | AC2–AC4 可训闭环                       |
+| 5    | `harden-docs-retire`    | 测试加固、legacy 删除、README 定稿         | AC5–AC6                                |
 
 依赖关系（写在各 child PRD，非系统强制）：1 → 2 与 3 可并行 → 4 依赖 2+3 → 5 收尾。
 
@@ -90,10 +90,10 @@ pnpm run dev
 
 ## 风险文件 / 回滚点
 
-| 点 | 风险 | 回滚 |
-|----|------|------|
-| 清空 `web/src` | 丢失可参考交互 | git；或先搬 `legacy/web-mvp` |
-| MediaPipe WASM | 加载失败/CORS | CDN↔本地切换；spike 换手检测库 |
+| 点              | 风险                    | 回滚                                  |
+| --------------- | ----------------------- | ------------------------------------- |
+| 清空 `web/src`  | 丢失可参考交互          | git；或先搬 `legacy/web-mvp`          |
+| MediaPipe WASM  | 加载失败/CORS           | CDN↔本地切换；spike 换手检测库        |
 | MachineDef 迁移 | 步骤 ID 与旧 tip 不一致 | 对照旧 `range_hood_generic.json` 做表 |
 
 ## Spike（P1 内可选，1 天内）

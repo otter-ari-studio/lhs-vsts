@@ -1,27 +1,23 @@
-import { expect, test } from '@rstest/core';
-import { Matrix4 } from 'three';
-import {
-  DEFAULT_AXIS_MAP,
-  buildMapMatrix,
-  mapPointTuple,
-} from '../src/hand/axisMap';
-import { handHub } from '../src/hand/HandHub';
+import { expect, test } from "@rstest/core";
+import { Matrix4 } from "three";
+import { DEFAULT_AXIS_MAP, buildMapMatrix, mapPointTuple } from "../src/hand/axisMap";
+import { handHub } from "../src/hand/HandHub";
 import {
   MEDIAPIPE_VERSION,
   MEDIAPIPE_WASM_BASE,
   MEDIAPIPE_WASM_CDN,
-} from '../src/hand/mediapipeLoader';
-import { distance3, updatePinchState, updatePinchStateConfirmed } from '../src/hand/pinch';
-import { fingerOpenRatio, updateGraspStateConfirmed } from '../src/hand/grasp';
-import type { HandSample, Vec3 } from '../src/hand/types';
+} from "../src/hand/mediapipeLoader";
+import { distance3, updatePinchState, updatePinchStateConfirmed } from "../src/hand/pinch";
+import { fingerOpenRatio, updateGraspStateConfirmed } from "../src/hand/grasp";
+import type { HandSample, Vec3 } from "../src/hand/types";
 
-test('DEFAULT_AXIS_MAP mirrors X and flips Y for selfie → Three', () => {
+test("DEFAULT_AXIS_MAP mirrors X and flips Y for selfie → Three", () => {
   expect(DEFAULT_AXIS_MAP.invertX).toBe(true);
   expect(DEFAULT_AXIS_MAP.invertY).toBe(true);
   expect(DEFAULT_AXIS_MAP.invertZ).toBe(false);
 });
 
-test('buildMapMatrix maps MediaPipe point into scene space', () => {
+test("buildMapMatrix maps MediaPipe point into scene space", () => {
   const map = buildMapMatrix(DEFAULT_AXIS_MAP);
   // Capture +X right, +Y down → scene −X (mirrored), +Y up
   const out = mapPointTuple([0.1, 0.2, 0.3], map);
@@ -30,19 +26,19 @@ test('buildMapMatrix maps MediaPipe point into scene space', () => {
   expect(out[2]).toBeCloseTo(0.3);
 });
 
-test('illegal axis config falls back to identity', () => {
+test("illegal axis config falls back to identity", () => {
   const map = buildMapMatrix({
-    sceneXFrom: 'x',
+    sceneXFrom: "x",
     invertX: false,
-    sceneYFrom: 'x',
+    sceneYFrom: "x",
     invertY: false,
-    sceneZFrom: 'z',
+    sceneZFrom: "z",
     invertZ: false,
   });
   expect(map.equals(new Matrix4())).toBe(true);
 });
 
-test('pinch hysteresis: enter below ON, stay until OFF', () => {
+test("pinch hysteresis: enter below ON, stay until OFF", () => {
   const on = 0.035;
   const off = 0.055;
   expect(updatePinchState(false, 0.04, on, off)).toBe(false);
@@ -52,7 +48,7 @@ test('pinch hysteresis: enter below ON, stay until OFF', () => {
   expect(updatePinchState(true, 0.06, on, off)).toBe(false);
 });
 
-test('pinch confirm ignores single-frame flips near the band', () => {
+test("pinch confirm ignores single-frame flips near the band", () => {
   const on = 0.045;
   const off = 0.07;
   let pending = 0;
@@ -91,7 +87,7 @@ test('pinch confirm ignores single-frame flips near the band', () => {
   expect(pinching).toBe(true);
 });
 
-test('fingerOpenRatio lower when tips curl toward wrist', () => {
+test("fingerOpenRatio lower when tips curl toward wrist", () => {
   const open: Vec3[] = Array.from({ length: 21 }, () => [0, 0, 0] as Vec3);
   open[0] = [0, 0, 0];
   open[9] = [0, 0.08, 0];
@@ -102,7 +98,7 @@ test('fingerOpenRatio lower when tips curl toward wrist', () => {
   expect(fingerOpenRatio(closed)).toBeLessThan(1.4);
 });
 
-test('grasp hysteresis: enter when openRatio ≤ ON, leave when ≥ OFF', () => {
+test("grasp hysteresis: enter when openRatio ≤ ON, leave when ≥ OFF", () => {
   const on = 1.4;
   const off = 1.65;
   expect(updateGraspStateConfirmed(false, 1.5, on, off, 0, 1).grasping).toBe(false);
@@ -111,11 +107,11 @@ test('grasp hysteresis: enter when openRatio ≤ ON, leave when ≥ OFF', () => 
   expect(updateGraspStateConfirmed(true, 1.65, on, off, 0, 1).grasping).toBe(false);
 });
 
-test('distance3 is Euclidean', () => {
+test("distance3 is Euclidean", () => {
   expect(distance3([0, 0, 0], [3, 4, 0])).toBeCloseTo(5);
 });
 
-test('handHub publish / clear / hasAny', () => {
+test("handHub publish / clear / hasAny", () => {
   handHub.clearAll();
   expect(handHub.hasAny()).toBe(false);
 
@@ -136,15 +132,15 @@ test('handHub publish / clear / hasAny', () => {
   expect(handHub.hasAny()).toBe(false);
 });
 
-test('MediaPipe WASM URLs are pinned (not @latest)', () => {
-  expect(MEDIAPIPE_VERSION).toBe('1.0.1');
-  expect(MEDIAPIPE_WASM_BASE).toBe('/mediapipe');
+test("MediaPipe WASM URLs are pinned (not @latest)", () => {
+  expect(MEDIAPIPE_VERSION).toBe("1.0.1");
+  expect(MEDIAPIPE_WASM_BASE).toBe("/mediapipe");
   expect(MEDIAPIPE_WASM_CDN).toContain(`@${MEDIAPIPE_VERSION}`);
-  expect(MEDIAPIPE_WASM_CDN).not.toContain('@latest');
+  expect(MEDIAPIPE_WASM_CDN).not.toContain("@latest");
 });
 
-test('imageLandmarksToCaptureMeters maps frame center XY; Z from depth + finger', async () => {
-  const { imageLandmarksToCaptureMeters } = await import('../src/hand/HandTracker');
+test("imageLandmarksToCaptureMeters maps frame center XY; Z from depth + finger", async () => {
+  const { imageLandmarksToCaptureMeters } = await import("../src/hand/HandTracker");
   const pts = Array.from({ length: 21 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
   pts[1] = { x: 1, y: 0, z: -0.1 };
   const out = imageLandmarksToCaptureMeters(pts, {
@@ -159,14 +155,13 @@ test('imageLandmarksToCaptureMeters maps frame center XY; Z from depth + finger'
   expect(out[1][0]).toBeCloseTo(0.4);
   expect(out[1][1]).toBeCloseTo(0.4);
   // Finger zRel=-0.1 → closer to cam → larger scene Z (depthZ - zRel*span)
-  expect(out[1][2]).toBeCloseTo(1 - (-0.1) * 0.8);
+  expect(out[1][2]).toBeCloseTo(1 - -0.1 * 0.8);
 });
 
-test('screen map: mirrored preview center → workspace center; right of preview → +X', async () => {
-  const { imageLandmarkToScene, SCREEN_WORKSPACE, clampHandZ } = await import(
-    '../src/hand/screenMap'
-  );
-  const { HAND_Z_NEAR } = await import('../src/hand/defaults');
+test("screen map: mirrored preview center → workspace center; right of preview → +X", async () => {
+  const { imageLandmarkToScene, SCREEN_WORKSPACE, clampHandZ } =
+    await import("../src/hand/screenMap");
+  const { HAND_Z_NEAR } = await import("../src/hand/defaults");
   const mid = imageLandmarkToScene(0.5, 0.5, 0, { depthZ: SCREEN_WORKSPACE.center[2] });
   expect(mid[0]).toBeCloseTo(SCREEN_WORKSPACE.center[0]);
   expect(mid[1]).toBeCloseTo(SCREEN_WORKSPACE.center[1]);
@@ -190,13 +185,9 @@ test('screen map: mirrored preview center → workspace center; right of preview
   expect(clampHandZ(0.1)).toBe(HAND_Z_NEAR);
 });
 
-test('desk depth: larger palm → closer; browsers assume 1 m desk', async () => {
-  const {
-    DESK_TO_SCREEN_METERS,
-    estimateDepthFromPalmNorm,
-    palmRatioToSceneZ,
-    palmWidthNorm,
-  } = await import('../src/hand/deskDepth');
+test("desk depth: larger palm → closer; browsers assume 1 m desk", async () => {
+  const { DESK_TO_SCREEN_METERS, estimateDepthFromPalmNorm, palmRatioToSceneZ, palmWidthNorm } =
+    await import("../src/hand/deskDepth");
   expect(DESK_TO_SCREEN_METERS).toBe(1);
 
   const near = estimateDepthFromPalmNorm(0.2);
@@ -222,34 +213,33 @@ test('desk depth: larger palm → closer; browsers assume 1 m desk', async () =>
   expect(palmWidthNorm(pts)).toBeCloseTo(0.15);
 });
 
-test('median origin helper prefers mid sample', async () => {
-  const { median } = await import('../src/hand/deskDepth');
+test("median origin helper prefers mid sample", async () => {
+  const { median } = await import("../src/hand/deskDepth");
   expect(median([0.2, 0.1, 0.15])).toBeCloseTo(0.15);
   expect(median([0.1, 0.2])).toBeCloseTo(0.15);
 });
 
-test('capture log: record → parse → replay publishes HandHub', async () => {
+test("capture log: record → parse → replay publishes HandHub", async () => {
   const {
     HAND_CAPTURE_LOG_VERSION,
     handCaptureRecorder,
     parseHandCaptureLog,
     HandCaptureReplayer,
-  } = await import('../src/hand/captureLog');
-  const { handHub: hub } = await import('../src/hand/HandHub');
-  const { JOINT_COUNT } = await import('../src/hand/types');
+  } = await import("../src/hand/captureLog");
+  const { handHub: hub } = await import("../src/hand/HandHub");
+  const { JOINT_COUNT } = await import("../src/hand/types");
 
   hub.clearAll();
   handCaptureRecorder.clear();
-  handCaptureRecorder.start('unit');
-  const landmarks = Array.from({ length: JOINT_COUNT }, (_, i) => [i * 0.01, 0.1, 0.4] as [
-    number,
-    number,
-    number,
-  ]);
+  handCaptureRecorder.start("unit");
+  const landmarks = Array.from(
+    { length: JOINT_COUNT },
+    (_, i) => [i * 0.01, 0.1, 0.4] as [number, number, number],
+  );
   handCaptureRecorder.append([
     {
       handId: 0,
-      label: 'Left',
+      label: "Left",
       image: landmarks,
       world: null,
       palmRaw: 0.12,
@@ -266,7 +256,7 @@ test('capture log: record → parse → replay publishes HandHub', async () => {
   const log = handCaptureRecorder.stop();
   expect(log.version).toBe(HAND_CAPTURE_LOG_VERSION);
   expect(log.frames).toHaveLength(1);
-  expect(log.meta.note).toBe('unit');
+  expect(log.meta.note).toBe("unit");
 
   const parsed = parseHandCaptureLog(JSON.parse(JSON.stringify(log)));
   expect(parsed.frames[0].hands[0].reachZ).toBeCloseTo(0.4);
@@ -280,7 +270,7 @@ test('capture log: record → parse → replay publishes HandHub', async () => {
   handCaptureRecorder.clear();
 });
 
-test('parseHandCaptureLog rejects bad version', async () => {
-  const { parseHandCaptureLog } = await import('../src/hand/captureLog');
+test("parseHandCaptureLog rejects bad version", async () => {
+  const { parseHandCaptureLog } = await import("../src/hand/captureLog");
   expect(() => parseHandCaptureLog({ version: 99, frames: [] })).toThrow();
 });

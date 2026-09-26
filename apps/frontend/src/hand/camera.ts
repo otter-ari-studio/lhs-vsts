@@ -1,4 +1,4 @@
-export type CameraErrorKind = 'denied' | 'not_found' | 'secure_context' | 'unknown';
+export type CameraErrorKind = "denied" | "not_found" | "secure_context" | "unknown";
 
 export interface CameraError {
   kind: CameraErrorKind;
@@ -10,39 +10,39 @@ export type CameraRequestResult =
   | { ok: false; error: CameraError };
 
 function classifyGetUserMediaError(err: unknown): CameraError {
-  if (!window.isSecureContext && location.hostname !== 'localhost') {
+  if (!window.isSecureContext && location.hostname !== "localhost") {
     return {
-      kind: 'secure_context',
-      message: '摄像头需要安全上下文（HTTPS 或 localhost）。',
+      kind: "secure_context",
+      message: "摄像头需要安全上下文（HTTPS 或 localhost）。",
     };
   }
-  const name = err instanceof DOMException ? err.name : '';
-  if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+  const name = err instanceof DOMException ? err.name : "";
+  if (name === "NotAllowedError" || name === "PermissionDeniedError") {
     return {
-      kind: 'denied',
-      message: '摄像头权限被拒绝。请在地址栏允许摄像头后重试。',
+      kind: "denied",
+      message: "摄像头权限被拒绝。请在地址栏允许摄像头后重试。",
     };
   }
-  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+  if (name === "NotFoundError" || name === "DevicesNotFoundError") {
     return {
-      kind: 'not_found',
-      message: '未找到摄像头设备。',
+      kind: "not_found",
+      message: "未找到摄像头设备。",
     };
   }
   const message = err instanceof Error ? err.message : String(err);
-  return { kind: 'unknown', message: message || '无法打开摄像头。' };
+  return { kind: "unknown", message: message || "无法打开摄像头。" };
 }
 
 /**
  * Request user-facing webcam (laptop top cam). Prefer facingMode user.
  */
 export async function requestUserCamera(): Promise<CameraRequestResult> {
-  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+  if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
     return {
       ok: false,
       error: {
-        kind: 'unknown',
-        message: '当前环境不支持 getUserMedia。',
+        kind: "unknown",
+        message: "当前环境不支持 getUserMedia。",
       },
     };
   }
@@ -51,7 +51,7 @@ export async function requestUserCamera(): Promise<CameraRequestResult> {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: false,
       video: {
-        facingMode: 'user',
+        facingMode: "user",
         width: { ideal: 640 },
         height: { ideal: 480 },
       },

@@ -28,24 +28,24 @@ vp run dev:frontend
 
 ## Scripts
 
-| Command | Purpose |
-|---------|---------|
-| `vp run frontend#dev` | 本地开发服务器 |
-| `vp run frontend#build` | 生产构建 |
-| `vp run frontend#preview` | 预览构建产物 |
-| `vp run frontend#lint` | Rslint |
-| `vp run frontend#test` | Rstest 单测 |
+| Command                   | Purpose        |
+| ------------------------- | -------------- |
+| `vp run frontend#dev`     | 本地开发服务器 |
+| `vp run frontend#build`   | 生产构建       |
+| `vp run frontend#preview` | 预览构建产物   |
+| `vp run frontend#lint`    | Rslint         |
+| `vp run frontend#test`    | Rstest 单测    |
 
 ## Module layout
 
-| Folder | Responsibility |
-|--------|----------------|
-| `src/api/` | 同源 `/api` 客户端与 `loadMachineDef` |
-| `src/hand/` | 遗留摄像头 / MediaPipe 代码（训练页已不再启用） |
-| `src/interaction/` | 鼠标点击拖拽、grab / clip / nut、物品栏 |
-| `src/visual/` | Kitbash 适配器；未来可换 GLTF，不改 StepGraph |
-| `src/ui/` | 引导、训练、管理、结束页 |
-| `src/scene/` | R3F 训练场景 |
+| Folder             | Responsibility                                  |
+| ------------------ | ----------------------------------------------- |
+| `src/api/`         | 同源 `/api` 客户端与 `loadMachineDef`           |
+| `src/hand/`        | 遗留摄像头 / MediaPipe 代码（训练页已不再启用） |
+| `src/interaction/` | 鼠标点击拖拽、grab / clip / nut、物品栏         |
+| `src/visual/`      | Kitbash 适配器；未来可换 GLTF，不改 StepGraph   |
+| `src/ui/`          | 引导、训练、管理、结束页                        |
+| `src/scene/`       | R3F 训练场景                                    |
 
 领域规则（MachineDef、StepGraph、ScoreBook、TrainingSession）在 `@lhs-vsts/machine`。
 

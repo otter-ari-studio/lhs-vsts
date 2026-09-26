@@ -1,16 +1,9 @@
-import { Vector3 } from 'three';
-import {
-  findNearestInteractable,
-  listLiveSopTargets,
-  type HandInteractable,
-} from './registry';
-import {
-  selectionFromInteractable,
-  selectionFromSopFallback,
-} from './selectionInfo';
-import { selectionHub } from './selectionHub';
-import { aimTargetHub } from './aimTargetHub';
-import { setOrbitLocked } from './orbitLockHub';
+import { Vector3 } from "three";
+import { findNearestInteractable, listLiveSopTargets, type HandInteractable } from "./registry";
+import { selectionFromInteractable, selectionFromSopFallback } from "./selectionInfo";
+import { selectionHub } from "./selectionHub";
+import { aimTargetHub } from "./aimTargetHub";
+import { setOrbitLocked } from "./orbitLockHub";
 
 export interface PointerDragSession {
   /** Current pointer position on the operation surface (world). */
@@ -85,16 +78,13 @@ export function createPointerDragSession(): PointerDragSession {
 
     setHover(target && target.isInteractableNow() ? target : null);
     selectionHub.set(
-      hover.current
-        ? selectionFromInteractable(hover.current)
-        : selectionFromSopFallback(),
+      hover.current ? selectionFromInteractable(hover.current) : selectionFromSopFallback(),
     );
 
     const aimIt = hover.current ?? listLiveSopTargets()[0] ?? null;
     if (aimIt?.copyWorldPosition?.(aim)) {
       const inRange =
-        !!hover.current &&
-        hover.current.distanceTo(pos) <= hover.current.interactionRadius * 0.95;
+        !!hover.current && hover.current.distanceTo(pos) <= hover.current.interactionRadius * 0.95;
       aimTargetHub.set({
         id: aimIt.id,
         position: [aim.x, aim.y, aim.z],
@@ -116,21 +106,21 @@ export function createPointerDragSession(): PointerDragSession {
       return true;
     }
 
-    if (target.kind === 'clip') {
+    if (target.kind === "clip") {
       lockoutId.current = target.id;
       engaged.current = null;
       setOrbitLocked(false);
       return true;
     }
 
-    if (target.kind === 'rotate_nut' && !target.isInteractableNow()) {
+    if (target.kind === "rotate_nut" && !target.isInteractableNow()) {
       lockoutId.current = target.id;
       engaged.current = null;
       setOrbitLocked(false);
       return true;
     }
 
-    if (target.kind === 'grabbable' || target.kind === 'rotate_nut') {
+    if (target.kind === "grabbable" || target.kind === "rotate_nut") {
       engaged.current = target;
       setOrbitLocked(true);
       return true;
@@ -172,11 +162,7 @@ export function createPointerDragSession(): PointerDragSession {
         return true;
       }
       const target = findNearestInteractable(pos);
-      if (
-        target &&
-        target.id !== lockoutId.current &&
-        target.isInteractableNow()
-      ) {
+      if (target && target.id !== lockoutId.current && target.isInteractableNow()) {
         pointerDown.current = true;
         setOrbitLocked(true);
         tryCommit();

@@ -1,7 +1,7 @@
-import { Html } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
-import { DoubleSide, type Mesh, type MeshBasicMaterial } from 'three';
+import { Html } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import { useRef } from "react";
+import { DoubleSide, type Mesh, type MeshBasicMaterial } from "three";
 
 interface SopTargetHighlightProps {
   /** When true, pulse ring + core (SOP current target). */
@@ -121,16 +121,16 @@ export function SopTargetHighlight({
           center
           position={[0, 0.12, 0.06]}
           style={{
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-            padding: '0.2rem 0.45rem',
-            borderRadius: '0.25rem',
-            background: 'rgba(12, 18, 26, 0.92)',
-            border: '1px solid #3ddc97',
-            color: '#3ddc97',
-            fontSize: '12px',
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+            padding: "0.2rem 0.45rem",
+            borderRadius: "0.25rem",
+            background: "rgba(12, 18, 26, 0.92)",
+            border: "1px solid #3ddc97",
+            color: "#3ddc97",
+            fontSize: "12px",
             fontWeight: 600,
-            transform: 'translateZ(0)',
+            transform: "translateZ(0)",
           }}
           zIndexRange={[100, 0]}
         >

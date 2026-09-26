@@ -12,13 +12,13 @@ import {
   FilesetResolver,
   HandLandmarker,
   type HandLandmarker as HandLandmarkerType,
-} from '@mediapipe/tasks-vision';
+} from "@mediapipe/tasks-vision";
 
 /** Must match `package.json` dependency `@mediapipe/tasks-vision`. */
-export const MEDIAPIPE_VERSION = '1.0.1';
+export const MEDIAPIPE_VERSION = "1.0.1";
 
 /** Local static path (rsbuild copies wasm here). */
-export const MEDIAPIPE_WASM_LOCAL = '/mediapipe';
+export const MEDIAPIPE_WASM_LOCAL = "/mediapipe";
 
 /** Pinned CDN fallback — version must match MEDIAPIPE_VERSION. */
 export const MEDIAPIPE_WASM_CDN = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`;
@@ -28,9 +28,9 @@ export const MEDIAPIPE_WASM_BASE = MEDIAPIPE_WASM_LOCAL;
 
 /** Official float16 hand landmarker model (stable URL, not @latest). */
 export const HAND_LANDMARKER_MODEL =
-  'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+  "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
 
-export type MediapipeLoadState = 'idle' | 'loading' | 'ready' | 'error';
+export type MediapipeLoadState = "idle" | "loading" | "ready" | "error";
 
 export interface MediapipeLoaderStatus {
   state: MediapipeLoadState;
@@ -53,7 +53,7 @@ async function resolveVisionFileset(wasmBase: string) {
  */
 export async function createHandLandmarker(): Promise<CreateHandLandmarkerResult> {
   const bases = [MEDIAPIPE_WASM_LOCAL, MEDIAPIPE_WASM_CDN];
-  const delegates: Array<'GPU' | 'CPU'> = ['GPU', 'CPU'];
+  const delegates: Array<"GPU" | "CPU"> = ["GPU", "CPU"];
   let lastError: unknown;
 
   for (const wasmBase of bases) {
@@ -65,7 +65,7 @@ export async function createHandLandmarker(): Promise<CreateHandLandmarkerResult
             modelAssetPath: HAND_LANDMARKER_MODEL,
             delegate,
           },
-          runningMode: 'VIDEO',
+          runningMode: "VIDEO",
           numHands: 2,
           minHandDetectionConfidence: 0.5,
           minHandPresenceConfidence: 0.5,
@@ -74,10 +74,7 @@ export async function createHandLandmarker(): Promise<CreateHandLandmarkerResult
         return { landmarker, wasmBase };
       } catch (err) {
         lastError = err;
-        console.warn(
-          `[mediapipe] failed to load from ${wasmBase} (${delegate})`,
-          err,
-        );
+        console.warn(`[mediapipe] failed to load from ${wasmBase} (${delegate})`, err);
       }
     }
   }
@@ -89,14 +86,14 @@ export async function createHandLandmarker(): Promise<CreateHandLandmarkerResult
 /** Lightweight readiness probe (import + path docs). */
 export async function ensureMediapipeVisionReady(): Promise<MediapipeLoaderStatus> {
   try {
-    await import('@mediapipe/tasks-vision');
+    await import("@mediapipe/tasks-vision");
     return {
-      state: 'ready',
+      state: "ready",
       detail: `WASM local=${MEDIAPIPE_WASM_LOCAL}; CDN=${MEDIAPIPE_WASM_CDN}`,
       wasmBase: MEDIAPIPE_WASM_BASE,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return { state: 'error', detail: message };
+    return { state: "error", detail: message };
   }
 }

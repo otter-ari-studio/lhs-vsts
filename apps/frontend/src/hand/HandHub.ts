@@ -1,4 +1,4 @@
-import type { HandId, HandSample } from './types';
+import type { HandId, HandSample } from "./types";
 
 /**
  * Latest-sample hub for L/R hands.

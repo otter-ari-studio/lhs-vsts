@@ -34,12 +34,17 @@ apps/backend :3001
 
 ```ts
 {
-  id: string
-  machineId: string
-  score: number
-  passed: boolean
-  faults: { key: string; reason: string; amount: number }[]
-  finishedAt: string
+  id: string;
+  machineId: string;
+  score: number;
+  passed: boolean;
+  faults: {
+    key: string;
+    reason: string;
+    amount: number;
+  }
+  [];
+  finishedAt: string;
 }
 ```
 

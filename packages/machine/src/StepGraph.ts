@@ -5,9 +5,9 @@ import {
   removeStep,
   type MachineDef,
   type PartDef,
-} from './types.js';
+} from "./types.js";
 
-export type PartRuntimeState = 'installed' | 'removed' | 'clip_open' | 'clip_closed';
+export type PartRuntimeState = "installed" | "removed" | "clip_open" | "clip_closed";
 
 export interface StepInfo {
   stepId: string;
@@ -21,8 +21,8 @@ export function buildStepPrereqs(def: MachineDef): Map<string, string[]> {
   const map = new Map<string, string[]>();
 
   for (const part of def.parts) {
-    if (part.kind === 'fixed_shell') continue;
-    if (part.kind === 'clip') {
+    if (part.kind === "fixed_shell") continue;
+    if (part.kind === "clip") {
       map.set(openStep(part.partId), [...part.removePrereqs]);
       map.set(closeStep(part.partId), [...part.installPrereqs]);
     } else {
@@ -45,10 +45,7 @@ export function buildRequiredSteps(def: MachineDef): string[] {
   return topoSortSteps([...prereqs.keys()], prereqs);
 }
 
-export function topoSortSteps(
-  stepIds: string[],
-  prereqs: Map<string, string[]>,
-): string[] {
+export function topoSortSteps(stepIds: string[], prereqs: Map<string, string[]>): string[] {
   const remaining = new Set(stepIds);
   const done = new Set<string>();
   const ordered: string[] = [];
@@ -86,11 +83,11 @@ export function prereqsMet(
 export function initialPartStates(def: MachineDef): Map<string, PartRuntimeState> {
   const states = new Map<string, PartRuntimeState>();
   for (const part of def.parts) {
-    if (part.kind === 'fixed_shell') continue;
-    if (part.kind === 'clip') {
-      states.set(part.partId, 'clip_closed');
+    if (part.kind === "fixed_shell") continue;
+    if (part.kind === "clip") {
+      states.set(part.partId, "clip_closed");
     } else {
-      states.set(part.partId, 'installed');
+      states.set(part.partId, "installed");
     }
   }
   return states;
