@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { RelativeHandDriver } from '../hand/RelativeHandDriver';
-import { HandAimCursor } from '../interaction/HandAimCursor';
-import { InteractionRouter } from '../interaction/InteractionRouter';
+import { PointerInteraction } from '../interaction/PointerInteraction';
+import {
+  isOrbitLocked,
+  subscribeOrbitLock,
+} from '../interaction/orbitLockHub';
 import { clearInteractables } from '../interaction/registry';
 import { clearPartPoses } from '../interaction/partPoseHub';
 import {
@@ -15,17 +17,30 @@ import {
 import { MachineView } from '../visual/MachineView';
 
 interface TrainingSceneProps {
-  calibrateToken: number;
   /** Bumps to restart session with a fresh TrainingSession. */
   restartToken: number;
   onSessionReady?: (session: TrainingSession) => void;
 }
 
+function OrbitGate() {
+  const { controls } = useThree();
+  useEffect(() => {
+    return subscribeOrbitLock(() => {
+      const c = controls as { enabled?: boolean } | null;
+      if (c && 'enabled' in c) c.enabled = !isOrbitLocked();
+    });
+  }, [controls]);
+  useFrame(() => {
+    const c = controls as { enabled?: boolean } | null;
+    if (c && 'enabled' in c) c.enabled = !isOrbitLocked();
+  });
+  return null;
+}
+
 /**
- * Training R3F scene: lighting, Kitbash machine + interactions, dual virtual hands.
+ * Training R3F scene: lighting, Kitbash machine, mouse click/drag interaction.
  */
 export function TrainingScene({
-  calibrateToken,
   restartToken,
   onSessionReady,
 }: TrainingSceneProps) {
@@ -54,7 +69,6 @@ export function TrainingScene({
     clearPartPoses();
     const session = new TrainingSession(def);
     setTrainingSession(session);
-    // Force chrome to leave empty-snapshot state (rev stays meaningful after first bump).
     onSessionReady?.(session);
     return () => {
       setTrainingSession(null);
@@ -69,7 +83,7 @@ export function TrainingScene({
       {!def && !error ? <div className="scene-banner">加载机型…</div> : null}
       <Canvas
         shadows
-        camera={{ position: [0, 0.28, 1.45], fov: 42, near: 0.05, far: 50 }}
+        camera={{ position: [0.55, 0.42, 1.55], fov: 42, near: 0.05, far: 50 }}
         gl={{ antialias: true }}
       >
         <color attach="background" args={['#101725']} />
@@ -92,21 +106,19 @@ export function TrainingScene({
         </mesh>
 
         {def ? <MachineView key={restartToken} def={def} /> : null}
-        <InteractionRouter />
-        <HandAimCursor />
-
-        <RelativeHandDriver handId={0} calibrateToken={calibrateToken} />
-        <RelativeHandDriver handId={1} calibrateToken={calibrateToken} />
+        <PointerInteraction />
+        <OrbitGate />
 
         <OrbitControls
+          makeDefault
           target={[0, 0.15, 0.1]}
           enablePan={false}
-          minDistance={0.85}
-          maxDistance={2.8}
-          minPolarAngle={Math.PI * 0.28}
-          maxPolarAngle={Math.PI * 0.48}
-          minAzimuthAngle={-Math.PI * 0.18}
-          maxAzimuthAngle={Math.PI * 0.18}
+          minDistance={0.7}
+          maxDistance={3.2}
+          minPolarAngle={Math.PI * 0.12}
+          maxPolarAngle={Math.PI * 0.55}
+          minAzimuthAngle={-Math.PI * 0.55}
+          maxAzimuthAngle={Math.PI * 0.55}
         />
       </Canvas>
     </div>

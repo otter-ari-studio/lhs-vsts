@@ -131,7 +131,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         }
         if (mgr && !tipShown.current) {
           tipShown.current = true;
-          mgr.tip('瞄准球停在零件上取下，移到左侧入栏；回装时道具弹出后放回安装位');
+          mgr.tip('点击取下零件，拖到左侧入栏；回装时拖回安装位松手');
         }
         return true;
       },
@@ -243,7 +243,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         g.position.set(...PROP_OFFER_POS);
         followPos.current.set(...PROP_OFFER_POS);
         g.visible = true;
-        mgr?.tip(`道具已弹出：抓住「${part.displayName}」放回安装位`);
+        mgr?.tip(`道具已弹出：拖拽「${part.displayName}」放回安装位`);
       }
       if (!shouldOffer) offerTipShown.current = false;
     }
@@ -317,7 +317,7 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         ringRadius={0.1}
         label={
           offered
-            ? `抓住 · ${part.displayName}`
+            ? `拖回 · ${part.displayName}`
             : isSopTarget && !inInventory
               ? part.displayName
               : undefined

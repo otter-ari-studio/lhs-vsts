@@ -182,7 +182,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
       if (!offerTipShown.current) {
         offerTipShown.current = true;
         popT.current = 0;
-        mgr?.tip(`道具已弹出：抓住「${part.displayName}」放回安装位`);
+        mgr?.tip(`道具已弹出：拖拽「${part.displayName}」放回安装位`);
       }
       popT.current = Math.min(1, popT.current + dt * 3.2);
       const ease = 1 - (1 - popT.current) ** 3;
@@ -238,7 +238,7 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
         ringRadius={0.08}
         label={
           removed && isInstallOfferPart(part.partId)
-            ? `抓住 · ${part.displayName}`
+            ? `拖回 · ${part.displayName}`
             : isSopTarget
               ? part.displayName
               : undefined

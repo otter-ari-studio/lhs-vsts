@@ -9,24 +9,24 @@ export function GuidePage({ onStart }: GuidePageProps) {
         <p className="guide-brand">LHS-VSTS</p>
         <h1 className="guide-title">大家电拆洗训练</h1>
         <p className="guide-lead">
-          纯浏览器动捕，无需安装 Python。请使用笔记本顶摄，端坐面对屏幕。
+          纯浏览器 3D 演示：用鼠标拖动旋转视角，点击与拖拽完成 SOP 拆洗回装。
         </p>
       </header>
 
-      <section className="guide-card" aria-labelledby="cam-heading">
-        <h2 id="cam-heading">摄像头权限</h2>
+      <section className="guide-card" aria-labelledby="mouse-heading">
+        <h2 id="mouse-heading">鼠标操作</h2>
         <ul>
-          <li>浏览器会请求摄像头权限；请选择「允许」。</li>
-          <li>需要安全上下文：本机用 <code>localhost</code>，部署须 HTTPS。</li>
-          <li>拒绝权限后无法追踪双手；可在地址栏重新授权。</li>
+          <li>拖动画布空白处：旋转 / 缩放查看机身。</li>
+          <li>点击高亮零件：打开卡扣、拧下螺母、取下部件。</li>
+          <li>按住拖拽零件：移到左侧松手进入物品栏；回装时拖回安装位松手。</li>
         </ul>
       </section>
 
-      <section className="guide-card" aria-labelledby="pose-heading">
-        <h2 id="pose-heading">顶摄端坐姿势</h2>
+      <section className="guide-card" aria-labelledby="flow-heading">
+        <h2 id="flow-heading">训练流程</h2>
         <ul>
-          <li>坐正，双手举到胸前入画，手心大致朝向屏幕。</li>
-          <li>进入训练后显示双手骨架并自动标定；姿势变了可点「重新标定」。</li>
+          <li>按左侧 SOP 步骤顺序操作；当前目标会高亮提示。</li>
+          <li>拆完后自动进入清洗，再按顺序回装。</li>
         </ul>
       </section>
 

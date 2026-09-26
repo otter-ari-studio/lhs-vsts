@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { useHandCamera } from '../hand/useHandCamera';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { partInventory } from '../interaction/partInventory';
 import { currentInstallOfferPartId } from '../interaction/partOffer';
 import { selectionHub } from '../interaction/selectionHub';
@@ -14,34 +13,6 @@ import { TrainingScene } from '../scene/TrainingScene';
 
 interface TrainPageProps {
   onBack: () => void;
-}
-
-function statusLabel(
-  phase: ReturnType<typeof useHandCamera>['phase'],
-  presence: ReturnType<typeof useHandCamera>['presence'],
-): { text: string; tone: 'ok' | 'wait' | 'bad' } {
-  if (phase === 'requesting') {
-    return { text: '正在请求摄像头权限…', tone: 'wait' };
-  }
-  if (phase === 'loading_model') {
-    return { text: '正在加载手部模型…', tone: 'wait' };
-  }
-  if (phase === 'denied') {
-    return { text: '摄像头权限被拒绝', tone: 'bad' };
-  }
-  if (phase === 'error') {
-    return { text: '摄像头或模型加载失败', tone: 'bad' };
-  }
-  if (phase === 'tracking') {
-    if (presence === 'both') {
-      return { text: '双手追踪中', tone: 'ok' };
-    }
-    if (presence === 'partial') {
-      return { text: '仅一只手入画 · 请双手举到胸前', tone: 'wait' };
-    }
-    return { text: '双手入画 · 坐正面对顶摄', tone: 'wait' };
-  }
-  return { text: '准备中…', tone: 'wait' };
 }
 
 const EMPTY_SNAP: SessionSnapshot = {
@@ -74,29 +45,15 @@ function readSessionSnapshot(): SessionSnapshot {
 }
 
 function useSessionSnapshot(sessionTick: number): SessionSnapshot {
-  // sessionTick: TrainingScene calls onSessionReady after creating a rev-0 session.
   void sessionTick;
   return useSyncExternalStore(subscribeSession, readSessionSnapshot, () => EMPTY_SNAP);
 }
 
 export function TrainPage({ onBack }: TrainPageProps) {
-  const [calibrateToken, setCalibrateToken] = useState(0);
   const [restartToken, setRestartToken] = useState(0);
   const [sessionTick, setSessionTick] = useState(0);
   const [tip, setTip] = useState<string | null>(null);
   const [washPlaying, setWashPlaying] = useState(false);
-  const {
-    phase,
-    error,
-    presence,
-    videoRef,
-    retry,
-    recalibrateDepth,
-    capture,
-  } = useHandCamera(true);
-  const captureFileRef = useRef<HTMLInputElement | null>(null);
-  const status = statusLabel(phase, presence);
-  const showOverlay = phase === 'denied' || phase === 'error';
   const snap = useSessionSnapshot(sessionTick);
   const inventoryIds = useSyncExternalStore(
     (cb) => partInventory.subscribe(cb),
@@ -126,16 +83,13 @@ export function TrainPage({ onBack }: TrainPageProps) {
   }, [tip, setTip]);
 
   const onSessionReady = useCallback(() => {
-    // Ensure rail re-reads snapshot even if revision stays 0 after replace.
     setSessionTick((n) => n + 1);
   }, [setSessionTick]);
 
   const restart = () => {
-    recalibrateDepth();
     partInventory.clear();
     selectionHub.clear();
     setRestartToken((n) => n + 1);
-    setCalibrateToken((n) => n + 1);
     setTip(null);
     setWashPlaying(false);
   };
@@ -160,65 +114,13 @@ export function TrainPage({ onBack }: TrainPageProps) {
       <header className="train-chrome">
         <div className="brand">LHS-VSTS</div>
         <div className="meta">
-          <span className={`dot ${status.tone}`} />
-          <span>{status.text}</span>
+          <span className="dot ok" />
+          <span>3D 演示 · 鼠标操作</span>
           <span className="score-chip">得分 {snap.score}</span>
         </div>
-        <button
-          type="button"
-          className="recal-btn"
-          onClick={() => {
-            recalibrateDepth();
-            setCalibrateToken((n) => n + 1);
-          }}
-          disabled={phase !== 'tracking' || capture.replaying}
-        >
-          重新标定
+        <button type="button" className="recal-btn" onClick={restart}>
+          重新开始
         </button>
-        {capture.recording ? (
-          <button
-            type="button"
-            className="recal-btn capture-active"
-            onClick={() => capture.stopAndDownload()}
-          >
-            停止并下载 ({capture.frameCount})
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="recal-btn"
-            onClick={() => capture.startRecording()}
-            disabled={phase !== 'tracking' || capture.replaying}
-          >
-            录制手部日志
-          </button>
-        )}
-        <button
-          type="button"
-          className="recal-btn"
-          onClick={() => captureFileRef.current?.click()}
-          disabled={capture.recording}
-        >
-          {capture.replaying ? '重放中…' : '重放日志'}
-        </button>
-        {capture.replaying ? (
-          <button type="button" className="recal-btn" onClick={() => capture.stopReplay()}>
-            停止重放
-          </button>
-        ) : null}
-        <input
-          ref={captureFileRef}
-          type="file"
-          accept="application/json,.json"
-          className="capture-file-input"
-          aria-hidden
-          tabIndex={-1}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            e.target.value = '';
-            if (file) void capture.loadAndReplay(file);
-          }}
-        />
         <button type="button" className="recal-btn" onClick={onBack}>
           返回引导
         </button>
@@ -229,7 +131,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
           <h2 className="step-rail-title">物品栏 · FIFO</h2>
           <ol className="inv-list" aria-label="已拆下零件">
             {inventory.length === 0 ? (
-              <li className="inv-empty">空 · 取下后左右甩手松手入队</li>
+              <li className="inv-empty">空 · 取下后拖到左侧松手入队</li>
             ) : (
               inventory.map((id, i) => {
                 const offered = currentInstallOfferPartId() === id;
@@ -248,7 +150,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
           <h2 className="step-rail-title">SOP 步骤</h2>
           <ol className="step-list">
             {snap.steps.length === 0 ? (
-              <li className="inv-empty">步骤加载中…若一直为空请点「重新标定」</li>
+              <li className="inv-empty">步骤加载中…若一直为空请点「重新开始」</li>
             ) : (
               snap.steps.map((row) => (
                 <li key={row.stepId} className={`step-row ${row.status}`}>
@@ -264,25 +166,15 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
         <main className="viewport">
           <TrainingScene
-            calibrateToken={calibrateToken}
             restartToken={restartToken}
             onSessionReady={onSessionReady}
-          />
-
-          <video
-            ref={videoRef}
-            className="cam-preview"
-            muted
-            playsInline
-            autoPlay
-            aria-label="摄像头预览（镜像）"
           />
 
           <aside className="selection-card" aria-live="polite">
             {selection ? (
               <>
                 <div className="selection-kicker">
-                  {selection.hint.startsWith('SOP') ? 'SOP 目标' : '手部选中'}
+                  {selection.hint.startsWith('SOP') ? 'SOP 目标' : '鼠标选中'}
                 </div>
                 <div className="selection-name">{selection.displayName}</div>
                 <div className="selection-hint">{selection.hint}</div>
@@ -290,7 +182,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
             ) : (
               <>
                 <div className="selection-kicker">当前目标</div>
-                <div className="selection-empty">靠近零件以选中</div>
+                <div className="selection-empty">点击高亮零件操作</div>
               </>
             )}
           </aside>
@@ -316,26 +208,9 @@ export function TrainPage({ onBack }: TrainPageProps) {
             </div>
           ) : null}
 
-          {showOverlay ? (
-            <div className="cam-overlay" role="alertdialog" aria-labelledby="cam-fail-title">
-              <h2 id="cam-fail-title">无法启动摄像头追踪</h2>
-              <p>{error?.message ?? '未知错误'}</p>
-              <ul className="cam-overlay-tips">
-                <li>请坐正，双手举到胸前入画，手心大致朝向屏幕（默认按约 1 米桌距建模）。</li>
-                <li>本机请使用 localhost；部署须 HTTPS。</li>
-                <li>若曾拒绝权限，请在地址栏重新允许摄像头。</li>
-              </ul>
-              <button type="button" className="primary-btn" onClick={retry}>
-                重试
-              </button>
-            </div>
-          ) : null}
-
-          {phase === 'tracking' && presence === 'none' ? (
-            <div className="cam-hint" role="status">
-              操作面：把青色球对准高亮热区，变绿后停住约 1 秒再动作；取下后移到左侧入栏。
-            </div>
-          ) : null}
+          <div className="cam-hint" role="status">
+            拖动旋转视角 · 点击高亮零件 · 拖拽零件到左侧入栏或装回安装位
+          </div>
 
           {showEnd ? (
             <div className="end-screen" role="dialog" aria-labelledby="end-title">

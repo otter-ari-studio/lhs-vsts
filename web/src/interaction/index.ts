@@ -11,6 +11,7 @@ export {
 } from './defaults';
 export { accumulateDwell, createDwellTracker } from './dwell';
 export { InteractionRouter } from './InteractionRouter';
+export { PointerInteraction } from './PointerInteraction';
 export { GrabInstallGhost, GrabPart } from './GrabPart';
 export { ClipPart } from './ClipPart';
 export { NutPart } from './NutPart';
