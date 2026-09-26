@@ -7,6 +7,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22.18-3c873a?style=flat-square)
 ![pnpm](https://img.shields.io/badge/pnpm-12.6-f69220?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white)
+![ari](https://storage.360buyimg.com/store-jddj-pro/otter-ari/built-with-love.svg)
 
 ## 概览
 
