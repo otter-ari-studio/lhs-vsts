@@ -4,6 +4,7 @@ import { getTrainingSession } from '../machine/TrainingSession';
 import type { PartDef, Vec3 } from '../machine/types';
 import { KitbashPart } from '../visual/kitbash/KitbashAdapter';
 import { COLLIDER_RADIUS, SOP_PICK_PRIORITY } from './defaults';
+import { surfaceDistance } from './operationSurface';
 import {
   registerInteractable,
   unregisterInteractable,
@@ -38,7 +39,11 @@ export function ClipPart({ part, isSopTarget }: ClipPartProps) {
       distanceTo(handPos) {
         const g = groupRef.current;
         if (!g) return Number.POSITIVE_INFINITY;
-        return g.getWorldPosition(_tmp).distanceTo(handPos);
+        g.getWorldPosition(_tmp);
+        return surfaceDistance(
+          [handPos.x, handPos.y, handPos.z],
+          [_tmp.x, _tmp.y, _tmp.z],
+        );
       },
       copyWorldPosition(out) {
         const g = groupRef.current;

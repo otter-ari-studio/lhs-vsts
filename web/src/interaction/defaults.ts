@@ -4,16 +4,16 @@ export const NUT_DWELL_MS = 700;
 /** Default clean dwell when MachineDef omits (should not happen). */
 export const DEFAULT_CLEAN_DWELL_MS = 1500;
 
-/** Collider radii by kind (meters) — pick range for pinch start. */
+/** Collider radii by kind (meters) — hover / aim on the operation surface. */
 export const COLLIDER_RADIUS = {
   /** Grab pick (install snap still uses part.snapRangeMeters). */
-  grabbable: 0.26,
-  /** Clips sit deeper (z≈0.14–0.22); need larger pick than filters. */
-  clip: 0.28,
+  grabbable: 0.2,
+  /** Clips: tight face hot-zone (large radii auto-fire while hands are just on screen). */
+  clip: 0.14,
   /** Keep nut smaller than wheel so after nut-off the impeller wins nearby pinches. */
   rotate_nut: 0.09,
   /** While nut is the SOP target, enlarge pick so top-cam aim can hit. */
-  rotate_nut_sop: 0.2,
+  rotate_nut_sop: 0.16,
   clean: 0.14,
 } as const;
 
@@ -24,10 +24,16 @@ export const GRAB_COMMIT_MS = 160;
  */
 export const HIGHLIGHT_GRAB_COMMIT_MS = 40;
 /**
- * Reach-in commit: aim point stays on a live part this long → action.
- * No fist required (top-cam curl is unreliable). Fist only releases carries.
+ * Deliberate pause on the hot zone before the action fires.
+ * Short values feel like “nothing happened but steps cleared”.
  */
-export const REACH_COMMIT_MS = 220;
+export const REACH_COMMIT_MS = 900;
+
+/**
+ * Commit only in the inner fraction of `interactionRadius`.
+ * Outer ring = aim/hover guidance; inner = intentional contact.
+ */
+export const REACH_COMMIT_RADIUS_SCALE = 0.65;
 
 /** @deprecated Prefer REACH_COMMIT_MS — kept for old imports. */
 export const SOP_DWELL_COMMIT_MS = REACH_COMMIT_MS;

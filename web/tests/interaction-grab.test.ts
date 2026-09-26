@@ -42,8 +42,9 @@ function stub(
   };
 }
 
-test('grab pick radius is larger than former snap-only 0.08m', () => {
-  expect(COLLIDER_RADIUS.grabbable).toBeGreaterThan(0.2);
+test('grab pick radius stays usable on the operation face', () => {
+  expect(COLLIDER_RADIUS.grabbable).toBeGreaterThanOrEqual(0.18);
+  expect(COLLIDER_RADIUS.grabbable).toBeLessThanOrEqual(0.24);
 });
 
 test('nut pick radius stays smaller than grabbable so impeller can win after nut-off', () => {
@@ -52,8 +53,9 @@ test('nut pick radius stays smaller than grabbable so impeller can win after nut
   expect(COLLIDER_RADIUS.rotate_nut_sop).toBeLessThanOrEqual(COLLIDER_RADIUS.grabbable);
 });
 
-test('clip pick radius reaches deep hood clips', () => {
-  expect(COLLIDER_RADIUS.clip).toBeGreaterThanOrEqual(0.25);
+test('clip pick radius is a tight face hot-zone', () => {
+  expect(COLLIDER_RADIUS.clip).toBeGreaterThanOrEqual(0.12);
+  expect(COLLIDER_RADIUS.clip).toBeLessThan(0.2);
 });
 
 test('inventory FIFO enqueue / dequeue', () => {

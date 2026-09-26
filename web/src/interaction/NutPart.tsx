@@ -11,6 +11,7 @@ import {
   SOP_PICK_PRIORITY,
 } from './defaults';
 import { isInstallOfferPart, PROP_OFFER_POS } from './partOffer';
+import { surfaceDistance } from './operationSurface';
 import {
   registerInteractable,
   unregisterInteractable,
@@ -79,7 +80,11 @@ export function NutPart({ part, isSopTarget }: NutPartProps) {
       distanceTo(handPos) {
         const g = groupRef.current;
         if (!g) return Number.POSITIVE_INFINITY;
-        return g.getWorldPosition(_tmp).distanceTo(handPos);
+        g.getWorldPosition(_tmp);
+        return surfaceDistance(
+          [handPos.x, handPos.y, handPos.z],
+          [_tmp.x, _tmp.y, _tmp.z],
+        );
       },
       copyWorldPosition(out) {
         const g = groupRef.current;

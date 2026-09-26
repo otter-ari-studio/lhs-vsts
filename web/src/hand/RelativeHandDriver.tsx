@@ -21,6 +21,8 @@ import { handHub } from './HandHub';
 import { handWorldHub } from './handWorldHub';
 import { LandmarkRig, type LandmarkRigHandle } from './LandmarkRig';
 import { JOINT_COUNT, type HandId, type Vec3 } from './types';
+import { projectToSurface } from '../interaction/operationSurface';
+import { operationSurfaceHub } from '../interaction/operationSurfaceHub';
 
 interface RelativeHandDriverProps {
   handId: HandId;
@@ -229,7 +231,7 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
       if (mesh) mesh.visible = true;
     }
 
-    // Tip centroid = pick/aim point (wrist sits ~20cm below tips under top-cam).
+    // Tip XY from tracking; Z locked to current SOP operation face (scheme A).
     if (hasSmoothLm.current && lmVisible.current) {
       _aim.set(0, 0, 0);
       for (const i of TIP_IDX) {
@@ -239,11 +241,13 @@ export function RelativeHandDriver({ handId, calibrateToken }: RelativeHandDrive
     } else {
       _aim.copy(palm.position);
     }
+    const faceZ = operationSurfaceHub.get().z;
+    const onFace = projectToSurface([_aim.x, _aim.y, _aim.z], faceZ);
 
     handWorldHub.publish({
       handId,
       palm: [palm.position.x, palm.position.y, palm.position.z],
-      interactionPoint: [_aim.x, _aim.y, _aim.z],
+      interactionPoint: onFace,
       pinching: grasping,
       clockSec: state.clock.elapsedTime,
     });

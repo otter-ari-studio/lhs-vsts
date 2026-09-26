@@ -17,18 +17,18 @@ function hintFor(it: HandInteractable, partId: string): string {
     if (isInstallOfferPart(partId) || st === 'removed') {
       return '抓住 · 放到绿色安装位松手拧上';
     }
-    return '瞄准球停在零件上即可取下，移到左侧松开入栏';
+    return '球变绿后停住约 1 秒取下，移到左侧入栏';
   }
   if (it.kind === 'clip') {
     return st === 'clip_closed'
-      ? '瞄准球停在卡扣上即可打开'
-      : '瞄准球停在卡扣上即可锁止';
+      ? '球变绿后停住约 1 秒打开'
+      : '球变绿后停住约 1 秒锁止';
   }
   if (it.kind === 'rotate_nut') {
     if (isInstallOfferPart(partId) || st === 'removed') {
       return '抓住 · 放到安装位松手拧上';
     }
-    return '瞄准球停在螺母上即可拧下';
+    return '球变绿后停住约 1 秒拧下';
   }
   return '已选中';
 }
@@ -55,7 +55,7 @@ export function selectionFromSopFallback(): SelectionInfo | null {
   let hint = '按 SOP 操作';
   if (current.stepId.startsWith('remove_')) {
     partId = current.stepId.slice('remove_'.length);
-    hint = 'SOP 目标 · 瞄准球停在上面即可拆下';
+    hint = 'SOP 目标 · 球变绿后停住约 1 秒拆下';
   } else if (current.stepId.startsWith('install_')) {
     partId = current.stepId.slice('install_'.length);
     hint = isInstallOfferPart(partId)
@@ -63,10 +63,10 @@ export function selectionFromSopFallback(): SelectionInfo | null {
       : '等待道具弹出';
   } else if (current.stepId.startsWith('open_')) {
     partId = current.stepId.slice('open_'.length);
-    hint = 'SOP 目标 · 瞄准球停在卡扣上即可打开';
+    hint = 'SOP 目标 · 球变绿后停住约 1 秒打开';
   } else if (current.stepId.startsWith('close_')) {
     partId = current.stepId.slice('close_'.length);
-    hint = 'SOP 目标 · 瞄准球停在卡扣上即可锁止';
+    hint = 'SOP 目标 · 球变绿后停住约 1 秒锁止';
   } else if (current.stepId === 'appliance_wash') {
     return {
       id: 'appliance_wash',

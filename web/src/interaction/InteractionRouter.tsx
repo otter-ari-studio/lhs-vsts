@@ -7,6 +7,7 @@ import { aimTargetHub } from './aimTargetHub';
 import {
   PENDING_EXIT_SCALE,
   REACH_COMMIT_MS,
+  REACH_COMMIT_RADIUS_SCALE,
 } from './defaults';
 import {
   findNearestInteractable,
@@ -48,6 +49,14 @@ interface HandInteractionState {
 function inReach(it: HandInteractable, handPos: Vector3): boolean {
   if (!it.isInteractableNow()) return false;
   return it.distanceTo(handPos) <= it.interactionRadius;
+}
+
+/** Inner hot zone — must be here to accumulate commit time. */
+function inCommitZone(it: HandInteractable, handPos: Vector3): boolean {
+  if (!it.isInteractableNow()) return false;
+  return (
+    it.distanceTo(handPos) <= it.interactionRadius * REACH_COMMIT_RADIUS_SCALE
+  );
 }
 
 function stillNear(it: HandInteractable, handPos: Vector3): boolean {
@@ -165,7 +174,8 @@ export function InteractionRouter() {
       const target = pickReachTarget(_pos, preferred, state.lockoutId);
       state.hoverCand = target;
 
-      if (target) {
+      // Outer ring = hover/aim; inner ring + dwell = intentional commit.
+      if (target && inCommitZone(target, _pos)) {
         if (state.contact?.id === target.id) {
           state.contactMs += dtMs;
         } else {
@@ -177,7 +187,6 @@ export function InteractionRouter() {
           const ok = target.onPinchStart(_pos);
           state.contact = null;
           state.contactMs = 0;
-          state.hoverCand = null;
           if (ok === false) {
             state.lockoutId = target.id;
           } else if (target.kind === 'clip') {
@@ -187,7 +196,6 @@ export function InteractionRouter() {
             target.kind === 'rotate_nut' &&
             !target.isInteractableNow()
           ) {
-            // Instant unscrew — no carry.
             state.lockoutId = target.id;
             state.engaged = null;
           } else {
@@ -276,9 +284,10 @@ export function InteractionRouter() {
 
     if (aimIt?.copyWorldPosition?.(_aimWorld)) {
       const same = aimIdRef.current === aimIt.id;
+      const commitR = aimIt.interactionRadius * REACH_COMMIT_RADIUS_SCALE;
       aimInRangeRef.current = resolveAimInRange(
         aimDist,
-        aimIt.interactionRadius,
+        commitR,
         same ? aimInRangeRef.current : false,
       );
       aimIdRef.current = aimIt.id;

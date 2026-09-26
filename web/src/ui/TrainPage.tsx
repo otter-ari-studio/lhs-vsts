@@ -333,7 +333,7 @@ export function TrainPage({ onBack }: TrainPageProps) {
 
           {phase === 'tracking' && presence === 'none' ? (
             <div className="cam-hint" role="status">
-              面对机身伸手：瞄准球停在高亮零件/卡扣上即可操作；取下的零件移到左侧入栏。
+              操作面：把青色球对准高亮热区，变绿后停住约 1 秒再动作；取下后移到左侧入栏。
             </div>
           ) : null}
 

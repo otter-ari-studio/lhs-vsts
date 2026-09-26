@@ -14,6 +14,7 @@ import { setGrabHolding } from './grabHoldHub';
 import { INVENTORY_PARK, partInventory } from './partInventory';
 import { isInstallOfferPart, PROP_OFFER_POS } from './partOffer';
 import { setPartPose } from './partPoseHub';
+import { surfaceDistance } from './operationSurface';
 import {
   registerInteractable,
   unregisterInteractable,
@@ -82,8 +83,8 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
         const mgr = getTrainingSession();
         if (!mgr) return true;
         const st = mgr.getState(part.partId);
-        if (st === 'installed') return true;
-        // Offered reinstall prop: pickable from tray even while still listed in inventory
+        // Operation-surface: only the current SOP part is live on the face.
+        if (st === 'installed') return sopRef.current;
         if (st === 'removed' && isInstallOfferPart(part.partId)) return true;
         if (partInventory.has(part.partId)) return false;
         if (st === 'removed') return sopRef.current;
@@ -100,7 +101,11 @@ export function GrabPart({ part, snapRange, isSopTarget }: GrabPartProps) {
       distanceTo(handPos) {
         const g = groupRef.current;
         if (!g) return Number.POSITIVE_INFINITY;
-        return g.getWorldPosition(_tmp).distanceTo(handPos);
+        g.getWorldPosition(_tmp);
+        return surfaceDistance(
+          [handPos.x, handPos.y, handPos.z],
+          [_tmp.x, _tmp.y, _tmp.z],
+        );
       },
       copyWorldPosition(out) {
         const g = groupRef.current;

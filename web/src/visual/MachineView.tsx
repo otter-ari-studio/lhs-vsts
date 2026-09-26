@@ -8,6 +8,8 @@ import { closeStep, installStep, openStep, removeStep } from '../machine/types';
 import { ClipPart } from '../interaction/ClipPart';
 import { GrabInstallGhost, GrabPart } from '../interaction/GrabPart';
 import { NutPart } from '../interaction/NutPart';
+import { operationSurfaceHub } from '../interaction/operationSurfaceHub';
+import { surfaceZFromPartAnchors } from '../interaction/operationSurface';
 import { partInventory } from '../interaction/partInventory';
 import { resetGrabHold } from '../interaction/grabHoldHub';
 import { KitbashPart } from './kitbash/KitbashAdapter';
@@ -101,11 +103,27 @@ export function MachineView({ def }: MachineViewProps) {
   useEffect(() => {
     partInventory.clear();
     resetGrabHold();
+    return () => {
+      operationSurfaceHub.clear();
+    };
   }, [def.machineId]);
 
   const sopTargets = currentSopPartIds(def);
+  const sopKey = [...sopTargets].sort().join('|');
   const snapRange = def.assemblyDefaults.snapRangeMeters;
   const session = getTrainingSession();
+
+  useEffect(() => {
+    const sopIds = sopKey ? sopKey.split('|') : [];
+    const sopZs = sopIds.map((id) => {
+      const p = def.parts.find((x) => x.partId === id);
+      return p?.anchor.position[2] ?? 0.22;
+    });
+    operationSurfaceHub.set({
+      z: surfaceZFromPartAnchors(sopZs),
+      partIds: sopIds,
+    });
+  }, [def.parts, sopKey]);
 
   return (
     <group name={`machine:${def.machineId}`}>
