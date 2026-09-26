@@ -31,6 +31,8 @@ vp run dev:frontend  # :3000
 
 Both scripts build `@lhs-vsts/machine` first. The frontend proxies `/api` to the backend.
 
+Format / lint from root: `vp fmt`, `vp lint` (or `vp check`).
+
 ## Coverage (AC9)
 
 Line coverage must be ≥ 90% for machine, backend, and frontend (frontend gate covers API client, AdminPage, score submit, and the shared 3D pointer-drag modules — see `apps/frontend/rstest.config.ts`).

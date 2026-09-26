@@ -10,7 +10,13 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+build
 *.local
+*.tsbuildinfo
+coverage
+.nyc_output
+.temp
+.tmp
 
 # dotenv environment variable files
 .env
@@ -20,6 +26,8 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -31,9 +39,6 @@ dist-ssr
 
 # AI agent worktrees
 .claude/worktrees/
-!.vscode/
-!.vscode/settings.json
-!.vscode/extensions.json
 
 # Playwright
 /test-results/

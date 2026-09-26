@@ -1,16 +1,5 @@
-# Local
-.DS_Store
-*.local
-*.log*
+# apps/frontend/.gitignore — only paths unique to this package
+# Shared ignores live in the repo-root .gitignore.
 
-# Dist
-node_modules
-dist/
-
-# Profile
+# Rsbuild / Rspack local profiles
 .rspack-profile-*/
-
-# IDE
-.vscode/*
-!.vscode/extensions.json
-.idea
